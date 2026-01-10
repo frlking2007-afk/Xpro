@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Customer } from '../types';
-import { Plus, Search, Trash2, Edit, Phone, Calendar } from 'lucide-react';
+import { Plus, Search, Edit, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
