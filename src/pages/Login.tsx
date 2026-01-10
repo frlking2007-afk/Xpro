@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { LogIn, Lock, Mail, ArrowRight, BarChart2, Shield, Users } from 'lucide-react';
+import { Lock, Mail, ArrowRight, BarChart2, Shield, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function Login() {
