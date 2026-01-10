@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Lock, Mail, ArrowRight, BarChart2, Shield, Users } from 'lucide-react';
 import { toast } from 'sonner';
+// @ts-ignore
 import Hyperspeed from '../components/Hyperspeed';
+// @ts-ignore
 import { hyperspeedPresets } from '../components/HyperSpeedPresets';
 
 export default function Login() {
