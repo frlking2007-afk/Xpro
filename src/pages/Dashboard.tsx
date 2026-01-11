@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { TrendingUp, Users, ShoppingBag, DollarSign, ArrowUpRight } from 'lucide-react';
+import { TrendingUp, Users, ShoppingBag, DollarSign, ArrowUpRight, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const data = [
@@ -57,18 +57,18 @@ export default function Dashboard() {
       
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard 
-          title="Jami Savdo" 
+          title="Jami Foyda" 
           value="124.5M" 
           change="+12.5%" 
           icon={DollarSign}
           color="bg-blue-500" 
         />
         <StatCard 
-          title="Buyurtmalar" 
+          title="Kassa Xarajatlari" 
           value="1,234" 
           change="+8.2%" 
-          icon={ShoppingBag}
-          color="bg-purple-500" 
+          icon={Wallet}
+          color="bg-red-500" 
         />
         <StatCard 
           title="Yangi Mijozlar" 

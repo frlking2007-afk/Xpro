@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, BarChart3, Settings, Menu, X, LogOut, Bell, Search, Zap } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, Settings, Menu, X, LogOut, Zap } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
@@ -120,18 +120,7 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="relative hidden sm:block">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-              <input 
-                type="text" 
-                placeholder="Qidiruv..." 
-                className="h-10 w-64 rounded-xl border border-slate-800 bg-slate-900/50 pl-10 pr-4 text-sm text-slate-200 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
-              />
-            </div>
-            <button className="relative rounded-xl border border-slate-800 bg-slate-900/50 p-2.5 text-slate-400 hover:text-white transition-colors">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50"></span>
-            </button>
+            {/* Search and Notifications removed */}
           </div>
         </header>
 
