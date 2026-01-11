@@ -1,24 +1,153 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, CreditCard, Banknote, Upload, ArrowDownRight, ArrowUpRight, DollarSign } from 'lucide-react';
+import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight } from 'lucide-react';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 const tabs = [
-  { id: 'kassa', label: 'KASSA', icon: Wallet },
-  { id: 'click', label: 'CLICK', icon: CreditCard },
-  { id: 'uzcard', label: 'UZCARD', icon: CreditCard },
-  { id: 'humo', label: 'HUMO', icon: CreditCard },
-  { id: 'xarajat', label: 'XARAJAT', icon: Banknote },
-  { id: 'eksport', label: 'EKSPORT', icon: Upload },
+  { id: 'kassa', label: 'KASSA', icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
+  { id: 'click', label: 'CLICK', icon: CreditCard, color: 'text-blue-400', bg: 'bg-blue-500/20' },
+  { id: 'uzcard', label: 'UZCARD', icon: CreditCard, color: 'text-purple-400', bg: 'bg-purple-500/20' },
+  { id: 'humo', label: 'HUMO', icon: CreditCard, color: 'text-orange-400', bg: 'bg-orange-500/20' },
+  { id: 'xarajat', label: 'XARAJAT', icon: Banknote, color: 'text-red-400', bg: 'bg-red-500/20' },
+  { id: 'eksport', label: 'EKSPORT', icon: Upload, color: 'text-gray-400', bg: 'bg-gray-500/20' },
 ];
+
+interface Transaction {
+  id: string;
+  amount: number;
+  description: string;
+  date: Date;
+  type: string;
+}
+
+const PaymentTab = ({ type, color, bg }: { type: string, color: string, bg: string }) => {
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
+  const [transactions, setTransactions] = useState<Transaction[]>([
+    { id: '1', amount: 450000, description: 'Tushlik uchun', date: new Date(), type },
+    { id: '2', amount: 120000, description: 'Transport', date: new Date(Date.now() - 3600000), type },
+  ]);
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amount) return;
+
+    const newTransaction: Transaction = {
+      id: Date.now().toString(),
+      amount: parseFloat(amount.replace(/[^0-9]/g, '')),
+      description,
+      date: new Date(),
+      type
+    };
+
+    setTransactions([newTransaction, ...transactions]);
+    setAmount('');
+    setDescription('');
+    toast.success("Muvaffaqiyatli saqlandi!");
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Input Form */}
+      <div className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm">
+        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-white">
+          <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${bg} ${color}`}>
+            <Plus className="h-5 w-5" />
+          </div>
+          Yangi kirim
+        </h3>
+        
+        <form onSubmit={handleSave} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-slate-400 uppercase tracking-wider">Summa</label>
+            <div className="relative">
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0"
+                className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-4 pr-12 text-lg font-bold text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+                required
+              />
+              <span className="absolute right-4 top-3.5 text-sm font-medium text-slate-500">UZS</span>
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-slate-400 uppercase tracking-wider">Tavsif (Ixtiyoriy)</label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Izoh yozing..."
+              className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 px-4 text-sm text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="group mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 py-3.5 text-sm font-bold text-white hover:from-blue-500 hover:to-purple-500 transition-all shadow-lg shadow-blue-500/20"
+          >
+            Saqlash
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </button>
+        </form>
+      </div>
+
+      {/* History List */}
+      <div>
+        <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-400 uppercase tracking-wider">
+          <History className="h-4 w-4" />
+          Oxirgi operatsiyalar
+        </h3>
+        
+        <div className="space-y-3">
+          {transactions.length === 0 ? (
+            <div className="rounded-xl border border-white/5 bg-white/5 p-8 text-center text-slate-500">
+              Hozircha ma'lumot yo'q
+            </div>
+          ) : (
+            transactions.map((item) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="group flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-4 transition-colors hover:bg-white/10 hover:border-white/10"
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-full ${bg} ${color}`}>
+                    <Plus className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-white">{item.amount.toLocaleString()} UZS</p>
+                    <p className="text-xs text-slate-400">
+                      {item.description || "Izohsiz"} • {format(item.date, 'HH:mm')}
+                    </p>
+                  </div>
+                </div>
+                <button className="rounded-lg p-2 text-slate-500 opacity-0 transition-all hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </motion.div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function XproPage() {
   const [activeTab, setActiveTab] = useState('kassa');
+
+  const activeTabInfo = tabs.find(t => t.id === activeTab);
 
   return (
     <div className="space-y-8">
       {/* Top Navigation Tabs */}
       <div className="relative">
-        <div className="flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 backdrop-blur-xl sm:justify-start">
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 backdrop-blur-xl">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -26,7 +155,7 @@ export default function XproPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`group relative flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all duration-300 ${
-                  isActive ? 'text-black' : 'text-slate-400 hover:text-white'
+                  isActive ? 'text-black shadow-lg shadow-white/10' : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
               >
                 {isActive && (
@@ -37,7 +166,7 @@ export default function XproPage() {
                   />
                 )}
                 <span className="relative z-10 flex items-center gap-2">
-                  <tab.icon className={`h-4 w-4 ${isActive ? 'text-black' : 'text-slate-400 group-hover:text-white'}`} />
+                  <tab.icon className={`h-4 w-4 ${isActive ? 'text-black' : tab.color}`} />
                   {tab.label}
                 </span>
               </button>
@@ -52,55 +181,30 @@ export default function XproPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="rounded-3xl border border-white/5 bg-white/5 p-8 backdrop-blur-sm"
+        className="rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur-sm lg:p-8"
       >
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold text-white uppercase tracking-wider">{tabs.find(t => t.id === activeTab)?.label}</h2>
-          <div className="text-sm text-slate-400">Jami balans: <span className="text-white font-mono font-bold">12,450,000 UZS</span></div>
-        </div>
-
-        {/* Placeholder Content for Each Tab */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {/* Example Cards */}
-          <div className="rounded-2xl bg-black/20 p-6 border border-white/5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="h-10 w-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-500">
-                <ArrowDownRight className="h-5 w-5" />
-              </div>
-              <span className="text-xs text-slate-500">Bugun, 14:30</span>
-            </div>
-            <p className="text-2xl font-bold text-white mb-1">+ 450,000</p>
-            <p className="text-sm text-slate-400">Kirim</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-white uppercase tracking-wider flex items-center gap-3">
+              {activeTabInfo?.icon && <activeTabInfo.icon className={`h-8 w-8 ${activeTabInfo.color}`} />}
+              {activeTabInfo?.label}
+            </h2>
+            <p className="text-sm text-slate-400 mt-1">Operatsiyalar boshqaruvi</p>
           </div>
-
-          <div className="rounded-2xl bg-black/20 p-6 border border-white/5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="h-10 w-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-500">
-                <ArrowUpRight className="h-5 w-5" />
-              </div>
-              <span className="text-xs text-slate-500">Bugun, 12:15</span>
-            </div>
-            <p className="text-2xl font-bold text-white mb-1">- 120,000</p>
-            <p className="text-sm text-slate-400">Chiqim</p>
-          </div>
-
-          <div className="rounded-2xl bg-black/20 p-6 border border-white/5 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/5 transition-colors group">
-            <div className="h-12 w-12 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500 mb-3 group-hover:scale-110 transition-transform">
-              <DollarSign className="h-6 w-6" />
-            </div>
-            <p className="font-medium text-white">Yangi operatsiya</p>
+          <div className="flex flex-col items-end">
+            <span className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Jami balans</span>
+            <span className="text-3xl font-mono font-bold text-white tracking-tight">12,450,000 <span className="text-lg text-slate-500">UZS</span></span>
           </div>
         </div>
 
-        {/* Tab Specific Message */}
-        <div className="mt-8 text-center text-slate-500 text-sm">
-          {activeTab === 'kassa' && "Naqd pul operatsiyalari tarixi"}
-          {activeTab === 'click' && "Click orqali to'lovlar tarixi"}
-          {activeTab === 'uzcard' && "Uzcard kartasidan o'tkazmalar"}
-          {activeTab === 'humo' && "Humo terminali tushumlari"}
-          {activeTab === 'xarajat' && "Do'kon va ofis xarajatlari ro'yxati"}
-          {activeTab === 'eksport' && "Ma'lumotlarni Excel formatida yuklab olish"}
-        </div>
+        {/* Tab Specific Content */}
+        {['kassa', 'click', 'uzcard', 'humo'].includes(activeTab) && activeTabInfo ? (
+          <PaymentTab type={activeTab} color={activeTabInfo.color} bg={activeTabInfo.bg} />
+        ) : (
+          <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-black/20 text-slate-500">
+            {activeTab === 'xarajat' ? "Xarajatlar bo'limi tez orada..." : "Eksport bo'limi tez orada..."}
+          </div>
+        )}
       </motion.div>
     </div>
   );
