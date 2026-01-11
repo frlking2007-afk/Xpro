@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Search, Filter, Download, Calendar, ArrowUpRight, ArrowDownRight, Wallet, CreditCard, Banknote } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { format } from 'date-fns';
+import { format, endOfDay, startOfDay } from 'date-fns';
 import DateFilter from '../components/DateFilter';
+import MetricSelector from '../components/MetricSelector';
 
 interface Transaction {
   id: string;
@@ -17,19 +18,28 @@ export default function Reports() {
   const [search, setSearch] = useState('');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState({ start: new Date(), end: new Date() });
+  const [dateRange, setDateRange] = useState({ start: new Date(new Date().getFullYear(), new Date().getMonth(), 1), end: new Date() });
+  const [filterType, setFilterType] = useState('all');
 
   useEffect(() => {
     fetchTransactions();
-  }, []);
+  }, [dateRange, filterType]); // Refetch when date range or type changes
 
   const fetchTransactions = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('transactions')
         .select('*')
+        .gte('date', startOfDay(dateRange.start).toISOString())
+        .lte('date', endOfDay(dateRange.end).toISOString())
         .order('date', { ascending: false });
+
+      if (filterType !== 'all') {
+        query = query.eq('type', filterType);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setTransactions(data || []);
@@ -44,6 +54,19 @@ export default function Reports() {
     t.description?.toLowerCase().includes(search.toLowerCase()) ||
     t.amount.toString().includes(search)
   );
+
+  const handleDateChange = (range: { start: Date; end: Date; label: string }) => {
+    setDateRange({ start: range.start, end: range.end });
+  };
+
+  const typeOptions = [
+    { value: 'all', label: 'Barchasi', color: '#94a3b8' },
+    { value: 'kassa', label: 'Kassa', color: '#10b981' },
+    { value: 'click', label: 'Click', color: '#3b82f6' },
+    { value: 'uzcard', label: 'Uzcard', color: '#8b5cf6' },
+    { value: 'humo', label: 'Humo', color: '#f97316' },
+    { value: 'xarajat', label: 'Xarajat', color: '#ef4444' },
+  ];
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -71,6 +94,16 @@ export default function Reports() {
         <h2 className="text-2xl font-bold text-white tracking-tight">Xisobotlar</h2>
         
         <div className="flex flex-1 flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
+          {/* Date Filter */}
+          <DateFilter onFilterChange={handleDateChange} />
+
+          {/* Type Filter */}
+          <MetricSelector 
+            selected={filterType}
+            onSelect={setFilterType}
+            options={typeOptions}
+          />
+
           {/* Search Bar */}
           <div className="relative w-full sm:max-w-xs">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -85,17 +118,11 @@ export default function Reports() {
             />
           </div>
           
-          {/* Filter & Export Buttons */}
-          <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-colors">
-              <Filter className="h-4 w-4" />
-              <span className="hidden sm:inline">Filtr</span>
-            </button>
-            <button className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-500 transition-colors shadow-lg shadow-blue-500/20">
-              <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Yuklash</span>
-            </button>
-          </div>
+          {/* Export Button */}
+          <button className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-500 transition-colors shadow-lg shadow-blue-500/20">
+            <Download className="h-4 w-4" />
+            <span className="hidden sm:inline">Yuklash</span>
+          </button>
         </div>
       </div>
 
