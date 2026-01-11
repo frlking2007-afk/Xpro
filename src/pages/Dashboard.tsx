@@ -53,7 +53,7 @@ export default function Dashboard() {
   };
 
   const metricOptions = [
-    { value: 'savdo', label: 'Jami Savdo', color: '#3b82f6' },
+    { value: 'savdo', label: 'Jami Foyda', color: '#3b82f6' },
     { value: 'daromad', label: 'Sof Foyda', color: '#8b5cf6' },
     { value: 'zarar', label: 'Jami Zarar', color: '#ef4444' },
   ];
