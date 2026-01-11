@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { supabase } from '../lib/supabase';
 
 const tabs = [
   { id: 'kassa', label: 'KASSA', icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
@@ -17,7 +18,7 @@ interface Transaction {
   id: string;
   amount: number;
   description: string;
-  date: Date;
+  date: string; // Supabase returns string for dates
   type: string;
 }
 
@@ -27,14 +28,16 @@ const PaymentTab = ({
   bg, 
   transactions, 
   onAddTransaction,
-  onDeleteTransaction 
+  onDeleteTransaction,
+  loading 
 }: { 
   type: string, 
   color: string, 
   bg: string, 
   transactions: Transaction[], 
   onAddTransaction: (amount: number, description: string) => void,
-  onDeleteTransaction: (id: string) => void
+  onDeleteTransaction: (id: string) => void,
+  loading: boolean
 }) => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -88,14 +91,15 @@ const PaymentTab = ({
 
           <button
             type="submit"
+            disabled={loading}
             className={`group mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white transition-all shadow-lg ${
               type === 'xarajat' 
                 ? 'bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 shadow-red-500/20' 
                 : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-blue-500/20'
-            }`}
+            } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            Saqlash
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            {loading ? 'Saqlanmoqda...' : 'Saqlash'}
+            {!loading && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
           </button>
         </form>
       </div>
@@ -129,7 +133,7 @@ const PaymentTab = ({
                       {type === 'xarajat' ? '-' : '+'} {item.amount.toLocaleString()} UZS
                     </p>
                     <p className="text-xs text-slate-400">
-                      {item.description || "Izohsiz"} • {format(item.date, 'HH:mm')}
+                      {item.description || "Izohsiz"} • {format(new Date(item.date), 'dd.MM.yyyy HH:mm')}
                     </p>
                   </div>
                 </div>
@@ -151,24 +155,70 @@ const PaymentTab = ({
 export default function XproPage() {
   const [activeTab, setActiveTab] = useState('kassa');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const activeTabInfo = tabs.find(t => t.id === activeTab);
 
-  const handleAddTransaction = (amount: number, description: string) => {
-    const newTransaction: Transaction = {
-      id: Date.now().toString(),
-      amount,
-      description,
-      date: new Date(),
-      type: activeTab
-    };
-    setTransactions([newTransaction, ...transactions]);
-    toast.success("Muvaffaqiyatli saqlandi!");
+  // Fetch transactions on load
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
+  const fetchTransactions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+      setTransactions(data || []);
+    } catch (error: any) {
+      toast.error('Ma\'lumotlarni yuklashda xatolik: ' + error.message);
+    }
   };
 
-  const handleDeleteTransaction = (id: string) => {
-    setTransactions(transactions.filter(t => t.id !== id));
-    toast.success("O'chirildi!");
+  const handleAddTransaction = async (amount: number, description: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert([
+          {
+            amount,
+            description,
+            type: activeTab,
+            date: new Date().toISOString()
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setTransactions([data, ...transactions]);
+      toast.success("Muvaffaqiyatli saqlandi!");
+    } catch (error: any) {
+      toast.error('Xatolik: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setTransactions(transactions.filter(t => t.id !== id));
+      toast.success("O'chirildi!");
+    } catch (error: any) {
+      toast.error('O\'chirishda xatolik: ' + error.message);
+    }
   };
 
   // Calculate total balance from all transactions
@@ -248,6 +298,7 @@ export default function XproPage() {
             transactions={filteredTransactions}
             onAddTransaction={handleAddTransaction}
             onDeleteTransaction={handleDeleteTransaction}
+            loading={loading}
           />
         ) : (
           <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-black/20 text-slate-500">
