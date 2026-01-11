@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, BarChart3, Settings, Menu, X, LogOut, Zap } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, Settings, Menu, X, LogOut, Zap, Wallet } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) => {
   const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
+    { icon: Zap, label: 'Xpro', path: '/xpro' },
     { icon: BarChart3, label: 'Xisobotlar', path: '/reports' },
     { icon: Settings, label: 'Sozlamalar', path: '/settings' },
   ];
@@ -97,6 +98,7 @@ export default function DashboardLayout() {
   const getPageTitle = () => {
     switch (location.pathname) {
       case '/': return 'Dashboard';
+      case '/xpro': return 'Xpro Moliya';
       case '/reports': return 'Xisobotlar';
       case '/settings': return 'Sozlamalar';
       default: return 'Xpro';
