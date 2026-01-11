@@ -24,15 +24,9 @@ export default function XproLanding() {
             </div>
           </div>
 
-          <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Moliya va Xisobotlarni <br />
-            <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Oson Boshqaring</span>
+          <h1 className="mb-10 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+            Xpro <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Moliya</span>
           </h1>
-
-          <p className="mb-10 text-lg text-slate-400">
-            Xpro yordamida barcha kassa, click va xarajat operatsiyalarini bir joyda jamlang. 
-            Aniq statistika va xavfsiz tizim.
-          </p>
 
           <button
             onClick={() => navigate('/xpro/operations')}
