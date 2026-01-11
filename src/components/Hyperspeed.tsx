@@ -1104,6 +1104,15 @@ const Hyperspeed = ({
     (function () {
       const container = document.getElementById('lights');
       const options = { ...effectOptions };
+      
+      // Responsive adjustments
+      if (window.innerWidth < 768) {
+        options.roadWidth = options.roadWidth * 0.7; // Shrink road for mobile
+        options.islandWidth = options.islandWidth * 0.7;
+        options.lightStickWidth = options.lightStickWidth.map(w => w * 0.7);
+        options.lightStickHeight = options.lightStickHeight.map(h => h * 0.7);
+      }
+
       options.distortion = distortions[options.distortion];
 
       const myApp = new App(container, options);
