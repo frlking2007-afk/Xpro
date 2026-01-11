@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Users, ShoppingBag, DollarSign, ArrowUpRight, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
+import DateFilter from '../components/DateFilter';
 
 const data = [
   { name: 'Yan', savdo: 4000, daromad: 2400 },
@@ -42,16 +43,20 @@ const StatCard = ({ title, value, change, icon: Icon, color }: any) => (
 );
 
 export default function Dashboard() {
+  const [dateRange, setDateRange] = useState({ start: new Date(), end: new Date() });
+
+  const handleFilterChange = (range: { start: Date; end: Date; label: string }) => {
+    console.log('Tanlangan sana oralig\'i:', range);
+    setDateRange({ start: range.start, end: range.end });
+    // Bu yerda API ga so'rov yuborish mumkin
+  };
+
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-bold text-white tracking-tight">Umumiy ko'rinish</h2>
         <div className="flex gap-2">
-          <select className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option>Bu oy</option>
-            <option>O'tgan oy</option>
-            <option>Bu yil</option>
-          </select>
+          <DateFilter onFilterChange={handleFilterChange} />
         </div>
       </div>
       
