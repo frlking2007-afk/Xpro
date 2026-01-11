@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) => {
   const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-    { icon: Users, label: 'Mijozlar', path: '/customers' },
     { icon: BarChart3, label: 'Xisobotlar', path: '/reports' },
     { icon: Settings, label: 'Sozlamalar', path: '/settings' },
   ];
@@ -98,7 +97,6 @@ export default function DashboardLayout() {
   const getPageTitle = () => {
     switch (location.pathname) {
       case '/': return 'Dashboard';
-      case '/customers': return 'Mijozlar';
       case '/reports': return 'Xisobotlar';
       case '/settings': return 'Sozlamalar';
       default: return 'Xpro';
