@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Lock, Mail, ArrowRight, Zap, ShieldCheck, LayoutGrid } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Zap, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
+import Hyperspeed from '../components/Hyperspeed';
+import { hyperspeedPresets } from '../components/HyperSpeedPresets';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -38,70 +41,34 @@ export default function Login() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-slate-950">
-      {/* Animated Background */}
-      <div className="absolute inset-0 w-full h-full">
-        <div className="absolute top-0 -left-4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-0 -right-4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#050505]">
+      {/* Hyperspeed Background */}
+      <div className="absolute inset-0 z-0 opacity-40">
+        <Hyperspeed effectOptions={hyperspeedPresets.two} />
       </div>
 
-      <div className="relative z-10 w-full max-w-5xl px-4">
-        <div className="grid overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 shadow-2xl backdrop-blur-2xl lg:grid-cols-2">
-          
-          {/* Left Side - Brand */}
-          <div className="relative hidden flex-col justify-between p-12 lg:flex">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20"></div>
+      <div className="relative z-10 w-full max-w-md px-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/40 p-8 shadow-2xl backdrop-blur-xl"
+        >
+          {/* Glow Effect */}
+          <div className="absolute -top-24 -left-24 h-48 w-48 rounded-full bg-blue-600/30 blur-[100px]" />
+          <div className="absolute -bottom-24 -right-24 h-48 w-48 rounded-full bg-purple-600/30 blur-[100px]" />
+
+          <div className="relative flex flex-col items-center text-center">
+            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-purple-600 shadow-lg shadow-blue-500/20">
+              <Zap className="h-8 w-8 text-white" />
+            </div>
             
-            <div className="relative">
-              <div className="flex items-center gap-3 text-3xl font-bold text-white">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-500 to-purple-500 shadow-lg shadow-blue-500/30">
-                  <Zap className="h-6 w-6 text-white" />
-                </div>
-                Xpro CRM
-              </div>
-              <p className="mt-4 text-slate-400">
-                Biznesingizni keyingi bosqichga olib chiqing. Zamonaviy, tezkor va xavfsiz.
-              </p>
-            </div>
+            <h2 className="mb-2 text-3xl font-bold text-white tracking-tight">Xush kelibsiz</h2>
+            <p className="mb-8 text-slate-400">Xpro CRM tizimiga kirish</p>
 
-            <div className="relative space-y-6">
-              <div className="flex items-center gap-4 rounded-2xl bg-white/5 p-4 border border-white/5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/20 text-blue-400">
-                  <LayoutGrid className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white">Intuitiv Dashboard</h3>
-                  <p className="text-sm text-slate-400">Barcha ko'rsatkichlar bir joyda</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 rounded-2xl bg-white/5 p-4 border border-white/5">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-500/20 text-purple-400">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white">Xavfsiz Tizim</h3>
-                  <p className="text-sm text-slate-400">Ma'lumotlaringiz himoyalangan</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative text-xs text-slate-500">
-              © 2026 Xpro Inc. Barcha huquqlar himoyalangan.
-            </div>
-          </div>
-
-          {/* Right Side - Login Form */}
-          <div className="flex flex-col justify-center p-8 sm:p-12 bg-white/5">
-            <div className="mb-8 text-center lg:text-left">
-              <h2 className="text-3xl font-bold text-white mb-2">Xush kelibsiz</h2>
-              <p className="text-slate-400">Davom etish uchun tizimga kiring</p>
-            </div>
-
-            <form onSubmit={handleLogin} className="space-y-5">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">Email manzilingiz</label>
+            <form onSubmit={handleLogin} className="w-full space-y-5">
+              <div className="space-y-2 text-left">
+                <label className="text-xs font-medium uppercase tracking-wider text-slate-500">Email</label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <Mail className="h-5 w-5 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
@@ -111,14 +78,14 @@ export default function Login() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full rounded-xl border border-white/10 bg-black/20 py-3 pl-10 text-white placeholder-slate-500 focus:border-blue-500 focus:bg-black/40 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
                     placeholder="name@company.com"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">Parol</label>
+              <div className="space-y-2 text-left">
+                <label className="text-xs font-medium uppercase tracking-wider text-slate-500">Parol</label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <Lock className="h-5 w-5 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
@@ -128,7 +95,7 @@ export default function Login() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full rounded-xl border border-white/10 bg-black/20 py-3 pl-10 text-white placeholder-slate-500 focus:border-blue-500 focus:bg-black/40 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
                     placeholder="••••••••"
                   />
                 </div>
@@ -137,7 +104,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg shadow-blue-500/25"
+                className="group relative w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_20px_rgba(37,99,235,0.5)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)]"
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
@@ -149,14 +116,19 @@ export default function Login() {
                   </span>
                 ) : (
                   <span className="flex items-center gap-2">
-                    Tizimga kirish 
+                    Kirish 
                     <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </span>
                 )}
               </button>
             </form>
+
+            <div className="mt-6 flex items-center gap-2 text-xs text-slate-500">
+              <ShieldCheck className="h-3 w-3" />
+              <span>Himoyalangan tizim</span>
+            </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
