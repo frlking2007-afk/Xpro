@@ -24,10 +24,7 @@ interface Transaction {
 const PaymentTab = ({ type, color, bg }: { type: string, color: string, bg: string }) => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    { id: '1', amount: 450000, description: 'Tushlik uchun', date: new Date(), type },
-    { id: '2', amount: 120000, description: 'Transport', date: new Date(Date.now() - 3600000), type },
-  ]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,7 +190,7 @@ export default function XproPage() {
           </div>
           <div className="flex flex-col items-end">
             <span className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Jami balans</span>
-            <span className="text-3xl font-mono font-bold text-white tracking-tight">12,450,000 <span className="text-lg text-slate-500">UZS</span></span>
+            <span className="text-3xl font-mono font-bold text-white tracking-tight">0 <span className="text-lg text-slate-500">UZS</span></span>
           </div>
         </div>
 
