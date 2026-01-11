@@ -21,27 +21,31 @@ interface Transaction {
   type: string;
 }
 
-const PaymentTab = ({ type, color, bg }: { type: string, color: string, bg: string }) => {
+const PaymentTab = ({ 
+  type, 
+  color, 
+  bg, 
+  transactions, 
+  onAddTransaction,
+  onDeleteTransaction 
+}: { 
+  type: string, 
+  color: string, 
+  bg: string, 
+  transactions: Transaction[], 
+  onAddTransaction: (amount: number, description: string) => void,
+  onDeleteTransaction: (id: string) => void
+}) => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount) return;
 
-    const newTransaction: Transaction = {
-      id: Date.now().toString(),
-      amount: parseFloat(amount.replace(/[^0-9]/g, '')),
-      description,
-      date: new Date(),
-      type
-    };
-
-    setTransactions([newTransaction, ...transactions]);
+    onAddTransaction(parseFloat(amount.replace(/[^0-9]/g, '')), description);
     setAmount('');
     setDescription('');
-    toast.success("Muvaffaqiyatli saqlandi!");
   };
 
   return (
@@ -52,7 +56,7 @@ const PaymentTab = ({ type, color, bg }: { type: string, color: string, bg: stri
           <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${bg} ${color}`}>
             <Plus className="h-5 w-5" />
           </div>
-          Yangi kirim
+          {type === 'xarajat' ? 'Yangi xarajat' : 'Yangi kirim'}
         </h3>
         
         <form onSubmit={handleSave} className="space-y-4">
@@ -84,7 +88,11 @@ const PaymentTab = ({ type, color, bg }: { type: string, color: string, bg: stri
 
           <button
             type="submit"
-            className="group mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 py-3.5 text-sm font-bold text-white hover:from-blue-500 hover:to-purple-500 transition-all shadow-lg shadow-blue-500/20"
+            className={`group mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white transition-all shadow-lg ${
+              type === 'xarajat' 
+                ? 'bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 shadow-red-500/20' 
+                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-blue-500/20'
+            }`}
           >
             Saqlash
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -114,16 +122,21 @@ const PaymentTab = ({ type, color, bg }: { type: string, color: string, bg: stri
               >
                 <div className="flex items-center gap-4">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-full ${bg} ${color}`}>
-                    <Plus className="h-5 w-5" />
+                    <Plus className={`h-5 w-5 ${type === 'xarajat' ? 'rotate-45' : ''}`} />
                   </div>
                   <div>
-                    <p className="font-bold text-white">{item.amount.toLocaleString()} UZS</p>
+                    <p className="font-bold text-white">
+                      {type === 'xarajat' ? '-' : '+'} {item.amount.toLocaleString()} UZS
+                    </p>
                     <p className="text-xs text-slate-400">
                       {item.description || "Izohsiz"} • {format(item.date, 'HH:mm')}
                     </p>
                   </div>
                 </div>
-                <button className="rounded-lg p-2 text-slate-500 opacity-0 transition-all hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100">
+                <button 
+                  onClick={() => onDeleteTransaction(item.id)}
+                  className="rounded-lg p-2 text-slate-500 opacity-0 transition-all hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100"
+                >
                   <Trash2 className="h-4 w-4" />
                 </button>
               </motion.div>
@@ -137,8 +150,38 @@ const PaymentTab = ({ type, color, bg }: { type: string, color: string, bg: stri
 
 export default function XproPage() {
   const [activeTab, setActiveTab] = useState('kassa');
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const activeTabInfo = tabs.find(t => t.id === activeTab);
+
+  const handleAddTransaction = (amount: number, description: string) => {
+    const newTransaction: Transaction = {
+      id: Date.now().toString(),
+      amount,
+      description,
+      date: new Date(),
+      type: activeTab
+    };
+    setTransactions([newTransaction, ...transactions]);
+    toast.success("Muvaffaqiyatli saqlandi!");
+  };
+
+  const handleDeleteTransaction = (id: string) => {
+    setTransactions(transactions.filter(t => t.id !== id));
+    toast.success("O'chirildi!");
+  };
+
+  // Calculate total balance from all transactions
+  const calculateTotalBalance = () => {
+    return transactions.reduce((acc, curr) => {
+      if (curr.type === 'xarajat') {
+        return acc - curr.amount;
+      }
+      return acc + curr.amount;
+    }, 0);
+  };
+
+  const filteredTransactions = transactions.filter(t => t.type === activeTab);
 
   return (
     <div className="space-y-8">
@@ -190,16 +233,25 @@ export default function XproPage() {
           </div>
           <div className="flex flex-col items-end">
             <span className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Jami balans</span>
-            <span className="text-3xl font-mono font-bold text-white tracking-tight">0 <span className="text-lg text-slate-500">UZS</span></span>
+            <span className="text-3xl font-mono font-bold text-white tracking-tight">
+              {calculateTotalBalance().toLocaleString()} <span className="text-lg text-slate-500">UZS</span>
+            </span>
           </div>
         </div>
 
         {/* Tab Specific Content */}
-        {['kassa', 'click', 'uzcard', 'humo'].includes(activeTab) && activeTabInfo ? (
-          <PaymentTab type={activeTab} color={activeTabInfo.color} bg={activeTabInfo.bg} />
+        {['kassa', 'click', 'uzcard', 'humo', 'xarajat'].includes(activeTab) && activeTabInfo ? (
+          <PaymentTab 
+            type={activeTab} 
+            color={activeTabInfo.color} 
+            bg={activeTabInfo.bg}
+            transactions={filteredTransactions}
+            onAddTransaction={handleAddTransaction}
+            onDeleteTransaction={handleDeleteTransaction}
+          />
         ) : (
           <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-black/20 text-slate-500">
-            {activeTab === 'xarajat' ? "Xarajatlar bo'limi tez orada..." : "Eksport bo'limi tez orada..."}
+            Eksport bo'limi tez orada...
           </div>
         )}
       </motion.div>
