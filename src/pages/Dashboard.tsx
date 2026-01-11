@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, TrendingDown, ShoppingBag, DollarSign, ArrowUpRight, Wallet, ChevronDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, ShoppingBag, DollarSign, ArrowUpRight, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
 import DateFilter from '../components/DateFilter';
+import MetricSelector from '../components/MetricSelector';
 
 const data = [
   { name: 'Yan', savdo: 4000, daromad: 2400, foyda: 1800, zarar: 200 },
@@ -44,19 +45,21 @@ const StatCard = ({ title, value, change, icon: Icon, color }: any) => (
 
 export default function Dashboard() {
   const [dateRange, setDateRange] = useState({ start: new Date(), end: new Date() });
-  const [chartMetric, setChartMetric] = useState('savdo'); // savdo, daromad, foyda, zarar
+  const [chartMetric, setChartMetric] = useState('savdo');
 
   const handleFilterChange = (range: { start: Date; end: Date; label: string }) => {
     console.log('Tanlangan sana oralig\'i:', range);
     setDateRange({ start: range.start, end: range.end });
   };
 
-  const metrics = {
-    savdo: { label: 'Jami Savdo', color: '#3b82f6' },
-    daromad: { label: 'Sof Foyda', color: '#8b5cf6' },
-    foyda: { label: 'Kechagi Foyda', color: '#10b981' },
-    zarar: { label: 'Jami Zarar', color: '#ef4444' },
-  };
+  const metricOptions = [
+    { value: 'savdo', label: 'Jami Savdo', color: '#3b82f6' },
+    { value: 'daromad', label: 'Sof Foyda', color: '#8b5cf6' },
+    { value: 'foyda', label: 'Kechagi Foyda', color: '#10b981' },
+    { value: 'zarar', label: 'Jami Zarar', color: '#ef4444' },
+  ];
+
+  const currentMetric = metricOptions.find(m => m.value === chartMetric) || metricOptions[0];
 
   return (
     <div className="space-y-8">
@@ -107,19 +110,11 @@ export default function Dashboard() {
         >
           <div className="mb-6 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-white">Statistika</h3>
-            <div className="relative">
-              <select
-                value={chartMetric}
-                onChange={(e) => setChartMetric(e.target.value)}
-                className="appearance-none rounded-xl border border-white/10 bg-black/20 py-2 pl-4 pr-10 text-sm text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="savdo">Jami Savdo</option>
-                <option value="daromad">Sof Foyda</option>
-                <option value="foyda">Kechagi Foyda</option>
-                <option value="zarar">Jami Zarar</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-slate-400 pointer-events-none" />
-            </div>
+            <MetricSelector 
+              selected={chartMetric}
+              onSelect={setChartMetric}
+              options={metricOptions}
+            />
           </div>
 
           <div className="h-80 w-full">
@@ -127,8 +122,8 @@ export default function Dashboard() {
               <AreaChart data={data}>
                 <defs>
                   <linearGradient id="colorMetric" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={metrics[chartMetric as keyof typeof metrics].color} stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor={metrics[chartMetric as keyof typeof metrics].color} stopOpacity={0}/>
+                    <stop offset="5%" stopColor={currentMetric.color} stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor={currentMetric.color} stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
@@ -141,7 +136,7 @@ export default function Dashboard() {
                 <Area 
                   type="monotone" 
                   dataKey={chartMetric} 
-                  stroke={metrics[chartMetric as keyof typeof metrics].color} 
+                  stroke={currentMetric.color} 
                   strokeWidth={3} 
                   fillOpacity={1} 
                   fill="url(#colorMetric)" 
