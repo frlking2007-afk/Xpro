@@ -101,7 +101,7 @@ export default function DashboardLayout() {
       case '/customers': return 'Mijozlar';
       case '/reports': return 'Xisobotlar';
       case '/settings': return 'Sozlamalar';
-      default: return 'Xpro CRM';
+      default: return 'Xpro';
     }
   };
 
