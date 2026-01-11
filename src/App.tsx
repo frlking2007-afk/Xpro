@@ -5,23 +5,24 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
-import Customers from './pages/Customers';
+import XproPage from './pages/XproPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
     <>
       <BrowserRouter>
-        <Toaster position="top-right" richColors />
+        <Toaster position="top-right" richColors theme="dark" />
         <Routes>
           <Route path="/login" element={<Login />} />
           
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<DashboardLayout />}>
               <Route index element={<Dashboard />} />
-              <Route path="customers" element={<Customers />} />
-              <Route path="reports" element={<div className="p-4">Xisobotlar sahifasi (Tez orada)</div>} />
-              <Route path="settings" element={<div className="p-4">Sozlamalar sahifasi (Tez orada)</div>} />
+              <Route path="xpro" element={<XproPage />} />
+              <Route path="customers" element={<div className="p-4 text-white">Mijozlar sahifasi (Tez orada)</div>} />
+              <Route path="reports" element={<div className="p-4 text-white">Xisobotlar sahifasi (Tez orada)</div>} />
+              <Route path="settings" element={<div className="p-4 text-white">Sozlamalar sahifasi (Tez orada)</div>} />
             </Route>
           </Route>
         </Routes>
