@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Users, ShoppingBag, DollarSign, ArrowUpRight, Wallet, ChevronDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, ShoppingBag, DollarSign, ArrowUpRight, Wallet, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import DateFilter from '../components/DateFilter';
 
 const data = [
-  { name: 'Yan', savdo: 4000, daromad: 2400, foyda: 1800, mijozlar: 400 },
-  { name: 'Fev', savdo: 3000, daromad: 1398, foyda: 1200, mijozlar: 300 },
-  { name: 'Mar', savdo: 2000, daromad: 9800, foyda: 4500, mijozlar: 200 },
-  { name: 'Apr', savdo: 2780, daromad: 3908, foyda: 2100, mijozlar: 278 },
-  { name: 'May', savdo: 1890, daromad: 4800, foyda: 1600, mijozlar: 189 },
-  { name: 'Iyun', savdo: 2390, daromad: 3800, foyda: 1900, mijozlar: 239 },
-  { name: 'Iyul', savdo: 3490, daromad: 4300, foyda: 2800, mijozlar: 349 },
+  { name: 'Yan', savdo: 4000, daromad: 2400, foyda: 1800, zarar: 200 },
+  { name: 'Fev', savdo: 3000, daromad: 1398, foyda: 1200, zarar: 150 },
+  { name: 'Mar', savdo: 2000, daromad: 9800, foyda: 4500, zarar: 300 },
+  { name: 'Apr', savdo: 2780, daromad: 3908, foyda: 2100, zarar: 180 },
+  { name: 'May', savdo: 1890, daromad: 4800, foyda: 1600, zarar: 120 },
+  { name: 'Iyun', savdo: 2390, daromad: 3800, foyda: 1900, zarar: 250 },
+  { name: 'Iyul', savdo: 3490, daromad: 4300, foyda: 2800, zarar: 400 },
 ];
 
 const StatCard = ({ title, value, change, icon: Icon, color }: any) => (
@@ -44,7 +44,7 @@ const StatCard = ({ title, value, change, icon: Icon, color }: any) => (
 
 export default function Dashboard() {
   const [dateRange, setDateRange] = useState({ start: new Date(), end: new Date() });
-  const [chartMetric, setChartMetric] = useState('savdo'); // savdo, daromad, foyda, mijozlar
+  const [chartMetric, setChartMetric] = useState('savdo'); // savdo, daromad, foyda, zarar
 
   const handleFilterChange = (range: { start: Date; end: Date; label: string }) => {
     console.log('Tanlangan sana oralig\'i:', range);
@@ -55,7 +55,7 @@ export default function Dashboard() {
     savdo: { label: 'Jami Savdo', color: '#3b82f6' },
     daromad: { label: 'Sof Foyda', color: '#8b5cf6' },
     foyda: { label: 'Kechagi Foyda', color: '#10b981' },
-    mijozlar: { label: 'Yangi Mijozlar', color: '#ec4899' },
+    zarar: { label: 'Jami Zarar', color: '#ef4444' },
   };
 
   return (
@@ -83,11 +83,11 @@ export default function Dashboard() {
           color="bg-emerald-500" 
         />
         <StatCard 
-          title="Yangi Mijozlar" 
+          title="Jami Zarar" 
           value="3,456" 
           change="+5.1%" 
-          icon={Users}
-          color="bg-pink-500" 
+          icon={TrendingDown}
+          color="bg-red-500" 
         />
         <StatCard 
           title="Sof Foyda" 
@@ -116,7 +116,7 @@ export default function Dashboard() {
                 <option value="savdo">Jami Savdo</option>
                 <option value="daromad">Sof Foyda</option>
                 <option value="foyda">Kechagi Foyda</option>
-                <option value="mijozlar">Yangi Mijozlar</option>
+                <option value="zarar">Jami Zarar</option>
               </select>
               <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-slate-400 pointer-events-none" />
             </div>
