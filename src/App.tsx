@@ -6,6 +6,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import XproPage from './pages/XproPage';
+import Reports from './pages/Reports';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -20,8 +21,8 @@ function App() {
             <Route path="/" element={<DashboardLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="xpro" element={<XproPage />} />
+              <Route path="reports" element={<Reports />} />
               <Route path="customers" element={<div className="p-4 text-white">Mijozlar sahifasi (Tez orada)</div>} />
-              <Route path="reports" element={<div className="p-4 text-white">Xisobotlar sahifasi (Tez orada)</div>} />
               <Route path="settings" element={<div className="p-4 text-white">Sozlamalar sahifasi (Tez orada)</div>} />
             </Route>
           </Route>
