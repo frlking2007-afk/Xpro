@@ -4,6 +4,7 @@ import { Customer } from '../types';
 import { Plus, Search, Edit, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { formatCurrency } from '../utils/currency';
 
 export default function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -131,7 +132,7 @@ export default function Customers() {
                       {customer.last_purchase_date ? format(new Date(customer.last_purchase_date), 'dd.MM.yyyy') : '-'}
                     </td>
                     <td className="px-6 py-4 font-medium">
-                      {customer.total_spent.toLocaleString()} UZS
+                      {formatCurrency(customer.total_spent)}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button className="text-blue-600 hover:text-blue-900">

@@ -8,6 +8,7 @@ import DateFilter from '../components/DateFilter';
 import MetricSelector from '../components/MetricSelector';
 import PasswordModal from '../components/PasswordModal';
 import { verifyPassword, isPasswordSet } from '../utils/password';
+import { formatCurrency } from '../utils/currency';
 
 interface Transaction {
   id: string;
@@ -110,10 +111,18 @@ export default function Reports() {
 
   const performDeleteShift = async (id: string) => {
     try {
-      // First delete transactions linked to this shift (if needed, but usually we keep them or cascade)
-      // For now, just delete the shift. If FK constraint exists, it might fail unless cascade is on.
-      // Assuming cascade is ON or no FK constraint blocking deletion.
-      
+      // First, delete all transactions linked to this shift
+      const { error: transactionsError } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('shift_id', id);
+
+      if (transactionsError) {
+        console.error('Error deleting transactions:', transactionsError);
+        // Continue anyway, maybe transactions were already deleted
+      }
+
+      // Then delete the shift
       const { error } = await supabase
         .from('shifts')
         .delete()
@@ -122,7 +131,7 @@ export default function Reports() {
       if (error) throw error;
 
       setShifts(shifts.filter(s => s.id !== id));
-      toast.success("Smena o'chirildi");
+      toast.success("Smena va unga bog'liq operatsiyalar o'chirildi");
     } catch (error: any) {
       toast.error("O'chirishda xatolik: " + error.message);
     }
@@ -283,9 +292,8 @@ export default function Reports() {
                       </td>
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <span className={`font-mono font-bold text-lg ${item.type === 'xarajat' ? 'text-red-400' : 'text-emerald-400'}`}>
-                          {item.type === 'xarajat' ? '-' : '+'} {item.amount.toLocaleString()}
+                          {item.type === 'xarajat' ? '-' : '+'} {formatCurrency(item.amount)}
                         </span>
-                        <span className="text-xs text-slate-500 ml-1">UZS</span>
                       </td>
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <div className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
@@ -343,10 +351,10 @@ export default function Reports() {
                         )}
                       </td>
                       <td className="px-6 py-4 text-right font-mono text-slate-300">
-                        {shift.starting_balance.toLocaleString()} UZS
+                        {formatCurrency(shift.starting_balance)}
                       </td>
                       <td className="px-6 py-4 text-right font-mono text-white font-bold">
-                        {shift.ending_balance ? `${shift.ending_balance.toLocaleString()} UZS` : '-'}
+                        {shift.ending_balance ? formatCurrency(shift.ending_balance) : '-'}
                       </td>
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <div className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${

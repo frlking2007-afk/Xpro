@@ -8,6 +8,7 @@ import DateFilter from '../components/DateFilter';
 import MetricSelector from '../components/MetricSelector';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
+import { formatCurrency } from '../utils/currency';
 
 const StatCard = ({ title, value, change, icon: Icon, color }: any) => (
   <motion.div 
@@ -203,28 +204,28 @@ export default function Dashboard() {
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard 
           title="Jami Foyda" 
-          value={`${stats.jamiFoyda.toLocaleString()} UZS`}
+          value={formatCurrency(stats.jamiFoyda)}
           change={stats.jamiFoydaChange} 
           icon={DollarSign}
           color="bg-blue-500" 
         />
         <StatCard 
           title="Kechagi Foyda" 
-          value={`${stats.kechagiFoyda.toLocaleString()} UZS`}
+          value={formatCurrency(stats.kechagiFoyda)}
           change={stats.kechagiFoydaChange} 
           icon={Wallet}
           color="bg-emerald-500" 
         />
         <StatCard 
           title="Jami Zarar" 
-          value={`${stats.jamiZarar.toLocaleString()} UZS`}
+          value={formatCurrency(stats.jamiZarar)}
           change={stats.jamiZararChange} 
           icon={TrendingDown}
           color="bg-red-500" 
         />
         <StatCard 
           title="Sof Foyda" 
-          value={`${stats.sofFoyda.toLocaleString()} UZS`}
+          value={formatCurrency(stats.sofFoyda)}
           change={stats.sofFoydaChange} 
           icon={TrendingUp}
           color="bg-purple-500" 
@@ -262,7 +263,7 @@ export default function Dashboard() {
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px' }}
                   itemStyle={{ color: '#fff' }}
-                  formatter={(value: number) => [`${value.toLocaleString()} UZS`, currentMetric.label]}
+                  formatter={(value: number) => [formatCurrency(value), currentMetric.label]}
                 />
                 <Area 
                   type="monotone" 

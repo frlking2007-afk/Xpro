@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal';
 import PasswordModal from '../components/PasswordModal';
 import { verifyPassword, isPasswordSet } from '../utils/password';
+import { formatCurrency, getCurrencySymbol } from '../utils/currency';
 
 const tabs = [
   { id: 'kassa', label: 'KASSA', icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
@@ -95,7 +96,7 @@ const PaymentTab = ({
                 className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-4 pr-12 text-lg font-bold text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
                 required
               />
-              <span className="absolute right-4 top-3.5 text-sm font-medium text-slate-500">UZS</span>
+              <span className="absolute right-4 top-3.5 text-sm font-medium text-slate-500">{getCurrencySymbol()}</span>
             </div>
           </div>
 
@@ -151,7 +152,7 @@ const PaymentTab = ({
                   </div>
                   <div>
                     <p className="font-bold text-white">
-                      {type === 'xarajat' ? '-' : '+'} {item.amount.toLocaleString()} UZS
+                      {type === 'xarajat' ? '-' : '+'} {formatCurrency(item.amount)}
                     </p>
                     <p className="text-xs text-slate-400">
                       {item.description || "Izohsiz"} • {format(new Date(item.date), 'HH:mm')}
@@ -449,7 +450,7 @@ export default function XproOperations() {
                 {activeTab === 'xarajat' ? 'Jami xarajat' : 'Jami kirim'}
               </span>
               <span className="text-3xl font-mono font-bold text-white tracking-tight">
-                {calculateTabBalance().toLocaleString()} <span className="text-lg text-slate-500">UZS</span>
+                {formatCurrency(calculateTabBalance())}
               </span>
             </div>
             {activeTab === 'xarajat' && (
