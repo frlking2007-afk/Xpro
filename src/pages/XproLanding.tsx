@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Zap, ArrowRight, Wallet, TrendingUp, ShieldCheck, Play, Lock } from 'lucide-react';
+import { Zap, ArrowRight, Wallet, TrendingUp, ShieldCheck, Play, Lock, Plus } from 'lucide-react';
 import { useShift } from '../hooks/useShift';
 
 export default function XproLanding() {
@@ -20,6 +20,16 @@ export default function XproLanding() {
       if (shift) {
         navigate('/xpro/operations');
       }
+    }
+    setIsStarting(false);
+  };
+
+  const handleNewShift = async () => {
+    setIsStarting(true);
+    // Always open a new shift, even if one is already open
+    const shift = await openShift(0); // Default 0 starting balance for now
+    if (shift) {
+      navigate('/xpro/operations');
     }
     setIsStarting(false);
   };
@@ -61,16 +71,31 @@ export default function XproLanding() {
             </span>
           </div>
 
-          <button
-            onClick={handleStart}
-            disabled={loading || isStarting}
-            className="group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl bg-white px-8 py-4 text-lg font-bold text-slate-900 transition-all hover:bg-slate-100 hover:scale-105 hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            <span className="relative z-10 flex items-center gap-2">
-              {currentShift ? 'Davom Ettirish' : 'Smenani Boshlash'}
-              {currentShift ? <ArrowRight className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-            </span>
-          </button>
+          <div className="flex items-center gap-4 justify-center">
+            <button
+              onClick={handleStart}
+              disabled={loading || isStarting}
+              className="group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl bg-white px-8 py-4 text-lg font-bold text-slate-900 transition-all hover:bg-slate-100 hover:scale-105 hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                {currentShift ? 'Davom Ettirish' : 'Smenani Boshlash'}
+                {currentShift ? <ArrowRight className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+              </span>
+            </button>
+            
+            {currentShift && (
+              <button
+                onClick={handleNewShift}
+                disabled={loading || isStarting}
+                className="group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl border-2 border-blue-500/50 bg-blue-500/10 px-8 py-4 text-lg font-bold text-blue-400 transition-all hover:bg-blue-500/20 hover:scale-105 hover:shadow-[0_0_40px_-10px_rgba(59,130,246,0.3)] active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  Yangi Smena Ochish
+                  <Plus className="h-5 w-5" />
+                </span>
+              </button>
+            )}
+          </div>
 
           {/* Features Grid */}
           <div className="mt-16 grid gap-6 sm:grid-cols-3">
