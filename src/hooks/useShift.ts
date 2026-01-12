@@ -46,39 +46,36 @@ export function useShift() {
   const openShift = async (startingBalance: number = 0, shiftName?: string) => {
     try {
       const now = new Date();
-      const defaultName = shiftName || `Smena ${now.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}`;
       
-      // Try to insert with name first, if it fails, insert without name
-      let insertData: any = {
+      // Base insert data without name field
+      const insertData: any = {
         status: 'open',
         starting_balance: startingBalance,
         opened_at: now.toISOString(),
       };
 
-      // Try to add name field (only if column exists in database)
-      // We'll try with name first, and if it fails, retry without name
+      // Try to insert without name first (safer approach)
+      // If name column exists, we can add it later via migration
       let { data, error } = await supabase
         .from('shifts')
-        .insert([
-          {
-            ...insertData,
-            name: defaultName,
-          }
-        ])
+        .insert([insertData])
         .select()
         .single();
 
-      // If error is about missing column, retry without name
-      if (error && (error.message.includes('name') || error.message.includes('column'))) {
-        const { data: retryData, error: retryError } = await supabase
-          .from('shifts')
-          .insert([insertData])
-          .select()
-          .single();
+      // If successful but name column might exist, try to update with name
+      if (!error && data) {
+        const defaultName = shiftName || `Smena ${now.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}`;
         
-        if (retryError) throw retryError;
-        data = retryData;
-        error = null;
+        // Try to update with name (silently fail if column doesn't exist)
+        try {
+          await supabase
+            .from('shifts')
+            .update({ name: defaultName })
+            .eq('id', data.id);
+        } catch (updateError) {
+          // Ignore update error if name column doesn't exist
+          console.log('Name column not available, skipping name update');
+        }
       }
 
       if (error) throw error;
@@ -86,6 +83,7 @@ export function useShift() {
       toast.success('Yangi smena ochildi!');
       return data;
     } catch (error: any) {
+      console.error('Error opening shift:', error);
       toast.error('Smena ochishda xatolik: ' + error.message);
       return null;
     }
