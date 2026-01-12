@@ -18,25 +18,23 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
     loadUserProfile();
     
     // Listen for profile updates from Settings page
-    const handleStorageChange = () => {
+    const handleProfileUpdate = () => {
       loadUserProfile();
     };
     
-    window.addEventListener('storage', handleStorageChange);
-    // Also listen for custom event
-    window.addEventListener('profileUpdated', handleStorageChange);
+    // Listen for custom event
+    window.addEventListener('profileUpdated', handleProfileUpdate);
     
     // Check localStorage periodically (fallback)
     const interval = setInterval(() => {
       const savedName = localStorage.getItem('user_full_name');
-      if (savedName && savedName !== userProfile.fullName) {
+      if (savedName) {
         loadUserProfile();
       }
-    }, 1000);
+    }, 2000);
     
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('profileUpdated', handleStorageChange);
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
       clearInterval(interval);
     };
   }, []);
