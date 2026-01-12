@@ -65,12 +65,6 @@ const PaymentTab = ({
     <div className="space-y-8">
       {/* Input Form */}
       <div className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm">
-        <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-white">
-          <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${bg} ${color}`}>
-            <Plus className="h-5 w-5" />
-          </div>
-          {type === 'xarajat' ? 'Yangi xarajat' : 'Yangi kirim'}
-        </h3>
         
         <form onSubmit={handleSave} className="space-y-4">
           <div>
