@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight, Lock, Calendar } from 'lucide-react';
+import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight, Lock, Calendar, FolderPlus, Trash } from 'lucide-react';
 import { format } from 'date-fns';
 import { uz } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -182,6 +182,7 @@ export default function XproOperations() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
+  const [isClearPasswordModalOpen, setIsClearPasswordModalOpen] = useState(false);
 
   const activeTabInfo = tabs.find(t => t.id === activeTab);
 
@@ -280,6 +281,56 @@ export default function XproOperations() {
       setTransactionToDelete(null);
     }
     setIsPasswordModalOpen(false);
+  };
+
+  const handleClearAllTransactions = () => {
+    // Check if password is set
+    if (isPasswordSet()) {
+      setIsClearPasswordModalOpen(true);
+      return;
+    }
+
+    // If no password is set, show confirmation and clear directly
+    if (!window.confirm("Barcha xarajatlarni o'chirishni tasdiqlaysizmi? Bu amalni ortga qaytarib bo'lmaydi.")) {
+      return;
+    }
+
+    performClearAll();
+  };
+
+  const performClearAll = async () => {
+    try {
+      const xarajatTransactions = transactions.filter(t => t.type === 'xarajat');
+      
+      if (xarajatTransactions.length === 0) {
+        toast.info('O\'chirish uchun xarajatlar mavjud emas');
+        return;
+      }
+
+      // Delete all xarajat transactions
+      const ids = xarajatTransactions.map(t => t.id);
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .in('id', ids);
+
+      if (error) throw error;
+
+      setTransactions(transactions.filter(t => t.type !== 'xarajat'));
+      toast.success(`Barcha xarajatlar o'chirildi (${xarajatTransactions.length} ta)`);
+    } catch (error: any) {
+      toast.error('Tozalashda xatolik: ' + error.message);
+    }
+  };
+
+  const handleClearPasswordConfirm = (password: string) => {
+    if (!verifyPassword(password)) {
+      toast.error('Noto\'g\'ri parol');
+      return;
+    }
+
+    performClearAll();
+    setIsClearPasswordModalOpen(false);
   };
 
   const handleCloseShiftConfirm = async () => {
@@ -392,13 +443,36 @@ export default function XproOperations() {
             </h2>
             <p className="text-sm text-slate-400 mt-1">Operatsiyalar boshqaruvi</p>
           </div>
-          <div className="flex flex-col items-end">
-            <span className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
-              {activeTab === 'xarajat' ? 'Jami xarajat' : 'Jami kirim'}
-            </span>
-            <span className="text-3xl font-mono font-bold text-white tracking-tight">
-              {calculateTabBalance().toLocaleString()} <span className="text-lg text-slate-500">UZS</span>
-            </span>
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col items-end">
+              <span className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
+                {activeTab === 'xarajat' ? 'Jami xarajat' : 'Jami kirim'}
+              </span>
+              <span className="text-3xl font-mono font-bold text-white tracking-tight">
+                {calculateTabBalance().toLocaleString()} <span className="text-lg text-slate-500">UZS</span>
+              </span>
+            </div>
+            {activeTab === 'xarajat' && (
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => {
+                    // Bo'lim qo'shish funksiyasi
+                    toast.info('Bo\'lim qo\'shish funksiyasi tez orada qo\'shiladi');
+                  }}
+                  className="flex items-center gap-2 rounded-xl border border-blue-500/50 bg-blue-500/10 px-4 py-2.5 text-sm font-medium text-blue-400 hover:bg-blue-500/20 transition-colors"
+                >
+                  <FolderPlus className="h-4 w-4" />
+                  Bo'lim qo'shish
+                </button>
+                <button
+                  onClick={handleClearAllTransactions}
+                  className="flex items-center gap-2 rounded-xl border border-red-500/50 bg-red-500/10 px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/20 transition-colors"
+                >
+                  <Trash className="h-4 w-4" />
+                  Tozalash
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -440,6 +514,14 @@ export default function XproOperations() {
         onConfirm={handlePasswordConfirm}
         title="Parolni kiriting"
         message="Operatsiyani o'chirish uchun parolni kiriting"
+      />
+
+      <PasswordModal
+        isOpen={isClearPasswordModalOpen}
+        onClose={() => setIsClearPasswordModalOpen(false)}
+        onConfirm={handleClearPasswordConfirm}
+        title="Parolni kiriting"
+        message="Barcha xarajatlarni o'chirish uchun parolni kiriting"
       />
     </div>
   );
