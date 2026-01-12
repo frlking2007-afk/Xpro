@@ -6,6 +6,8 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import DateFilter from '../components/DateFilter';
 import MetricSelector from '../components/MetricSelector';
+import PasswordModal from '../components/PasswordModal';
+import { verifyPassword, isPasswordSet } from '../utils/password';
 
 interface Transaction {
   id: string;
@@ -37,6 +39,8 @@ export default function Reports() {
   // Shift States
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [loadingShifts, setLoadingShifts] = useState(true);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [shiftToDelete, setShiftToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (activeTab === 'transactions') {
@@ -89,10 +93,22 @@ export default function Reports() {
   };
 
   const handleDeleteShift = async (id: string) => {
+    // Check if password is set
+    if (isPasswordSet()) {
+      setShiftToDelete(id);
+      setIsPasswordModalOpen(true);
+      return;
+    }
+
+    // If no password is set, show confirmation and delete directly
     if (!window.confirm("Smenani o'chirishni tasdiqlaysizmi? Bu amalni ortga qaytarib bo'lmaydi.")) {
       return;
     }
 
+    await performDeleteShift(id);
+  };
+
+  const performDeleteShift = async (id: string) => {
     try {
       // First delete transactions linked to this shift (if needed, but usually we keep them or cascade)
       // For now, just delete the shift. If FK constraint exists, it might fail unless cascade is on.
@@ -110,6 +126,19 @@ export default function Reports() {
     } catch (error: any) {
       toast.error("O'chirishda xatolik: " + error.message);
     }
+  };
+
+  const handlePasswordConfirm = (password: string) => {
+    if (!verifyPassword(password)) {
+      toast.error('Noto\'g\'ri parol');
+      return;
+    }
+
+    if (shiftToDelete) {
+      performDeleteShift(shiftToDelete);
+      setShiftToDelete(null);
+    }
+    setIsPasswordModalOpen(false);
   };
 
   const filteredTransactions = transactions.filter(t => 
@@ -353,6 +382,17 @@ export default function Reports() {
           </span>
         </div>
       </motion.div>
+
+      <PasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => {
+          setIsPasswordModalOpen(false);
+          setShiftToDelete(null);
+        }}
+        onConfirm={handlePasswordConfirm}
+        title="Parolni kiriting"
+        message="Smenani o'chirish uchun parolni kiriting"
+      />
     </div>
   );
 }

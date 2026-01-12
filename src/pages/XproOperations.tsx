@@ -8,6 +8,8 @@ import { supabase } from '../lib/supabase';
 import { useShift } from '../hooks/useShift';
 import { useNavigate } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal';
+import PasswordModal from '../components/PasswordModal';
+import { verifyPassword, isPasswordSet } from '../utils/password';
 
 const tabs = [
   { id: 'kassa', label: 'KASSA', icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
@@ -178,6 +180,8 @@ export default function XproOperations() {
   const { currentShift, closeShift, loading: shiftLoading } = useShift();
   const navigate = useNavigate();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
 
   const activeTabInfo = tabs.find(t => t.id === activeTab);
 
@@ -238,6 +242,18 @@ export default function XproOperations() {
   };
 
   const handleDeleteTransaction = async (id: string) => {
+    // Check if password is set
+    if (isPasswordSet()) {
+      setTransactionToDelete(id);
+      setIsPasswordModalOpen(true);
+      return;
+    }
+
+    // If no password is set, delete directly
+    await performDelete(id);
+  };
+
+  const performDelete = async (id: string) => {
     try {
       const { error } = await supabase
         .from('transactions')
@@ -251,6 +267,19 @@ export default function XproOperations() {
     } catch (error: any) {
       toast.error('O\'chirishda xatolik: ' + error.message);
     }
+  };
+
+  const handlePasswordConfirm = (password: string) => {
+    if (!verifyPassword(password)) {
+      toast.error('Noto\'g\'ri parol');
+      return;
+    }
+
+    if (transactionToDelete) {
+      performDelete(transactionToDelete);
+      setTransactionToDelete(null);
+    }
+    setIsPasswordModalOpen(false);
   };
 
   const handleCloseShiftConfirm = async () => {
@@ -400,6 +429,17 @@ export default function XproOperations() {
         message="Haqiqatan ham smenani yopmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi."
         confirmText="Yopish"
         isDanger={true}
+      />
+
+      <PasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => {
+          setIsPasswordModalOpen(false);
+          setTransactionToDelete(null);
+        }}
+        onConfirm={handlePasswordConfirm}
+        title="Parolni kiriting"
+        message="Operatsiyani o'chirish uchun parolni kiriting"
       />
     </div>
   );

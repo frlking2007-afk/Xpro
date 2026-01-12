@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { User, Moon, Sun, Palette, DollarSign, Save, Upload, X } from 'lucide-react';
+import { User, Moon, Sun, Palette, DollarSign, Save, Upload, X, Lock, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
+import { saveDeletePassword, getDeletePassword, clearPassword } from '../utils/password';
 
 type Theme = 'light' | 'dark' | 'blue';
 type Currency = 'UZS' | 'USD' | 'EUR';
@@ -14,6 +15,9 @@ export default function Settings() {
   const [theme, setTheme] = useState<Theme>('blue');
   const [currency, setCurrency] = useState<Currency>('UZS');
   const [loading, setLoading] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -56,6 +60,13 @@ export default function Settings() {
       const savedCurrency = localStorage.getItem('currency') as Currency;
       if (savedCurrency && ['UZS', 'USD', 'EUR'].includes(savedCurrency)) {
         setCurrency(savedCurrency);
+      }
+
+      // Load delete password from localStorage
+      const savedPassword = getDeletePassword();
+      if (savedPassword) {
+        setDeletePassword(savedPassword);
+        setConfirmPassword(savedPassword);
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -153,6 +164,15 @@ export default function Settings() {
       // Save theme and currency
       applyTheme(theme);
       localStorage.setItem('currency', currency);
+      
+      // Save delete password if set
+      if (deletePassword && deletePassword === confirmPassword) {
+        saveDeletePassword(deletePassword);
+      } else if (deletePassword && deletePassword !== confirmPassword) {
+        toast.error('Parollar mos kelmaydi');
+        setLoading(false);
+        return;
+      }
       
       // Save full name to localStorage for sidebar
       localStorage.setItem('user_full_name', fullName);
@@ -326,6 +346,75 @@ export default function Settings() {
               )}
             </button>
           ))}
+        </div>
+      </motion.div>
+
+      {/* Delete Password Settings */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="rounded-3xl border border-white/5 bg-white/5 p-6 backdrop-blur-sm"
+      >
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/20">
+            <Lock className="h-5 w-5 text-red-400" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-white">O'chirish Paroli</h3>
+            <p className="text-xs text-slate-400">O'chirish operatsiyalari uchun parol</p>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-slate-400 uppercase tracking-wider">
+              Yangi Parol
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Parolni kiriting"
+                className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-4 pr-12 text-sm text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 hover:bg-white/5 hover:text-white transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-slate-400 uppercase tracking-wider">
+              Parolni Tasdiqlash
+            </label>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Parolni qayta kiriting"
+              className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 px-4 text-sm text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+            />
+          </div>
+
+          {getDeletePassword() && (
+            <button
+              onClick={() => {
+                clearPassword();
+                setDeletePassword('');
+                setConfirmPassword('');
+                toast.success('Parol o\'chirildi');
+              }}
+              className="w-full rounded-xl border border-red-500/20 bg-red-500/10 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/20 transition-colors"
+            >
+              Parolni o'chirish
+            </button>
+          )}
         </div>
       </motion.div>
 
