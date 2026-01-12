@@ -194,7 +194,7 @@ export default function XproOperations() {
   
   // Get shift_id from URL params
   const viewShiftId = searchParams.get('shift_id');
-  const [viewShift, setViewShift] = useState<{ id: string; status: 'open' | 'closed' } | null>(null);
+  const [viewShift, setViewShift] = useState<{ id: string; status: 'open' | 'closed'; opened_at: string; closed_at: string | null } | null>(null);
   const [isViewMode, setIsViewMode] = useState(false);
 
   const activeTabInfo = tabs.find(t => t.id === activeTab);
@@ -213,14 +213,19 @@ export default function XproOperations() {
     try {
       const { data, error } = await supabase
         .from('shifts')
-        .select('id, status')
+        .select('id, status, opened_at, closed_at')
         .eq('id', shiftId)
         .single();
 
       if (error) throw error;
 
       if (data) {
-        setViewShift(data);
+        setViewShift({
+          id: data.id,
+          status: data.status,
+          opened_at: data.opened_at,
+          closed_at: data.closed_at
+        });
         setIsViewMode(true);
         fetchTransactionsForShift(shiftId);
       }
@@ -434,9 +439,10 @@ export default function XproOperations() {
 
   const filteredTransactions = transactions.filter(t => t.type === activeTab);
 
-  if (shiftLoading) return <div className="p-8 text-white">Yuklanmoqda...</div>;
+  if (shiftLoading && !isViewMode) return <div className="p-8 text-white">Yuklanmoqda...</div>;
 
-  if (!currentShift) {
+  // Show "Smena ochiq emas" only if NOT in view mode and no current shift
+  if (!currentShift && !isViewMode) {
     return (
       <div className="flex h-full flex-col items-center justify-center py-20 text-center">
         <h2 className="text-2xl font-bold text-white mb-4">Smena ochiq emas</h2>
@@ -457,10 +463,16 @@ export default function XproOperations() {
       <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-slate-300 backdrop-blur-sm">
           <Calendar className="h-4 w-4 text-blue-400" />
-          <span>Smena: <span className="text-white">{format(new Date(currentShift.opened_at), 'd-MMMM yyyy', { locale: uz })}</span></span>
+          <span>Smena: <span className="text-white">
+            {isViewMode && viewShift 
+              ? format(new Date(viewShift.opened_at), 'd-MMMM yyyy', { locale: uz })
+              : currentShift 
+                ? format(new Date(currentShift.opened_at), 'd-MMMM yyyy', { locale: uz })
+                : ''}
+          </span></span>
         </div>
         
-        {activeTab === 'kassa' && (
+        {activeTab === 'kassa' && !isViewMode && (
           <button
             onClick={() => setIsConfirmOpen(true)}
             className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm font-bold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
