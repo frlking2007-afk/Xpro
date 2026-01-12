@@ -290,16 +290,26 @@ export default function XproOperations() {
 
   return (
     <div className="space-y-8">
-      {/* Shift Date Header - Centered */}
-      <div className="flex items-center justify-center py-2">
+      {/* Shift Date Header - Centered with Close Shift Button */}
+      <div className="flex items-center justify-between py-2">
         <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-slate-300 backdrop-blur-sm">
           <Calendar className="h-4 w-4 text-blue-400" />
           <span>Smena: <span className="text-white">{format(new Date(currentShift.opened_at), 'd-MMMM yyyy', { locale: uz })}</span></span>
         </div>
+        
+        {activeTab === 'kassa' && (
+          <button
+            onClick={() => setIsConfirmOpen(true)}
+            className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm font-bold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
+          >
+            <Lock className="h-4 w-4" />
+            Smenani Yopish
+          </button>
+        )}
       </div>
 
       {/* Top Navigation Tabs */}
-      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-start">
         <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 backdrop-blur-xl">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -326,16 +336,6 @@ export default function XproOperations() {
             );
           })}
         </div>
-
-        {activeTab === 'kassa' && (
-          <button
-            onClick={() => setIsConfirmOpen(true)}
-            className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm font-bold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
-          >
-            <Lock className="h-4 w-4" />
-            Smenani Yopish
-          </button>
-        )}
       </div>
 
       {/* Content Area */}
