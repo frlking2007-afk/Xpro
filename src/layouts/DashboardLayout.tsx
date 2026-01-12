@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, BarChart3, Settings, Menu, X, LogOut, Zap, Calendar } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, Settings, Menu, X, LogOut, Zap, Calendar, Clock } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
@@ -98,6 +98,15 @@ export default function DashboardLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
   const { currentShift } = useShift();
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const getPageTitle = () => {
     switch (location.pathname) {
@@ -125,13 +134,22 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Shift Date Display (Only if shift is open) */}
-            {currentShift && (
-              <div className="hidden sm:flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-1.5 text-sm font-medium text-blue-400">
-                <Calendar className="h-4 w-4" />
-                <span>{format(new Date(currentShift.opened_at), 'd-MMMM yyyy', { locale: uz })}</span>
+            {/* Shift Date & Time Display */}
+            <div className="hidden sm:flex items-center gap-3">
+              {/* Time */}
+              <div className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/50 px-4 py-1.5 text-sm font-medium text-slate-300">
+                <Clock className="h-4 w-4 text-blue-400" />
+                <span className="font-mono">{format(currentTime, 'HH:mm:ss')}</span>
               </div>
-            )}
+
+              {/* Date (Only if shift is open) */}
+              {currentShift && (
+                <div className="flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-1.5 text-sm font-medium text-blue-400">
+                  <Calendar className="h-4 w-4" />
+                  <span>{format(new Date(currentShift.opened_at), 'd-MMMM yyyy', { locale: uz })}</span>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
