@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Download, Calendar, ArrowUpRight, ArrowDownRight, Wallet, CreditCard, Banknote, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { Search, Filter, Download, Calendar, ArrowUpRight, ArrowDownRight, Wallet, CreditCard, Banknote, Clock, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import DateFilter from '../components/DateFilter';
 import MetricSelector from '../components/MetricSelector';
 
@@ -84,6 +85,30 @@ export default function Reports() {
       console.error('Error fetching shifts:', error);
     } finally {
       setLoadingShifts(false);
+    }
+  };
+
+  const handleDeleteShift = async (id: string) => {
+    if (!window.confirm("Smenani o'chirishni tasdiqlaysizmi? Bu amalni ortga qaytarib bo'lmaydi.")) {
+      return;
+    }
+
+    try {
+      // First delete transactions linked to this shift (if needed, but usually we keep them or cascade)
+      // For now, just delete the shift. If FK constraint exists, it might fail unless cascade is on.
+      // Assuming cascade is ON or no FK constraint blocking deletion.
+      
+      const { error } = await supabase
+        .from('shifts')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setShifts(shifts.filter(s => s.id !== id));
+      toast.success("Smena o'chirildi");
+    } catch (error: any) {
+      toast.error("O'chirishda xatolik: " + error.message);
     }
   };
 
@@ -261,16 +286,17 @@ export default function Reports() {
                   <th className="px-6 py-4 text-right">Boshlang'ich Balans</th>
                   <th className="px-6 py-4 text-right">Yakuniy Balans</th>
                   <th className="px-6 py-4 text-right">Holat</th>
+                  <th className="px-6 py-4 text-right">Amallar</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {loadingShifts ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-slate-500">Yuklanmoqda...</td>
+                    <td colSpan={6} className="px-6 py-8 text-center text-slate-500">Yuklanmoqda...</td>
                   </tr>
                 ) : shifts.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-slate-500">Smenalar topilmadi</td>
+                    <td colSpan={6} className="px-6 py-8 text-center text-slate-500">Smenalar topilmadi</td>
                   </tr>
                 ) : (
                   shifts.map((shift) => (
@@ -306,6 +332,15 @@ export default function Reports() {
                           {shift.status === 'open' ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
                           {shift.status === 'open' ? 'Ochiq' : 'Yopiq'}
                         </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button 
+                          onClick={() => handleDeleteShift(shift.id)}
+                          className="rounded-lg p-2 text-slate-500 opacity-0 transition-all hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100"
+                          title="Smenani o'chirish"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </td>
                     </tr>
                   ))
