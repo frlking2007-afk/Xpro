@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import DateFilter from '../components/DateFilter';
 import MetricSelector from '../components/MetricSelector';
 import PasswordModal from '../components/PasswordModal';
@@ -28,6 +29,7 @@ interface Shift {
 }
 
 export default function Reports() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'transactions' | 'shifts'>('transactions');
   
   // Transaction States
@@ -346,7 +348,11 @@ export default function Reports() {
                   </tr>
                 ) : (
                   shifts.map((shift) => (
-                    <tr key={shift.id} className="group hover:bg-white/5 transition-colors">
+                    <tr 
+                      key={shift.id} 
+                      onClick={() => navigate(`/xpro/operations?shift_id=${shift.id}`)}
+                      className="group hover:bg-white/5 transition-colors cursor-pointer"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="font-medium text-white">
                           {shift.name || `Smena ${format(new Date(shift.opened_at), 'dd.MM.yyyy HH:mm')}`}
@@ -380,7 +386,10 @@ export default function Reports() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button 
-                          onClick={() => handleDeleteShift(shift.id)}
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent row click
+                            handleDeleteShift(shift.id);
+                          }}
                           className="rounded-lg p-2 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-400"
                           title="Smenani o'chirish"
                         >

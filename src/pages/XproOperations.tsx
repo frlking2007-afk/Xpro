@@ -6,7 +6,7 @@ import { uz } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { useShift } from '../hooks/useShift';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal';
 import PasswordModal from '../components/PasswordModal';
 import { verifyPassword, isPasswordSet } from '../utils/password';
@@ -37,7 +37,8 @@ const PaymentTab = ({
   onAddTransaction,
   onDeleteTransaction,
   loading,
-  shiftId
+  shiftId,
+  isReadOnly = false
 }: { 
   type: string, 
   color: string, 
@@ -46,7 +47,8 @@ const PaymentTab = ({
   onAddTransaction: (amount: number, description: string) => void,
   onDeleteTransaction: (id: string) => void,
   loading: boolean,
-  shiftId: string | undefined
+  shiftId: string | undefined,
+  isReadOnly?: boolean
 }) => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -93,7 +95,8 @@ const PaymentTab = ({
                 value={amount}
                 onChange={handleAmountChange}
                 placeholder="0"
-                className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-4 pr-12 text-lg font-bold text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+                disabled={isReadOnly}
+                className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-4 pr-12 text-lg font-bold text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 required
               />
               <span className="absolute right-4 top-3.5 text-sm font-medium text-slate-500">{getCurrencySymbol()}</span>
@@ -107,21 +110,22 @@ const PaymentTab = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Izoh yozing..."
-              className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 px-4 text-sm text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+              disabled={isReadOnly}
+              className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 px-4 text-sm text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || isReadOnly}
             className={`group mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white transition-all shadow-lg ${
               type === 'xarajat' 
                 ? 'bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 shadow-red-500/20' 
                 : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-blue-500/20'
-            } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            } ${loading || isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            {loading ? 'Saqlanmoqda...' : 'Saqlash'}
-            {!loading && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
+            {loading ? 'Saqlanmoqda...' : isReadOnly ? 'Faqat ko\'rish rejimi' : 'Saqlash'}
+            {!loading && !isReadOnly && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
           </button>
         </form>
       </div>
@@ -159,12 +163,14 @@ const PaymentTab = ({
                     </p>
                   </div>
                 </div>
-                <button 
-                  onClick={() => onDeleteTransaction(item.id)}
-                  className="rounded-lg p-2 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-400"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                {!isReadOnly && (
+                  <button 
+                    onClick={() => onDeleteTransaction(item.id)}
+                    className="rounded-lg p-2 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-400"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </motion.div>
             ))
           )}
@@ -180,19 +186,76 @@ export default function XproOperations() {
   const [loading, setLoading] = useState(false);
   const { currentShift, closeShift, loading: shiftLoading } = useShift();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [isClearPasswordModalOpen, setIsClearPasswordModalOpen] = useState(false);
+  
+  // Get shift_id from URL params
+  const viewShiftId = searchParams.get('shift_id');
+  const [viewShift, setViewShift] = useState<{ id: string; status: 'open' | 'closed' } | null>(null);
+  const [isViewMode, setIsViewMode] = useState(false);
 
   const activeTabInfo = tabs.find(t => t.id === activeTab);
 
-  // Fetch transactions ONLY for current shift
+  // Fetch view shift if shift_id is provided
   useEffect(() => {
-    if (currentShift) {
+    if (viewShiftId) {
+      fetchViewShift(viewShiftId);
+    } else {
+      setViewShift(null);
+      setIsViewMode(false);
+    }
+  }, [viewShiftId]);
+
+  const fetchViewShift = async (shiftId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('shifts')
+        .select('id, status')
+        .eq('id', shiftId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setViewShift(data);
+        setIsViewMode(true);
+        fetchTransactionsForShift(shiftId);
+      }
+    } catch (error: any) {
+      console.error('Error fetching view shift:', error);
+      toast.error('Smena topilmadi');
+      navigate('/reports');
+    }
+  };
+
+  const fetchTransactionsForShift = async (shiftId: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('shift_id', shiftId)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+      setTransactions(data || []);
+    } catch (error: any) {
+      console.error('Error fetching transactions:', error);
+      toast.error('Operatsiyalarni yuklashda xatolik');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch transactions ONLY for current shift (if not in view mode)
+  useEffect(() => {
+    if (currentShift && !isViewMode) {
       fetchTransactions();
     }
-  }, [currentShift]);
+  }, [currentShift, isViewMode]);
 
   // Listen for currency updates
   useEffect(() => {
@@ -487,6 +550,37 @@ export default function XproOperations() {
           </div>
         </div>
 
+        {/* View Mode Banner */}
+        {isViewMode && viewShift && (
+          <div className="mb-6 rounded-xl border border-blue-500/20 bg-blue-500/10 p-4 backdrop-blur-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/20">
+                  <History className="h-5 w-5 text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white">
+                    {viewShift.status === 'closed' ? 'Yopiq Smena - Faqat Ko\'rish' : 'Ochik Smena - Ko\'rish'}
+                  </h3>
+                  <p className="text-sm text-slate-400">
+                    {viewShift.status === 'closed' 
+                      ? 'Bu smena yopiq. Ma\'lumot kiritish mumkin emas.' 
+                      : 'Bu smenani ko\'rish rejimida ko\'ryapsiz.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  navigate('/reports');
+                }}
+                className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10 transition-colors"
+              >
+                Xisobotlarga qaytish
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Tab Specific Content */}
         {['kassa', 'click', 'uzcard', 'humo', 'xarajat'].includes(activeTab) && activeTabInfo ? (
           <PaymentTab 
@@ -497,7 +591,8 @@ export default function XproOperations() {
             onAddTransaction={handleAddTransaction}
             onDeleteTransaction={handleDeleteTransaction}
             loading={loading}
-            shiftId={currentShift.id}
+            shiftId={isViewMode ? viewShift?.id : currentShift?.id}
+            isReadOnly={isViewMode}
           />
         ) : (
           <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-black/20 text-slate-500">
