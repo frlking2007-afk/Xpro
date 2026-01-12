@@ -309,7 +309,7 @@ export default function XproOperations() {
       </div>
 
       {/* Top Navigation Tabs */}
-      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-start">
+      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-center">
         <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 backdrop-blur-xl">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
