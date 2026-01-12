@@ -1,10 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Zap, ArrowRight, Wallet, TrendingUp, ShieldCheck } from 'lucide-react';
+import { Zap, ArrowRight, Wallet, TrendingUp, ShieldCheck, Play, Lock } from 'lucide-react';
+import { useShift } from '../hooks/useShift';
 
 export default function XproLanding() {
   const navigate = useNavigate();
+  const { currentShift, loading, openShift } = useShift();
+  const [isStarting, setIsStarting] = useState(false);
+
+  const handleStart = async () => {
+    setIsStarting(true);
+    if (currentShift) {
+      // Shift already open, just navigate
+      navigate('/xpro/operations');
+    } else {
+      // Open new shift
+      const shift = await openShift(0); // Default 0 starting balance for now
+      if (shift) {
+        navigate('/xpro/operations');
+      }
+    }
+    setIsStarting(false);
+  };
 
   return (
     <div className="flex h-full flex-col items-center justify-center py-12">
@@ -24,17 +42,33 @@ export default function XproLanding() {
             </div>
           </div>
 
-          <h1 className="mb-10 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+          <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
             Xpro <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Moliya</span>
           </h1>
+          
+          <div className="mb-10 flex justify-center">
+            <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border ${
+              loading ? 'bg-slate-800 border-slate-700 text-slate-400' :
+              currentShift 
+                ? 'bg-green-500/10 border-green-500/20 text-green-400' 
+                : 'bg-slate-800 border-slate-700 text-slate-400'
+            }`}>
+              <span className={`mr-1.5 h-2 w-2 rounded-full ${
+                loading ? 'bg-slate-500' :
+                currentShift ? 'bg-green-500 animate-pulse' : 'bg-slate-500'
+              }`}></span>
+              {loading ? 'Yuklanmoqda...' : currentShift ? 'Smena Ochiq' : 'Smena Yopiq'}
+            </span>
+          </div>
 
           <button
-            onClick={() => navigate('/xpro/operations')}
-            className="group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl bg-white px-8 py-4 text-lg font-bold text-slate-900 transition-all hover:bg-slate-100 hover:scale-105 hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] active:scale-95"
+            onClick={handleStart}
+            disabled={loading || isStarting}
+            className="group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl bg-white px-8 py-4 text-lg font-bold text-slate-900 transition-all hover:bg-slate-100 hover:scale-105 hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             <span className="relative z-10 flex items-center gap-2">
-              Xisobotni Boshlash
-              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+              {currentShift ? 'Davom Ettirish' : 'Smenani Boshlash'}
+              {currentShift ? <ArrowRight className="h-5 w-5" /> : <Play className="h-5 w-5" />}
             </span>
           </button>
 

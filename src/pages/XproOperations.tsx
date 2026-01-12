@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight } from 'lucide-react';
+import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight, Lock } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
+import { useShift } from '../hooks/useShift';
+import { useNavigate } from 'react-router-dom';
 
 const tabs = [
   { id: 'kassa', label: 'KASSA', icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
@@ -29,7 +31,8 @@ const PaymentTab = ({
   transactions, 
   onAddTransaction,
   onDeleteTransaction,
-  loading 
+  loading,
+  shiftId
 }: { 
   type: string, 
   color: string, 
@@ -37,7 +40,8 @@ const PaymentTab = ({
   transactions: Transaction[], 
   onAddTransaction: (amount: number, description: string) => void,
   onDeleteTransaction: (id: string) => void,
-  loading: boolean
+  loading: boolean,
+  shiftId: string | undefined
 }) => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -45,6 +49,10 @@ const PaymentTab = ({
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount) return;
+    if (!shiftId) {
+      toast.error("Smena ochiq emas! Iltimos, avval smenani oching.");
+      return;
+    }
 
     onAddTransaction(parseFloat(amount.replace(/[^0-9]/g, '')), description);
     setAmount('');
@@ -108,7 +116,7 @@ const PaymentTab = ({
       <div>
         <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-400 uppercase tracking-wider">
           <History className="h-4 w-4" />
-          Oxirgi operatsiyalar
+          Bugungi operatsiyalar
         </h3>
         
         <div className="space-y-3">
@@ -133,7 +141,7 @@ const PaymentTab = ({
                       {type === 'xarajat' ? '-' : '+'} {item.amount.toLocaleString()} UZS
                     </p>
                     <p className="text-xs text-slate-400">
-                      {item.description || "Izohsiz"} • {format(new Date(item.date), 'dd.MM.yyyy HH:mm')}
+                      {item.description || "Izohsiz"} • {format(new Date(item.date), 'HH:mm')}
                     </p>
                   </div>
                 </div>
@@ -156,29 +164,40 @@ export default function XproOperations() {
   const [activeTab, setActiveTab] = useState('kassa');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
+  const { currentShift, closeShift, loading: shiftLoading } = useShift();
+  const navigate = useNavigate();
 
   const activeTabInfo = tabs.find(t => t.id === activeTab);
 
-  // Fetch transactions on load
+  // Fetch transactions ONLY for current shift
   useEffect(() => {
-    fetchTransactions();
-  }, []);
+    if (currentShift) {
+      fetchTransactions();
+    }
+  }, [currentShift]);
 
   const fetchTransactions = async () => {
+    if (!currentShift) return;
     try {
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
+        .eq('shift_id', currentShift.id) // Filter by Shift ID
         .order('date', { ascending: false });
 
       if (error) throw error;
       setTransactions(data || []);
     } catch (error: any) {
-      toast.error('Ma\'lumotlarni yuklashda xatolik: ' + error.message);
+      // toast.error('Ma\'lumotlarni yuklashda xatolik: ' + error.message);
     }
   };
 
   const handleAddTransaction = async (amount: number, description: string) => {
+    if (!currentShift) {
+      toast.error("Smena ochiq emas!");
+      return;
+    }
+    
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -188,7 +207,8 @@ export default function XproOperations() {
             amount,
             description,
             type: activeTab,
-            date: new Date().toISOString()
+            date: new Date().toISOString(),
+            shift_id: currentShift.id // Attach Shift ID
           }
         ])
         .select()
@@ -221,7 +241,17 @@ export default function XproOperations() {
     }
   };
 
-  // Calculate total balance from all transactions
+  const handleCloseShift = async () => {
+    if (window.confirm("Smenani yopishni tasdiqlaysizmi?")) {
+      const totalBalance = calculateTotalBalance();
+      const success = await closeShift(totalBalance);
+      if (success) {
+        navigate('/xpro');
+      }
+    }
+  };
+
+  // Calculate total balance from transactions in THIS shift
   const calculateTotalBalance = () => {
     return transactions.reduce((acc, curr) => {
       if (curr.type === 'xarajat') {
@@ -233,10 +263,27 @@ export default function XproOperations() {
 
   const filteredTransactions = transactions.filter(t => t.type === activeTab);
 
+  if (shiftLoading) return <div className="p-8 text-white">Yuklanmoqda...</div>;
+
+  if (!currentShift) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center py-20 text-center">
+        <h2 className="text-2xl font-bold text-white mb-4">Smena ochiq emas</h2>
+        <p className="text-slate-400 mb-8">Operatsiyalarni bajarish uchun avval smenani oching.</p>
+        <button
+          onClick={() => navigate('/xpro')}
+          className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-500"
+        >
+          Smenani Ochish
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Top Navigation Tabs */}
-      <div className="relative">
+      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 backdrop-blur-xl">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -263,6 +310,14 @@ export default function XproOperations() {
             );
           })}
         </div>
+
+        <button
+          onClick={handleCloseShift}
+          className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm font-bold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
+        >
+          <Lock className="h-4 w-4" />
+          Smenani Yopish
+        </button>
       </div>
 
       {/* Content Area */}
@@ -282,7 +337,7 @@ export default function XproOperations() {
             <p className="text-sm text-slate-400 mt-1">Operatsiyalar boshqaruvi</p>
           </div>
           <div className="flex flex-col items-end">
-            <span className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Jami balans</span>
+            <span className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Smena balansi</span>
             <span className="text-3xl font-mono font-bold text-white tracking-tight">
               {calculateTotalBalance().toLocaleString()} <span className="text-lg text-slate-500">UZS</span>
             </span>
@@ -299,6 +354,7 @@ export default function XproOperations() {
             onAddTransaction={handleAddTransaction}
             onDeleteTransaction={handleDeleteTransaction}
             loading={loading}
+            shiftId={currentShift.id}
           />
         ) : (
           <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-black/20 text-slate-500">
