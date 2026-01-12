@@ -158,7 +158,7 @@ const PaymentTab = ({
                 </div>
                 <button 
                   onClick={() => onDeleteTransaction(item.id)}
-                  className="rounded-lg p-2 text-slate-500 opacity-0 transition-all hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100"
+                  className="rounded-lg p-2 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-400"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
