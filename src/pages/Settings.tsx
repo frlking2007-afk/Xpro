@@ -281,7 +281,11 @@ export default function Settings() {
               {themeOption === 'light' && <Sun className="h-6 w-6 text-yellow-400" />}
               {themeOption === 'dark' && <Moon className="h-6 w-6 text-slate-400" />}
               {themeOption === 'blue' && <Palette className="h-6 w-6 text-blue-400" />}
-              <span className="text-sm font-medium text-white capitalize">{themeOption} Mode</span>
+              <span className="text-sm font-medium text-white">
+                {themeOption === 'light' && 'Yorug\' Rejim'}
+                {themeOption === 'dark' && 'Qora Rejim'}
+                {themeOption === 'blue' && 'Ko\'k Rejim'}
+              </span>
               {theme === themeOption && (
                 <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-blue-500" />
               )}
