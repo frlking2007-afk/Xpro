@@ -153,6 +153,15 @@ export default function Settings() {
       // Save theme and currency
       applyTheme(theme);
       localStorage.setItem('currency', currency);
+      
+      // Save full name to localStorage for sidebar
+      localStorage.setItem('user_full_name', fullName);
+      if (avatarUrl) {
+        localStorage.setItem('user_avatar_url', avatarUrl);
+      }
+      
+      // Dispatch event to update sidebar
+      window.dispatchEvent(new Event('profileUpdated'));
 
       toast.success('Sozlamalar saqlandi!');
     } catch (error: any) {

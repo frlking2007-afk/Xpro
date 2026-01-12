@@ -9,6 +9,73 @@ import { toast } from 'sonner';
 import { useShift } from '../hooks/useShift';
 
 const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) => {
+  const [userProfile, setUserProfile] = React.useState<{ fullName: string; avatar: string | null }>({
+    fullName: 'frlking2007',
+    avatar: null
+  });
+
+  React.useEffect(() => {
+    loadUserProfile();
+    
+    // Listen for profile updates from Settings page
+    const handleStorageChange = () => {
+      loadUserProfile();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    // Also listen for custom event
+    window.addEventListener('profileUpdated', handleStorageChange);
+    
+    // Check localStorage periodically (fallback)
+    const interval = setInterval(() => {
+      const savedName = localStorage.getItem('user_full_name');
+      if (savedName && savedName !== userProfile.fullName) {
+        loadUserProfile();
+      }
+    }, 1000);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('profileUpdated', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Try to get from user_profiles table
+      try {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profile) {
+          setUserProfile({
+            fullName: profile.full_name || user.email?.split('@')[0] || 'frlking2007',
+            avatar: profile.avatar_url || null
+          });
+          return;
+        }
+      } catch (error) {
+        // Table might not exist
+      }
+
+      // Fallback to user metadata or localStorage
+      const savedName = localStorage.getItem('user_full_name');
+      const savedAvatar = localStorage.getItem('user_avatar_url');
+      const fullName = savedName || user.user_metadata?.full_name || user.email?.split('@')[0] || 'frlking2007';
+      const avatar = savedAvatar || user.user_metadata?.avatar_url || null;
+      setUserProfile({ fullName, avatar });
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    }
+  };
+
   const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: Zap, label: 'Xpro', path: '/xpro' },
@@ -72,11 +139,19 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
           {/* User Profile */}
           <div className="border-t border-slate-800/50 p-4">
             <div className="flex items-center gap-3 rounded-xl bg-slate-900/50 p-3 border border-slate-800/50">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white font-medium border border-slate-700">
-                F
-              </div>
+              {userProfile.avatar ? (
+                <img
+                  src={userProfile.avatar}
+                  alt="Avatar"
+                  className="h-10 w-10 rounded-full object-cover border border-slate-700"
+                />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white font-medium border border-slate-700">
+                  {userProfile.fullName.charAt(0).toUpperCase()}
+                </div>
+              )}
               <div className="flex-1 overflow-hidden">
-                <p className="truncate text-sm font-medium text-white">frlking2007</p>
+                <p className="truncate text-sm font-medium text-white">{userProfile.fullName}</p>
                 <p className="truncate text-xs text-slate-500">Admin</p>
               </div>
               <button 
