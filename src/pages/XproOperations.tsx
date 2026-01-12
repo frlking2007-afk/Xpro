@@ -48,6 +48,20 @@ const PaymentTab = ({
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
 
+  // Format number with spaces (50000 -> 50 000)
+  const formatNumber = (value: string): string => {
+    const numericValue = value.replace(/\s/g, '').replace(/[^0-9]/g, '');
+    if (!numericValue) return '';
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  };
+
+  // Handle amount input change
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const formatted = formatNumber(value);
+    setAmount(formatted);
+  };
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!amount) return;
@@ -56,7 +70,8 @@ const PaymentTab = ({
       return;
     }
 
-    onAddTransaction(parseFloat(amount.replace(/[^0-9]/g, '')), description);
+    const numericAmount = parseFloat(amount.replace(/\s/g, ''));
+    onAddTransaction(numericAmount, description);
     setAmount('');
     setDescription('');
   };
@@ -71,9 +86,9 @@ const PaymentTab = ({
             <label className="mb-1.5 block text-xs font-medium text-slate-400 uppercase tracking-wider">Summa</label>
             <div className="relative">
               <input
-                type="number"
+                type="text"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={handleAmountChange}
                 placeholder="0"
                 className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-4 pr-12 text-lg font-bold text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
                 required
