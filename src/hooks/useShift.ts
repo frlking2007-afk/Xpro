@@ -48,18 +48,38 @@ export function useShift() {
       const now = new Date();
       const defaultName = shiftName || `Smena ${now.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}`;
       
-      const { data, error } = await supabase
+      // Try to insert with name first, if it fails, insert without name
+      let insertData: any = {
+        status: 'open',
+        starting_balance: startingBalance,
+        opened_at: now.toISOString(),
+      };
+
+      // Try to add name field (only if column exists in database)
+      // We'll try with name first, and if it fails, retry without name
+      let { data, error } = await supabase
         .from('shifts')
         .insert([
           {
-            status: 'open',
-            starting_balance: startingBalance,
-            opened_at: now.toISOString(),
+            ...insertData,
             name: defaultName,
           }
         ])
         .select()
         .single();
+
+      // If error is about missing column, retry without name
+      if (error && (error.message.includes('name') || error.message.includes('column'))) {
+        const { data: retryData, error: retryError } = await supabase
+          .from('shifts')
+          .insert([insertData])
+          .select()
+          .single();
+        
+        if (retryError) throw retryError;
+        data = retryData;
+        error = null;
+      }
 
       if (error) throw error;
       setCurrentShift(data);
