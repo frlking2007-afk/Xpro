@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight, Lock } from 'lucide-react';
+import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight, Lock, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
+import { uz } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { useShift } from '../hooks/useShift';
 import { useNavigate } from 'react-router-dom';
 
-// Force update
 const tabs = [
   { id: 'kassa', label: 'KASSA', icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
   { id: 'click', label: 'CLICK', icon: CreditCard, color: 'text-blue-400', bg: 'bg-blue-500/20' },
@@ -244,13 +244,8 @@ export default function XproOperations() {
 
   const handleCloseShift = async () => {
     if (window.confirm("Smenani yopishni tasdiqlaysizmi?")) {
-      const totalBalance = calculateTabBalance(); // Assuming we close with current tab balance? 
-      // Wait, shift balance is usually sum of ALL cash + card etc.
-      // But usually 'Kassa' means 'Cash'. Shift closure might imply counting CASH.
-      // Let's pass 0 for now or calculate total cash.
-      // For simplicity, let's just close it.
-      
-      const success = await closeShift(0); // We can update this logic later
+      const totalBalance = calculateTotalShiftBalance(); 
+      const success = await closeShift(totalBalance);
       if (success) {
         navigate('/xpro');
       }
@@ -260,14 +255,17 @@ export default function XproOperations() {
   // Calculate balance for the CURRENT tab
   const calculateTabBalance = () => {
     return filteredTransactions.reduce((acc, curr) => {
-      // For expense tab, it's just sum of expenses (shown as positive total expense or negative balance?)
-      // Usually expense tab shows Total Expenses.
-      // But for 'kassa', 'click' etc it shows Balance.
-      
-      // Let's assume for payment methods it's sum of incomes.
-      // For 'xarajat' it's sum of expenses.
-      
       return acc + curr.amount; 
+    }, 0);
+  };
+
+  // Calculate total balance for the SHIFT (for closing)
+  const calculateTotalShiftBalance = () => {
+    return transactions.reduce((acc, curr) => {
+      if (curr.type === 'xarajat') {
+        return acc - curr.amount;
+      }
+      return acc + curr.amount;
     }, 0);
   };
 
@@ -292,6 +290,14 @@ export default function XproOperations() {
 
   return (
     <div className="space-y-8">
+      {/* Shift Date Header */}
+      <div className="flex items-center justify-center py-2">
+        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-slate-300 backdrop-blur-sm">
+          <Calendar className="h-4 w-4 text-blue-400" />
+          <span>Smena: <span className="text-white">{format(new Date(currentShift.opened_at), 'd-MMMM yyyy', { locale: uz })}</span></span>
+        </div>
+      </div>
+
       {/* Top Navigation Tabs */}
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 backdrop-blur-xl">
