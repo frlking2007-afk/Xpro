@@ -328,10 +328,9 @@ export default function Reports() {
             <table className="w-full text-left text-sm text-slate-400">
               <thead className="bg-white/5 text-xs uppercase font-medium text-slate-300">
                 <tr>
+                  <th className="px-6 py-4">Nomi</th>
                   <th className="px-6 py-4">Ochilgan vaqti</th>
                   <th className="px-6 py-4">Yopilgan vaqti</th>
-                  <th className="px-6 py-4 text-right">Boshlang'ich Balans</th>
-                  <th className="px-6 py-4 text-right">Yakuniy Balans</th>
                   <th className="px-6 py-4 text-right">Holat</th>
                   <th className="px-6 py-4 text-right">Amallar</th>
                 </tr>
@@ -339,15 +338,20 @@ export default function Reports() {
               <tbody className="divide-y divide-white/5">
                 {loadingShifts ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-slate-500">Yuklanmoqda...</td>
+                    <td colSpan={5} className="px-6 py-8 text-center text-slate-500">Yuklanmoqda...</td>
                   </tr>
                 ) : shifts.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-slate-500">Smenalar topilmadi</td>
+                    <td colSpan={5} className="px-6 py-8 text-center text-slate-500">Smenalar topilmadi</td>
                   </tr>
                 ) : (
                   shifts.map((shift) => (
                     <tr key={shift.id} className="group hover:bg-white/5 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="font-medium text-white">
+                          {shift.name || `Smena ${format(new Date(shift.opened_at), 'dd.MM.yyyy HH:mm')}`}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2 text-white">
                           <Clock className="h-4 w-4 text-blue-400" />
@@ -364,12 +368,6 @@ export default function Reports() {
                           <span className="text-emerald-400 font-medium">Hozir ochiq</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-right font-mono text-slate-300">
-                        {formatCurrency(shift.starting_balance)}
-                      </td>
-                      <td className="px-6 py-4 text-right font-mono text-white font-bold">
-                        {shift.ending_balance ? formatCurrency(shift.ending_balance) : '-'}
-                      </td>
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <div className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
                           shift.status === 'open'
@@ -383,7 +381,7 @@ export default function Reports() {
                       <td className="px-6 py-4 text-right">
                         <button 
                           onClick={() => handleDeleteShift(shift.id)}
-                          className="rounded-lg p-2 text-slate-500 opacity-0 transition-all hover:bg-red-500/20 hover:text-red-400 group-hover:opacity-100"
+                          className="rounded-lg p-2 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-400"
                           title="Smenani o'chirish"
                         >
                           <Trash2 className="h-4 w-4" />

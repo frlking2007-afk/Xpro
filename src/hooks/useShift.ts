@@ -9,6 +9,7 @@ export interface Shift {
   status: 'open' | 'closed';
   starting_balance: number;
   ending_balance: number | null;
+  name?: string | null;
 }
 
 export function useShift() {
@@ -42,15 +43,19 @@ export function useShift() {
     }
   };
 
-  const openShift = async (startingBalance: number = 0) => {
+  const openShift = async (startingBalance: number = 0, shiftName?: string) => {
     try {
+      const now = new Date();
+      const defaultName = shiftName || `Smena ${now.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}`;
+      
       const { data, error } = await supabase
         .from('shifts')
         .insert([
           {
             status: 'open',
             starting_balance: startingBalance,
-            opened_at: new Date().toISOString(),
+            opened_at: now.toISOString(),
+            name: defaultName,
           }
         ])
         .select()
