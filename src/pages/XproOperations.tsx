@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight, Lock, Calendar } from 'lucide-react';
+import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight, Lock } from 'lucide-react';
 import { format } from 'date-fns';
-import { uz } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { useShift } from '../hooks/useShift';
@@ -290,8 +289,8 @@ export default function XproOperations() {
 
   return (
     <div className="space-y-8">
-      {/* Top Header with Date */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Top Navigation Tabs */}
+      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 backdrop-blur-xl">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -319,23 +318,15 @@ export default function XproOperations() {
           })}
         </div>
 
-        {/* Date & Close Shift */}
-        <div className="flex items-center gap-4">
-          <div className="hidden sm:flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-300">
-            <Calendar className="h-4 w-4 text-blue-400" />
-            <span>{format(new Date(currentShift.opened_at), 'd-MMMM yyyy', { locale: uz })}</span>
-          </div>
-
-          {activeTab === 'kassa' && (
-            <button
-              onClick={handleCloseShift}
-              className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm font-bold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
-            >
-              <Lock className="h-4 w-4" />
-              Smenani Yopish
-            </button>
-          )}
-        </div>
+        {activeTab === 'kassa' && (
+          <button
+            onClick={handleCloseShift}
+            className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm font-bold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
+          >
+            <Lock className="h-4 w-4" />
+            Smenani Yopish
+          </button>
+        )}
       </div>
 
       {/* Content Area */}

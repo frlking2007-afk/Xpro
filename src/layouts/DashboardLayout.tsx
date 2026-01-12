@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, BarChart3, Settings, Menu, X, LogOut, Zap, Wallet } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, Settings, Menu, X, LogOut, Zap, Calendar } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { supabase } from '../lib/supabase';
+import { format } from 'date-fns';
+import { uz } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { useShift } from '../hooks/useShift';
 
 const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) => {
   const navItems = [
@@ -94,11 +97,13 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
 export default function DashboardLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
+  const { currentShift } = useShift();
 
   const getPageTitle = () => {
     switch (location.pathname) {
       case '/': return 'Dashboard';
       case '/xpro': return 'Xpro Moliya';
+      case '/xpro/operations': return 'Xpro Operatsiyalar';
       case '/reports': return 'Xisobotlar';
       case '/settings': return 'Sozlamalar';
       default: return 'Xpro';
@@ -120,7 +125,13 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Search and Notifications removed */}
+            {/* Shift Date Display (Only if shift is open) */}
+            {currentShift && (
+              <div className="hidden sm:flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-4 py-1.5 text-sm font-medium text-blue-400">
+                <Calendar className="h-4 w-4" />
+                <span>{format(new Date(currentShift.opened_at), 'd-MMMM yyyy', { locale: uz })}</span>
+              </div>
+            )}
           </div>
         </header>
 
