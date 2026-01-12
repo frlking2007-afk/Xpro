@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight, Lock } from 'lucide-react';
+import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight, Lock, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
+import { uz } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { useShift } from '../hooks/useShift';
 import { useNavigate } from 'react-router-dom';
+import ConfirmModal from '../components/ConfirmModal';
 
 const tabs = [
   { id: 'kassa', label: 'KASSA', icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
@@ -166,6 +168,7 @@ export default function XproOperations() {
   const [loading, setLoading] = useState(false);
   const { currentShift, closeShift, loading: shiftLoading } = useShift();
   const navigate = useNavigate();
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const activeTabInfo = tabs.find(t => t.id === activeTab);
 
@@ -241,13 +244,11 @@ export default function XproOperations() {
     }
   };
 
-  const handleCloseShift = async () => {
-    if (window.confirm("Smenani yopishni tasdiqlaysizmi?")) {
-      const totalBalance = calculateTotalShiftBalance(); 
-      const success = await closeShift(totalBalance);
-      if (success) {
-        navigate('/xpro');
-      }
+  const handleCloseShiftConfirm = async () => {
+    const totalBalance = calculateTotalShiftBalance(); 
+    const success = await closeShift(totalBalance);
+    if (success) {
+      navigate('/xpro');
     }
   };
 
@@ -289,6 +290,14 @@ export default function XproOperations() {
 
   return (
     <div className="space-y-8">
+      {/* Shift Date Header - Centered */}
+      <div className="flex items-center justify-center py-2">
+        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-slate-300 backdrop-blur-sm">
+          <Calendar className="h-4 w-4 text-blue-400" />
+          <span>Smena: <span className="text-white">{format(new Date(currentShift.opened_at), 'd-MMMM yyyy', { locale: uz })}</span></span>
+        </div>
+      </div>
+
       {/* Top Navigation Tabs */}
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-2 backdrop-blur-xl">
@@ -320,7 +329,7 @@ export default function XproOperations() {
 
         {activeTab === 'kassa' && (
           <button
-            onClick={handleCloseShift}
+            onClick={() => setIsConfirmOpen(true)}
             className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm font-bold text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors"
           >
             <Lock className="h-4 w-4" />
@@ -373,6 +382,16 @@ export default function XproOperations() {
           </div>
         )}
       </motion.div>
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleCloseShiftConfirm}
+        title="Smenani yopish"
+        message="Haqiqatan ham smenani yopmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi."
+        confirmText="Yopish"
+        isDanger={true}
+      />
     </div>
   );
 }
