@@ -24,16 +24,25 @@ export default function Settings() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Load user profile
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+      // Load user profile (try to get from user_profiles, fallback to user metadata)
+      let profile = null;
+      try {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+        profile = data;
+      } catch (error) {
+        // Table might not exist yet, use user metadata as fallback
+        console.log('user_profiles table not found, using user metadata');
+      }
 
       if (profile) {
         setFullName(profile.full_name || '');
         setAvatar(profile.avatar_url || null);
+      } else if (user.user_metadata?.full_name) {
+        setFullName(user.user_metadata.full_name);
       }
 
       // Load theme from localStorage
@@ -88,36 +97,58 @@ export default function Settings() {
 
       // Upload avatar if new file selected
       if (avatarFile) {
-        const fileExt = avatarFile.name.split('.').pop();
-        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-        const filePath = `avatars/${fileName}`;
+        try {
+          const fileExt = avatarFile.name.split('.').pop();
+          const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+          const filePath = `avatars/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(filePath, avatarFile, { upsert: true });
+          const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(filePath, avatarFile, { upsert: true });
 
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('avatars')
-          .getPublicUrl(filePath);
-
-        avatarUrl = publicUrl;
+          if (uploadError) {
+            // If storage bucket doesn't exist, use data URL as fallback
+            console.warn('Storage upload failed, using data URL:', uploadError);
+            avatarUrl = avatar;
+          } else {
+            const { data: { publicUrl } } = supabase.storage
+              .from('avatars')
+              .getPublicUrl(filePath);
+            avatarUrl = publicUrl;
+          }
+        } catch (storageError) {
+          // Use data URL as fallback if storage is not available
+          console.warn('Storage not available, using data URL');
+          avatarUrl = avatar;
+        }
       }
 
-      // Save or update profile
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .upsert({
-          user_id: user.id,
-          full_name: fullName,
-          avatar_url: avatarUrl,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
-        });
+      // Save or update profile (try user_profiles table, fallback to user metadata)
+      try {
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .upsert({
+            user_id: user.id,
+            full_name: fullName,
+            avatar_url: avatarUrl,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id'
+          });
 
-      if (profileError) throw profileError;
+        if (profileError) {
+          // If table doesn't exist, save to user metadata as fallback
+          console.warn('user_profiles table error, using metadata:', profileError);
+          await supabase.auth.updateUser({
+            data: { full_name: fullName, avatar_url: avatarUrl }
+          });
+        }
+      } catch (error) {
+        // Fallback to user metadata
+        await supabase.auth.updateUser({
+          data: { full_name: fullName, avatar_url: avatarUrl }
+        });
+      }
 
       // Save theme and currency
       applyTheme(theme);
