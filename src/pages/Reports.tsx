@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Download, Calendar, ArrowUpRight, ArrowDownRight, Wallet, CreditCard, Banknote, Clock, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
+import { Search, Filter, Calendar, ArrowUpRight, ArrowDownRight, Wallet, CreditCard, Banknote, Clock, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
@@ -199,10 +199,6 @@ export default function Reports() {
                 placeholder="Qidiruv..."
               />
             </div>
-            <button className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-500 transition-colors shadow-lg shadow-blue-500/20">
-              <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Yuklash</span>
-            </button>
           </div>
         )}
       </div>
@@ -350,15 +346,11 @@ export default function Reports() {
           )}
         </div>
         
-        {/* Pagination (Common) */}
-        <div className="border-t border-white/5 bg-white/5 px-6 py-4 flex items-center justify-between">
+        {/* Footer (Common) */}
+        <div className="border-t border-white/5 bg-white/5 px-6 py-4">
           <span className="text-xs text-slate-500">
             Jami {activeTab === 'transactions' ? filteredTransactions.length : shifts.length} ta yozuv
           </span>
-          <div className="flex gap-2">
-            <button className="rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-400 hover:bg-white/5 hover:text-white disabled:opacity-50">Oldingi</button>
-            <button className="rounded-lg border border-white/10 px-3 py-1 text-xs text-slate-400 hover:bg-white/5 hover:text-white disabled:opacity-50">Keyingi</button>
-          </div>
         </div>
       </motion.div>
     </div>

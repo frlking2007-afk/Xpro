@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import XproLanding from './pages/XproLanding';
 import XproOperations from './pages/XproOperations';
 import Reports from './pages/Reports';
+import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -24,7 +25,7 @@ function App() {
               <Route path="xpro" element={<XproLanding />} />
               <Route path="xpro/operations" element={<XproOperations />} />
               <Route path="reports" element={<Reports />} />
-              <Route path="settings" element={<div className="p-4 text-white">Sozlamalar sahifasi (Tez orada)</div>} />
+              <Route path="settings" element={<Settings />} />
             </Route>
           </Route>
         </Routes>
