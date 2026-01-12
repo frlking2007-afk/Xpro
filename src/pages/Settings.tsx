@@ -268,7 +268,10 @@ export default function Settings() {
           {(['light', 'dark', 'blue'] as Theme[]).map((themeOption) => (
             <button
               key={themeOption}
-              onClick={() => setTheme(themeOption)}
+              onClick={() => {
+                setTheme(themeOption);
+                applyTheme(themeOption);
+              }}
               className={`relative flex flex-col items-center gap-3 rounded-xl border-2 p-4 transition-all ${
                 theme === themeOption
                   ? 'border-blue-500 bg-blue-500/10'
