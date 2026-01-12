@@ -196,6 +196,7 @@ export default function XproOperations() {
   const viewShiftId = searchParams.get('shift_id');
   const [viewShift, setViewShift] = useState<{ id: string; status: 'open' | 'closed'; opened_at: string; closed_at: string | null } | null>(null);
   const [isViewMode, setIsViewMode] = useState(false);
+  const [loadingViewShift, setLoadingViewShift] = useState(false);
 
   const activeTabInfo = tabs.find(t => t.id === activeTab);
 
@@ -210,6 +211,7 @@ export default function XproOperations() {
   }, [viewShiftId]);
 
   const fetchViewShift = async (shiftId: string) => {
+    setLoadingViewShift(true);
     try {
       const { data, error } = await supabase
         .from('shifts')
@@ -227,12 +229,14 @@ export default function XproOperations() {
           closed_at: data.closed_at
         });
         setIsViewMode(true);
-        fetchTransactionsForShift(shiftId);
+        await fetchTransactionsForShift(shiftId);
       }
     } catch (error: any) {
       console.error('Error fetching view shift:', error);
       toast.error('Smena topilmadi');
       navigate('/reports');
+    } finally {
+      setLoadingViewShift(false);
     }
   };
 
@@ -439,10 +443,17 @@ export default function XproOperations() {
 
   const filteredTransactions = transactions.filter(t => t.type === activeTab);
 
+  // Show loading while fetching view shift
+  if (loadingViewShift) {
+    return <div className="flex h-full flex-col items-center justify-center py-20 text-center">
+      <div className="p-8 text-white">Yuklanmoqda...</div>
+    </div>;
+  }
+
   if (shiftLoading && !isViewMode) return <div className="p-8 text-white">Yuklanmoqda...</div>;
 
   // Show "Smena ochiq emas" only if NOT in view mode and no current shift
-  if (!currentShift && !isViewMode) {
+  if (!currentShift && !isViewMode && !viewShiftId) {
     return (
       <div className="flex h-full flex-col items-center justify-center py-20 text-center">
         <h2 className="text-2xl font-bold text-white mb-4">Smena ochiq emas</h2>
@@ -452,6 +463,22 @@ export default function XproOperations() {
           className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-500"
         >
           Smenani Ochish
+        </button>
+      </div>
+    );
+  }
+
+  // If viewShiftId exists but viewShift is null, we're still loading or there was an error
+  if (viewShiftId && !viewShift && !loadingViewShift) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center py-20 text-center">
+        <h2 className="text-2xl font-bold text-white mb-4">Smena topilmadi</h2>
+        <p className="text-slate-400 mb-8">Smena ma'lumotlari yuklanmadi.</p>
+        <button
+          onClick={() => navigate('/reports')}
+          className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-500"
+        >
+          Xisobotlarga qaytish
         </button>
       </div>
     );
