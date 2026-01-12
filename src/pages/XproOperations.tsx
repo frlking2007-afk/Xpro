@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase';
 import { useShift } from '../hooks/useShift';
 import { useNavigate } from 'react-router-dom';
 
+// Force update
 const tabs = [
   { id: 'kassa', label: 'KASSA', icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
   { id: 'click', label: 'CLICK', icon: CreditCard, color: 'text-blue-400', bg: 'bg-blue-500/20' },
