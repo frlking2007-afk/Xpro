@@ -194,6 +194,16 @@ export default function XproOperations() {
     }
   }, [currentShift]);
 
+  // Listen for currency updates
+  useEffect(() => {
+    const handleCurrencyUpdate = () => {
+      // Force re-render by updating a dummy state
+      setTransactions([...transactions]);
+    };
+    window.addEventListener('currencyUpdated', handleCurrencyUpdate);
+    return () => window.removeEventListener('currencyUpdated', handleCurrencyUpdate);
+  }, [transactions]);
+
   const fetchTransactions = async () => {
     if (!currentShift) return;
     try {

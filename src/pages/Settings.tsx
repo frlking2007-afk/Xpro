@@ -165,6 +165,9 @@ export default function Settings() {
       applyTheme(theme);
       localStorage.setItem('currency', currency);
       
+      // Dispatch event to notify other components about currency change
+      window.dispatchEvent(new Event('currencyUpdated'));
+      
       // Save delete password if set
       if (deletePassword && deletePassword === confirmPassword) {
         saveDeletePassword(deletePassword);

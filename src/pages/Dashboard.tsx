@@ -57,6 +57,16 @@ export default function Dashboard() {
     fetchStats();
   }, [dateRange]); // Refetch when date range changes
 
+  // Listen for currency updates
+  useEffect(() => {
+    const handleCurrencyUpdate = () => {
+      // Force re-render by updating stats
+      setStats({ ...stats });
+    };
+    window.addEventListener('currencyUpdated', handleCurrencyUpdate);
+    return () => window.removeEventListener('currencyUpdated', handleCurrencyUpdate);
+  }, [stats]);
+
   const fetchStats = async () => {
     try {
       // 1. Fetch ALL transactions to calculate everything (or optimize with specific queries)

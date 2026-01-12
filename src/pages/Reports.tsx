@@ -51,6 +51,20 @@ export default function Reports() {
     }
   }, [activeTab, dateRange, filterType]);
 
+  // Listen for currency updates
+  useEffect(() => {
+    const handleCurrencyUpdate = () => {
+      // Force re-render by updating state
+      if (activeTab === 'transactions') {
+        setTransactions([...transactions]);
+      } else {
+        setShifts([...shifts]);
+      }
+    };
+    window.addEventListener('currencyUpdated', handleCurrencyUpdate);
+    return () => window.removeEventListener('currencyUpdated', handleCurrencyUpdate);
+  }, [activeTab, transactions, shifts]);
+
   const fetchTransactions = async () => {
     setLoadingTransactions(true);
     try {
