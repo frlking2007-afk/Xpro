@@ -70,7 +70,13 @@ export function generateExpenseReceiptHTML(
   const width = settings.paperWidth === '58mm' ? '48mm' : '72mm';
   const fontSize = settings.fontSize === 'small' ? '9px' : settings.fontSize === 'medium' ? '11px' : '13px';
   const titleSize = settings.fontSize === 'small' ? '13px' : settings.fontSize === 'medium' ? '15px' : '17px';
+  const dateSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
   const lineHeight = '1.2';
+  
+  // Format number without currency symbol
+  const formatAmount = (amount: number): string => {
+    return amount.toLocaleString('uz-UZ');
+  };
   
   let html = `
 <!DOCTYPE html>
