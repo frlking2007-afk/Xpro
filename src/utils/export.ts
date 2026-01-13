@@ -484,6 +484,9 @@ export function generatePaymentReceiptHTML(
 <body>
 `;
 
+  // Wrap ALL content in one container to prevent any page breaks
+  html += `<div style="page-break-inside: avoid !important; break-inside: avoid !important; orphans: 999 !important; widows: 999 !important; display: block !important;">`;
+  
   // Date (larger)
   html += `<div class="date">${format(now, 'dd.MM.yyyy', { locale: uz })}</div>`;
 
@@ -491,18 +494,12 @@ export function generatePaymentReceiptHTML(
   html += `<div class="title center">${paymentName.toUpperCase()}</div>`;
 
   // Total Balance
-  html += `<div class="section">`;
-  html += `<div class="row">`;
-  html += `<span class="row-label">Umumiy balans:</span>`;
-  html += `<span class="row-value">${formatAmount(totalBalance)}</span>`;
-  html += `</div>`;
-  html += `</div>`;
-  html += `<div class="divider"></div>`;
+  html += `<div class="section"><div class="row"><span class="row-label">Umumiy balans:</span><span class="row-value">${formatAmount(totalBalance)}</span></div></div><div class="divider"></div>`;
 
   // Operations History
-  html += `<div class="section-title" style="page-break-before: avoid; break-before: avoid;">Operatsiyalar tarixi:</div>`;
-  html += `<div class="divider"></div>`;
-  html += `<div style="page-break-inside: avoid; break-inside: avoid; page-break-before: avoid; break-before: avoid;">`;
+  html += `<div class="section-title" style="page-break-before: avoid !important; break-before: avoid !important; page-break-after: avoid !important; break-after: avoid !important;">Operatsiyalar tarixi:</div>`;
+  html += `<div class="divider" style="page-break-before: avoid !important; break-before: avoid !important; page-break-after: avoid !important; break-after: avoid !important;"></div>`;
+  html += `<div style="page-break-inside: avoid !important; break-inside: avoid !important; orphans: 999 !important; widows: 999 !important;">`;
   if (transactions.length === 0) {
     html += `<div class="info">Operatsiyalar mavjud emas</div>`;
   } else {
