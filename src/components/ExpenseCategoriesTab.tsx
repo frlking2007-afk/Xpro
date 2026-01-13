@@ -151,7 +151,7 @@ export default function ExpenseCategoriesTab({
 
             {/* Statistics Button */}
             <button
-              onClick={() => navigate('/expense-statistics')}
+              onClick={() => navigate(`/category-expense-statistics?category=${encodeURIComponent(category)}`)}
               className="mt-4 w-full rounded-xl border border-blue-500/50 bg-blue-500/10 py-2.5 text-sm font-medium text-blue-400 transition-all hover:bg-blue-500/20 flex items-center justify-center gap-2"
             >
               <BarChart3 className="h-4 w-4" />
