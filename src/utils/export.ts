@@ -68,11 +68,11 @@ export function generateExpenseReceiptHTML(
   
   // Calculate width based on paper size
   const width = settings.paperWidth === '58mm' ? '48mm' : '72mm';
-  const fontSize = settings.fontSize === 'small' ? '9px' : settings.fontSize === 'medium' ? '11px' : '13px';
-  const titleSize = settings.fontSize === 'small' ? '13px' : settings.fontSize === 'medium' ? '15px' : '17px';
-  const dateSize = settings.fontSize === 'small' ? '14px' : settings.fontSize === 'medium' ? '16px' : '18px';
-  const descSize = settings.fontSize === 'small' ? '11px' : settings.fontSize === 'medium' ? '13px' : '15px';
-  const lineHeight = '1.2';
+  const fontSize = settings.fontSize === 'small' ? '8px' : settings.fontSize === 'medium' ? '10px' : '12px';
+  const titleSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
+  const dateSize = settings.fontSize === 'small' ? '13px' : settings.fontSize === 'medium' ? '15px' : '17px';
+  const descSize = settings.fontSize === 'small' ? '10px' : settings.fontSize === 'medium' ? '12px' : '14px';
+  const lineHeight = '1.1';
   
   // Format number without currency symbol
   const formatAmount = (amount: number): string => {
@@ -97,11 +97,12 @@ export function generateExpenseReceiptHTML(
         box-sizing: border-box;
       }
       body {
-        margin: 0;
-        padding: 2px;
+        margin: 0 !important;
+        padding: 1px !important;
         page-break-inside: avoid;
         height: auto !important;
         min-height: auto !important;
+        max-height: none !important;
         orphans: 999;
         widows: 999;
       }
@@ -141,13 +142,14 @@ export function generateExpenseReceiptHTML(
       font-family: 'Courier New', monospace;
       width: ${width};
       margin: 0 auto;
-      padding: 2px;
+      padding: 1px;
       font-size: ${fontSize};
       line-height: ${lineHeight};
       background: white;
       color: black;
       height: auto;
       min-height: auto;
+      max-height: none;
     }
     .header {
       text-align: center;
@@ -326,11 +328,11 @@ export function generatePaymentReceiptHTML(
   
   // Calculate width based on paper size
   const width = settings.paperWidth === '58mm' ? '48mm' : '72mm';
-  const fontSize = settings.fontSize === 'small' ? '9px' : settings.fontSize === 'medium' ? '11px' : '13px';
-  const titleSize = settings.fontSize === 'small' ? '13px' : settings.fontSize === 'medium' ? '15px' : '17px';
-  const dateSize = settings.fontSize === 'small' ? '14px' : settings.fontSize === 'medium' ? '16px' : '18px';
-  const descSize = settings.fontSize === 'small' ? '11px' : settings.fontSize === 'medium' ? '13px' : '15px';
-  const lineHeight = '1.2';
+  const fontSize = settings.fontSize === 'small' ? '8px' : settings.fontSize === 'medium' ? '10px' : '12px';
+  const titleSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
+  const dateSize = settings.fontSize === 'small' ? '13px' : settings.fontSize === 'medium' ? '15px' : '17px';
+  const descSize = settings.fontSize === 'small' ? '10px' : settings.fontSize === 'medium' ? '12px' : '14px';
+  const lineHeight = '1.1';
   
   // Format number without currency symbol
   const formatAmount = (amount: number): string => {
@@ -355,11 +357,12 @@ export function generatePaymentReceiptHTML(
         box-sizing: border-box;
       }
       body {
-        margin: 0;
-        padding: 2px;
+        margin: 0 !important;
+        padding: 1px !important;
         page-break-inside: avoid;
         height: auto !important;
         min-height: auto !important;
+        max-height: none !important;
         orphans: 999;
         widows: 999;
       }
@@ -399,13 +402,14 @@ export function generatePaymentReceiptHTML(
       font-family: 'Courier New', monospace;
       width: ${width};
       margin: 0 auto;
-      padding: 2px;
+      padding: 1px;
       font-size: ${fontSize};
       line-height: ${lineHeight};
       background: white;
       color: black;
       height: auto;
       min-height: auto;
+      max-height: none;
     }
     .header {
       text-align: center;
@@ -525,16 +529,7 @@ export function generatePaymentReceiptHTML(
       const transactionDate = new Date(transaction.date);
       const timeStr = format(transactionDate, 'HH:mm', { locale: uz });
       
-      html += `
-      <div class="item">
-        <div class="item-amount">${amount}</div>
-        <div class="item-desc">
-          ${desc}
-          <div class="item-time">${timeStr}</div>
-        </div>
-      </div>
-      <div class="divider"></div>
-      `;
+      html += `<div class="item"><div class="item-amount">${amount}</div><div class="item-desc">${desc}<div class="item-time">${timeStr}</div></div></div><div class="divider"></div>`;
     });
   }
   html += `</div></div>`;
