@@ -9,6 +9,7 @@ import { uz } from 'date-fns/locale';
 import { toast } from 'sonner';
 import PasswordModal from '../components/PasswordModal';
 import { verifyPassword, isPasswordSet } from '../utils/password';
+import SalesModal from '../components/SalesModal';
 
 interface Transaction {
   id: string;
@@ -28,10 +29,15 @@ export default function CategoryExpenseStatistics() {
   const [loading, setLoading] = useState(true);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
+  const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
+  const [categorySales, setCategorySales] = useState<number>(0);
 
   useEffect(() => {
     if (categoryName) {
       fetchTransactions();
+      // Load category sales from localStorage
+      const savedSales = localStorage.getItem(`categorySales_${categoryName}`);
+      setCategorySales(savedSales ? parseFloat(savedSales) : 0);
     }
   }, [categoryName]);
 
@@ -130,13 +136,17 @@ export default function CategoryExpenseStatistics() {
     return transactions.reduce((sum, t) => sum + t.amount, 0);
   };
 
-  const getTotalCount = () => {
-    return transactions.length;
+  const getProfitOrLoss = () => {
+    if (categorySales === 0) return 0;
+    return categorySales - getTotalExpenses();
   };
 
-  const getAverageExpense = () => {
-    if (transactions.length === 0) return 0;
-    return getTotalExpenses() / transactions.length;
+  const handleSaveSales = (amount: number) => {
+    if (categoryName) {
+      localStorage.setItem(`categorySales_${categoryName}`, amount.toString());
+      setCategorySales(amount);
+      toast.success('Savdo summasi saqlandi!');
+    }
   };
 
   const handleDeleteTransaction = async (id: string) => {
@@ -227,15 +237,16 @@ export default function CategoryExpenseStatistics() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm"
+          onClick={() => setIsSalesModalOpen(true)}
+          className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm cursor-pointer transition-all hover:bg-black/30 hover:border-white/20"
         >
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-400">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10 text-green-400">
               <DollarSign className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-xs text-slate-400 uppercase tracking-wider">Jami xarajat</p>
-              <p className="text-2xl font-bold text-white">{formatCurrency(getTotalExpenses())}</p>
+              <p className="text-xs text-slate-400 uppercase tracking-wider">Savdo</p>
+              <p className="text-2xl font-bold text-white">{formatCurrency(categorySales)}</p>
             </div>
           </div>
         </motion.div>
@@ -247,12 +258,12 @@ export default function CategoryExpenseStatistics() {
           className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm"
         >
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10 text-blue-400">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-400">
               <FileText className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-xs text-slate-400 uppercase tracking-wider">Operatsiyalar soni</p>
-              <p className="text-2xl font-bold text-white">{getTotalCount()}</p>
+              <p className="text-xs text-slate-400 uppercase tracking-wider">Jami xarajat</p>
+              <p className="text-2xl font-bold text-white">{formatCurrency(getTotalExpenses())}</p>
             </div>
           </div>
         </motion.div>
@@ -264,12 +275,20 @@ export default function CategoryExpenseStatistics() {
           className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm"
         >
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10 text-green-400">
+            <div className={`flex h-12 w-12 items-center justify-center rounded-full ${
+              getProfitOrLoss() >= 0 ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'
+            }`}>
               <TrendingUp className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-xs text-slate-400 uppercase tracking-wider">O'rtacha xarajat</p>
-              <p className="text-2xl font-bold text-white">{formatCurrency(getAverageExpense())}</p>
+              <p className="text-xs text-slate-400 uppercase tracking-wider">
+                {getProfitOrLoss() >= 0 ? 'Foyda' : 'Zarar'}
+              </p>
+              <p className={`text-2xl font-bold ${
+                getProfitOrLoss() >= 0 ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {formatCurrency(Math.abs(getProfitOrLoss()))}
+              </p>
             </div>
           </div>
         </motion.div>
@@ -338,6 +357,13 @@ export default function CategoryExpenseStatistics() {
         onConfirm={handlePasswordConfirm}
         title="Parolni kiriting"
         message="Xarajatni o'chirish uchun parolni kiriting"
+      />
+
+      <SalesModal
+        isOpen={isSalesModalOpen}
+        onClose={() => setIsSalesModalOpen(false)}
+        onSave={handleSaveSales}
+        currentSales={categorySales}
       />
     </div>
   );
