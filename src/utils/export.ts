@@ -91,18 +91,34 @@ export function generateExpenseReceiptHTML(
         size: ${settings.paperWidth};
         margin: 0;
       }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
-        padding: 4px;
+        padding: 2px;
         page-break-inside: avoid;
+        height: auto !important;
+        min-height: auto !important;
+      }
+      .section-title {
+        page-break-after: avoid;
+        page-break-before: avoid;
+        break-after: avoid;
+        break-before: avoid;
       }
       .item {
         page-break-inside: avoid;
         break-inside: avoid;
+        display: block;
       }
       .divider {
         page-break-inside: avoid;
         break-inside: avoid;
+        page-break-after: avoid;
+        break-after: avoid;
       }
     }
     * {
@@ -114,11 +130,13 @@ export function generateExpenseReceiptHTML(
       font-family: 'Courier New', monospace;
       width: ${width};
       margin: 0 auto;
-      padding: 4px;
+      padding: 2px;
       font-size: ${fontSize};
       line-height: ${lineHeight};
       background: white;
       color: black;
+      height: auto;
+      min-height: auto;
     }
     .header {
       text-align: center;
@@ -143,7 +161,7 @@ export function generateExpenseReceiptHTML(
       break-inside: avoid;
     }
     .section {
-      margin: 3px 0;
+      margin: 2px 0;
     }
     .section-title {
       font-weight: bold;
@@ -243,9 +261,9 @@ export function generateExpenseReceiptHTML(
   html += `<div class="divider"></div>`;
 
   // Expenses History
-  html += `<div class="section-title">Xarajatlar tarixi:</div>`;
+  html += `<div class="section-title" style="page-break-before: avoid; break-before: avoid;">Xarajatlar tarixi:</div>`;
   html += `<div class="divider"></div>`;
-  html += `<div style="page-break-inside: avoid; break-inside: avoid;">`;
+  html += `<div style="page-break-inside: avoid; break-inside: avoid; page-break-before: avoid; break-before: avoid;">`;
   if (transactions.length === 0) {
     html += `<div class="info">Xarajatlar mavjud emas</div>`;
   } else {
@@ -320,18 +338,34 @@ export function generatePaymentReceiptHTML(
         size: ${settings.paperWidth};
         margin: 0;
       }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
-        padding: 4px;
+        padding: 2px;
         page-break-inside: avoid;
+        height: auto !important;
+        min-height: auto !important;
+      }
+      .section-title {
+        page-break-after: avoid;
+        page-break-before: avoid;
+        break-after: avoid;
+        break-before: avoid;
       }
       .item {
         page-break-inside: avoid;
         break-inside: avoid;
+        display: block;
       }
       .divider {
         page-break-inside: avoid;
         break-inside: avoid;
+        page-break-after: avoid;
+        break-after: avoid;
       }
     }
     * {
@@ -343,11 +377,13 @@ export function generatePaymentReceiptHTML(
       font-family: 'Courier New', monospace;
       width: ${width};
       margin: 0 auto;
-      padding: 4px;
+      padding: 2px;
       font-size: ${fontSize};
       line-height: ${lineHeight};
       background: white;
       color: black;
+      height: auto;
+      min-height: auto;
     }
     .header {
       text-align: center;
@@ -372,7 +408,7 @@ export function generatePaymentReceiptHTML(
       break-inside: avoid;
     }
     .section {
-      margin: 3px 0;
+      margin: 2px 0;
     }
     .section-title {
       font-weight: bold;
@@ -455,9 +491,9 @@ export function generatePaymentReceiptHTML(
   html += `<div class="divider"></div>`;
 
   // Operations History
-  html += `<div class="section-title">Operatsiyalar tarixi:</div>`;
+  html += `<div class="section-title" style="page-break-before: avoid; break-before: avoid;">Operatsiyalar tarixi:</div>`;
   html += `<div class="divider"></div>`;
-  html += `<div style="page-break-inside: avoid; break-inside: avoid;">`;
+  html += `<div style="page-break-inside: avoid; break-inside: avoid; page-break-before: avoid; break-before: avoid;">`;
   if (transactions.length === 0) {
     html += `<div class="info">Operatsiyalar mavjud emas</div>`;
   } else {
