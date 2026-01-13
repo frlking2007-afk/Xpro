@@ -120,17 +120,21 @@ export function generateExpenseReceiptHTML(
         display: block !important;
       }
       .item {
-        page-break-inside: avoid;
-        break-inside: avoid;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
         display: block;
-        orphans: 999;
-        widows: 999;
+        orphans: 999 !important;
+        widows: 999 !important;
+        page-break-before: avoid !important;
+        break-before: avoid !important;
       }
       .divider {
-        page-break-inside: avoid;
-        break-inside: avoid;
-        page-break-after: avoid;
-        break-after: avoid;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+        page-break-before: avoid !important;
+        break-before: avoid !important;
       }
     }
     * {
@@ -255,10 +259,10 @@ export function generateExpenseReceiptHTML(
   // Profit/Loss
   html += `<div class="section"><div class="row"><span class="row-label">${profitOrLoss >= 0 ? 'Foyda:' : 'Zarar:'}</span><span class="row-value">${formatAmount(Math.abs(profitOrLoss))}</span></div></div><div class="divider"></div>`;
 
-  // Expenses History
-  html += `<div style="page-break-inside: avoid; break-inside: avoid; orphans: 999; widows: 999;">`;
-  html += `<div class="section-title" style="page-break-before: avoid; break-before: avoid; page-break-after: avoid; break-after: avoid;">Xarajatlar tarixi:</div>`;
-  html += `<div class="divider" style="page-break-before: avoid; break-before: avoid; page-break-after: avoid; break-after: avoid;"></div>`;
+  // Expenses History - Wrap everything in one container to prevent page break
+  html += `<div style="page-break-inside: avoid !important; break-inside: avoid !important; page-break-before: avoid !important; break-before: avoid !important; orphans: 999 !important; widows: 999 !important; display: block !important;">`;
+  html += `<div class="section-title" style="page-break-before: avoid !important; break-before: avoid !important; page-break-after: avoid !important; break-after: avoid !important;">Xarajatlar tarixi:</div>`;
+  html += `<div class="divider" style="page-break-before: avoid !important; break-before: avoid !important; page-break-after: avoid !important; break-after: avoid !important;"></div>`;
   if (transactions.length === 0) {
     html += `<div class="info">Xarajatlar mavjud emas</div>`;
   } else {
@@ -353,17 +357,21 @@ export function generatePaymentReceiptHTML(
         display: block !important;
       }
       .item {
-        page-break-inside: avoid;
-        break-inside: avoid;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
         display: block;
-        orphans: 999;
-        widows: 999;
+        orphans: 999 !important;
+        widows: 999 !important;
+        page-break-before: avoid !important;
+        break-before: avoid !important;
       }
       .divider {
-        page-break-inside: avoid;
-        break-inside: avoid;
-        page-break-after: avoid;
-        break-after: avoid;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+        page-break-before: avoid !important;
+        break-before: avoid !important;
       }
     }
     * {
