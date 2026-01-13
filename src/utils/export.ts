@@ -233,7 +233,7 @@ export function generateExpenseReceiptHTML(
   if (transactions.length === 0) {
     html += `<div class="info">Xarajatlar mavjud emas</div>`;
   } else {
-    transactions.forEach((transaction, index) => {
+    transactions.forEach((transaction) => {
       const desc = transaction.description || 'Izohsiz';
       // Remove category prefix if exists
       const cleanDesc = desc.replace(`[${categoryName}]`, '').trim();
@@ -243,7 +243,7 @@ export function generateExpenseReceiptHTML(
       
       html += `
       <div class="item">
-        <div class="item-amount">${index + 1}. ${amount}</div>
+        <div class="item-amount">${amount}</div>
         <div class="item-desc">
           ${cleanDesc}
           <div class="item-time">${timeStr}</div>
@@ -430,7 +430,7 @@ export function generatePaymentReceiptHTML(
   if (transactions.length === 0) {
     html += `<div class="info">Operatsiyalar mavjud emas</div>`;
   } else {
-    transactions.forEach((transaction, index) => {
+    transactions.forEach((transaction) => {
       const desc = transaction.description || 'Izohsiz';
       const amount = formatAmount(transaction.amount);
       const transactionDate = new Date(transaction.date);
@@ -438,7 +438,7 @@ export function generatePaymentReceiptHTML(
       
       html += `
       <div class="item">
-        <div class="item-amount">${index + 1}. ${amount}</div>
+        <div class="item-amount">${amount}</div>
         <div class="item-desc">
           ${desc}
           <div class="item-time">${timeStr}</div>
