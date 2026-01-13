@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import EditCategoryModal from './EditCategoryModal';
 import ConfirmModal from './ConfirmModal';
+import PasswordModal from './PasswordModal';
+import { verifyPassword, isPasswordSet } from '../utils/password';
 
 interface Transaction {
   id: string;
@@ -42,6 +44,7 @@ export default function ExpenseCategoriesTab({
   const [categoryInputs, setCategoryInputs] = useState<Record<string, { amount: string; description: string }>>({});
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const navigate = useNavigate();
 
   // Format number with spaces (50000 -> 50 000)
@@ -230,8 +233,32 @@ export default function ExpenseCategoriesTab({
         />
       )}
 
-      {/* Delete Category Confirmation Modal */}
-      {deletingCategory && onDeleteCategory && (
+      {/* Password Modal for Delete */}
+      <PasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => {
+          setIsPasswordModalOpen(false);
+          setDeletingCategory(null);
+        }}
+        onConfirm={(password) => {
+          if (!verifyPassword(password)) {
+            toast.error('Noto\'g\'ri parol');
+            return;
+          }
+          setIsPasswordModalOpen(false);
+          // Show confirmation modal after password is verified
+          if (deletingCategory && onDeleteCategory) {
+            // Password is correct, proceed with deletion
+            onDeleteCategory(deletingCategory);
+            setDeletingCategory(null);
+          }
+        }}
+        title="Parolni kiriting"
+        message="Bo'limni o'chirish uchun parolni kiriting"
+      />
+
+      {/* Delete Category Confirmation Modal (only if password is not set) */}
+      {deletingCategory && onDeleteCategory && !isPasswordSet() && (
         <ConfirmModal
           isOpen={!!deletingCategory}
           onClose={() => setDeletingCategory(null)}
