@@ -391,10 +391,7 @@ export function generatePaymentReceiptHTML(
 <body>
 `;
 
-  // Date
-  html += `<div class="info center">${format(now, 'dd.MM.yyyy', { locale: uz })}</div>`;
-
-  // Payment Name
+  // Payment Name (no date/time in header)
   html += `<div class="title center">${paymentName.toUpperCase()}</div>`;
 
   html += `<div class="divider"></div>`;
