@@ -187,7 +187,7 @@ export default function XproOperations() {
   const [activeTab, setActiveTab] = useState('kassa');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
-  const { currentShift, closeShift, loading: shiftLoading } = useShift();
+  const { currentShift, closeShift, loading: shiftLoading, refreshShift } = useShift();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
