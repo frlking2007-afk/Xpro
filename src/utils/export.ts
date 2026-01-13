@@ -429,13 +429,6 @@ export function generatePaymentReceiptHTML(
     });
   }
 
-  html += `<div class="divider"></div>`;
-
-  // Footer
-  if (settings.showFooter && settings.footerText) {
-    html += `<div class="footer">${settings.footerText}</div>`;
-  }
-
   html += `
 </body>
 </html>
