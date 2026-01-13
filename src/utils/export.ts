@@ -422,8 +422,6 @@ export function generatePaymentReceiptHTML(
   // Payment Name
   html += `<div class="title center">${paymentName.toUpperCase()}</div>`;
 
-  html += `<div class="divider"></div>`;
-
   // Total Balance
   html += `<div class="section">`;
   html += `<div class="row">`;
@@ -431,11 +429,11 @@ export function generatePaymentReceiptHTML(
   html += `<span class="row-value">${formatAmount(totalBalance)}</span>`;
   html += `</div>`;
   html += `</div>`;
-
   html += `<div class="divider"></div>`;
 
   // Operations History
   html += `<div class="section-title">Operatsiyalar tarixi:</div>`;
+  html += `<div class="divider"></div>`;
   if (transactions.length === 0) {
     html += `<div class="info">Operatsiyalar mavjud emas</div>`;
   } else {
