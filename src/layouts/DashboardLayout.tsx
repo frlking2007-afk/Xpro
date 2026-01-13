@@ -144,9 +144,9 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
                   className="h-10 w-10 rounded-full object-cover border border-slate-700"
                 />
               ) : (
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white font-medium border border-slate-700">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-white font-medium border border-slate-700">
                   {userProfile.fullName.charAt(0).toUpperCase()}
-                </div>
+              </div>
               )}
               <div className="flex-1 overflow-hidden">
                 <p className="truncate text-sm font-medium text-white">{userProfile.fullName}</p>

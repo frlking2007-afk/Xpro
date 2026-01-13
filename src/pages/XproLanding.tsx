@@ -72,16 +72,16 @@ export default function XproLanding() {
           </div>
 
           <div className="flex items-center gap-4 justify-center">
-            <button
-              onClick={handleStart}
-              disabled={loading || isStarting}
-              className="group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl bg-white px-8 py-4 text-lg font-bold text-slate-900 transition-all hover:bg-slate-100 hover:scale-105 hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                {currentShift ? 'Davom Ettirish' : 'Smenani Boshlash'}
-                {currentShift ? <ArrowRight className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-              </span>
-            </button>
+          <button
+            onClick={handleStart}
+            disabled={loading || isStarting}
+            className="group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl bg-white px-8 py-4 text-lg font-bold text-slate-900 transition-all hover:bg-slate-100 hover:scale-105 hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            <span className="relative z-10 flex items-center gap-2">
+              {currentShift ? 'Davom Ettirish' : 'Smenani Boshlash'}
+              {currentShift ? <ArrowRight className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+            </span>
+          </button>
             
             {currentShift && (
               <button

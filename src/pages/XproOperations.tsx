@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight, Lock, Calendar, FolderPlus, Trash, Edit } from 'lucide-react';
+import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight, Lock, Calendar, FolderPlus, Trash, Edit, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 import { uz } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -14,6 +14,8 @@ import ExpenseCategoriesTab from '../components/ExpenseCategoriesTab';
 import EditShiftNameModal from '../components/EditShiftNameModal';
 import { verifyPassword, isPasswordSet } from '../utils/password';
 import { formatCurrency, getCurrencySymbol } from '../utils/currency';
+import ExportSettingsModal from '../components/ExportSettingsModal';
+import { generateReceiptHTML, printReceipt, getExportSettings, ExportSettings } from '../utils/export';
 
 const tabs = [
   { id: 'kassa', label: 'KASSA', icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
@@ -183,6 +185,165 @@ const PaymentTab = ({
   );
 };
 
+// Export Tab Component
+const ExportTab = ({
+  transactions,
+  expenseCategories,
+  shiftName,
+  onOpenSettings
+}: {
+  transactions: Transaction[];
+  expenseCategories: string[];
+  shiftName: string;
+  onOpenSettings: (name: string, type: 'category' | 'payment') => void;
+}) => {
+  const paymentTypes = [
+    { id: 'kassa', label: 'KASSA', icon: Wallet, color: 'text-emerald-400' },
+    { id: 'click', label: 'CLICK', icon: CreditCard, color: 'text-blue-400' },
+    { id: 'uzcard', label: 'UZCARD', icon: CreditCard, color: 'text-purple-400' },
+    { id: 'humo', label: 'HUMO', icon: CreditCard, color: 'text-orange-400' },
+  ];
+
+  const handleExport = (name: string, type: 'category' | 'payment') => {
+    try {
+      let filteredTransactions: Transaction[] = [];
+      
+      if (type === 'category') {
+        // Filter by category
+        filteredTransactions = transactions.filter(t => {
+          if (t.category === name) return true;
+          if (t.type === 'xarajat' && t.description && t.description.includes(`[${name}]`)) return true;
+          return false;
+        });
+      } else {
+        // Filter by payment type
+        filteredTransactions = transactions.filter(t => t.type === name);
+      }
+
+      if (filteredTransactions.length === 0) {
+        toast.info('Eksport qilish uchun ma\'lumotlar mavjud emas');
+        return;
+      }
+
+      const settings = getExportSettings(type, name);
+      const title = type === 'category' ? `${name} - Xarajatlar` : name.toUpperCase();
+      const html = generateReceiptHTML(filteredTransactions, title, settings, shiftName);
+      printReceipt(html);
+      toast.success('Chek tayyorlandi!');
+    } catch (error: any) {
+      toast.error('Eksport qilishda xatolik: ' + error.message);
+    }
+  };
+
+  const getCategoryTransactions = (category: string) => {
+    return transactions.filter(t => {
+      if (t.category === category) return true;
+      if (t.type === 'xarajat' && t.description && t.description.includes(`[${category}]`)) return true;
+      return false;
+    });
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Xarajatlar bo'limi */}
+      <div>
+        <h2 className="mb-4 text-xl font-bold text-white flex items-center gap-2">
+          <Banknote className="h-6 w-6 text-red-400" />
+          Xarajatlar bo'limlari
+        </h2>
+        {expenseCategories.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-black/20 p-8 text-center backdrop-blur-sm">
+            <p className="text-slate-400">Hozircha xarajat bo'limlari mavjud emas</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {expenseCategories.map((category) => {
+              const categoryTransactions = getCategoryTransactions(category);
+              const count = categoryTransactions.length;
+              return (
+                <motion.div
+                  key={category}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-bold text-white">{category}</h3>
+                    <span className="text-sm text-slate-400">{count} ta</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleExport(category, 'category')}
+                      className="flex-1 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:from-green-500 hover:to-emerald-500 shadow-lg shadow-green-500/20"
+                    >
+                      <Upload className="h-4 w-4 inline mr-2" />
+                      Eksport
+                    </button>
+                    <button
+                      onClick={() => onOpenSettings(category, 'category')}
+                      className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                      title="Sozlamalar"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* To'lov turlari */}
+      <div>
+        <h2 className="mb-4 text-xl font-bold text-white flex items-center gap-2">
+          <CreditCard className="h-6 w-6 text-blue-400" />
+          To'lov turlari
+        </h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {paymentTypes.map((payment) => {
+            const paymentTransactions = transactions.filter(t => t.type === payment.id);
+            const count = paymentTransactions.length;
+            const PaymentIcon = payment.icon;
+            return (
+              <motion.div
+                key={payment.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <PaymentIcon className={`h-5 w-5 ${payment.color}`} />
+                    <h3 className="text-lg font-bold text-white">{payment.label}</h3>
+                  </div>
+                  <span className="text-sm text-slate-400">{count} ta</span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleExport(payment.id, 'payment')}
+                    className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:from-blue-500 hover:to-cyan-500 shadow-lg shadow-blue-500/20"
+                  >
+                    <Upload className="h-4 w-4 inline mr-2" />
+                    Eksport
+                  </button>
+                  <button
+                    onClick={() => onOpenSettings(payment.id, 'payment')}
+                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                    title="Sozlamalar"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function XproOperations() {
   const [activeTab, setActiveTab] = useState('kassa');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -197,6 +358,8 @@ export default function XproOperations() {
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [isEditShiftNameModalOpen, setIsEditShiftNameModalOpen] = useState(false);
   const [expenseCategories, setExpenseCategories] = useState<string[]>([]);
+  const [exportSettingsModalOpen, setExportSettingsModalOpen] = useState(false);
+  const [exportSettingsItem, setExportSettingsItem] = useState<{ name: string; type: 'category' | 'payment' } | null>(null);
   
   // Get shift_id and tab from URL params
   const viewShiftId = searchParams.get('shift_id');
@@ -903,6 +1066,20 @@ export default function XproOperations() {
             loading={loading}
             shiftId={isViewMode ? viewShift?.id : currentShift?.id}
             isReadOnly={isViewMode}
+          />
+        ) : activeTab === 'eksport' ? (
+          <ExportTab
+            transactions={transactions}
+            expenseCategories={expenseCategories}
+            shiftName={isViewMode && viewShift 
+              ? (viewShift.name || format(new Date(viewShift.opened_at), 'd-MMMM yyyy', { locale: uz }))
+              : currentShift 
+                ? (currentShift.name || format(new Date(currentShift.opened_at), 'd-MMMM yyyy', { locale: uz }))
+                : 'Smena'}
+            onOpenSettings={(name, type) => {
+              setExportSettingsItem({ name, type });
+              setExportSettingsModalOpen(true);
+            }}
           />
         ) : (
           <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-black/20 text-slate-500">
