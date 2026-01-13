@@ -244,6 +244,9 @@ export function generateExpenseReceiptHTML(
 <body>
 `;
 
+  // Wrap ALL content in one container to prevent any page breaks
+  html += `<div style="page-break-inside: avoid !important; break-inside: avoid !important; orphans: 999 !important; widows: 999 !important; display: block !important;">`;
+  
   // Date (larger)
   html += `<div class="date">${format(now, 'dd.MM.yyyy', { locale: uz })}</div>`;
 
@@ -259,8 +262,7 @@ export function generateExpenseReceiptHTML(
   // Profit/Loss
   html += `<div class="section"><div class="row"><span class="row-label">${profitOrLoss >= 0 ? 'Foyda:' : 'Zarar:'}</span><span class="row-value">${formatAmount(Math.abs(profitOrLoss))}</span></div></div><div class="divider"></div>`;
 
-  // Expenses History - Wrap everything in one container to prevent page break
-  html += `<div style="page-break-inside: avoid !important; break-inside: avoid !important; page-break-before: avoid !important; break-before: avoid !important; orphans: 999 !important; widows: 999 !important; display: block !important;">`;
+  // Expenses History
   html += `<div class="section-title" style="page-break-before: avoid !important; break-before: avoid !important; page-break-after: avoid !important; break-after: avoid !important;">Xarajatlar tarixi:</div>`;
   html += `<div class="divider" style="page-break-before: avoid !important; break-before: avoid !important; page-break-after: avoid !important; break-after: avoid !important;"></div>`;
   if (transactions.length === 0) {
