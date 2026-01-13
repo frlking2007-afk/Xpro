@@ -70,7 +70,8 @@ export function generateExpenseReceiptHTML(
   const width = settings.paperWidth === '58mm' ? '48mm' : '72mm';
   const fontSize = settings.fontSize === 'small' ? '9px' : settings.fontSize === 'medium' ? '11px' : '13px';
   const titleSize = settings.fontSize === 'small' ? '13px' : settings.fontSize === 'medium' ? '15px' : '17px';
-  const dateSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
+  const dateSize = settings.fontSize === 'small' ? '14px' : settings.fontSize === 'medium' ? '16px' : '18px';
+  const descSize = settings.fontSize === 'small' ? '11px' : settings.fontSize === 'medium' ? '13px' : '15px';
   const lineHeight = '1.2';
   
   // Format number without currency symbol
@@ -203,8 +204,6 @@ export function generateExpenseReceiptHTML(
   // Category Name
   html += `<div class="title center">${categoryName}</div>`;
 
-  html += `<div class="divider"></div>`;
-
   // Sales
   html += `<div class="section">`;
   html += `<div class="row">`;
@@ -212,6 +211,7 @@ export function generateExpenseReceiptHTML(
   html += `<span class="row-value">${formatAmount(sales)}</span>`;
   html += `</div>`;
   html += `</div>`;
+  html += `<div class="divider"></div>`;
 
   // Total Expenses
   html += `<div class="section">`;
@@ -220,6 +220,7 @@ export function generateExpenseReceiptHTML(
   html += `<span class="row-value">${formatAmount(totalExpenses)}</span>`;
   html += `</div>`;
   html += `</div>`;
+  html += `<div class="divider"></div>`;
 
   // Profit/Loss
   html += `<div class="section">`;
@@ -228,11 +229,11 @@ export function generateExpenseReceiptHTML(
   html += `<span class="row-value">${formatAmount(Math.abs(profitOrLoss))}</span>`;
   html += `</div>`;
   html += `</div>`;
-
   html += `<div class="divider"></div>`;
 
   // Expenses History
   html += `<div class="section-title">Xarajatlar tarixi:</div>`;
+  html += `<div class="divider"></div>`;
   if (transactions.length === 0) {
     html += `<div class="info">Xarajatlar mavjud emas</div>`;
   } else {
@@ -252,6 +253,7 @@ export function generateExpenseReceiptHTML(
           <div class="item-time">${timeStr}</div>
         </div>
       </div>
+      <div class="divider"></div>
       `;
     });
   }
@@ -285,7 +287,8 @@ export function generatePaymentReceiptHTML(
   const width = settings.paperWidth === '58mm' ? '48mm' : '72mm';
   const fontSize = settings.fontSize === 'small' ? '9px' : settings.fontSize === 'medium' ? '11px' : '13px';
   const titleSize = settings.fontSize === 'small' ? '13px' : settings.fontSize === 'medium' ? '15px' : '17px';
-  const dateSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
+  const dateSize = settings.fontSize === 'small' ? '14px' : settings.fontSize === 'medium' ? '16px' : '18px';
+  const descSize = settings.fontSize === 'small' ? '11px' : settings.fontSize === 'medium' ? '13px' : '15px';
   const lineHeight = '1.2';
   
   // Format number without currency symbol
@@ -450,6 +453,7 @@ export function generatePaymentReceiptHTML(
           <div class="item-time">${timeStr}</div>
         </div>
       </div>
+      <div class="divider"></div>
       `;
     });
   }
