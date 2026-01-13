@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, BarChart3, TrendingUp, DollarSign, FileText } from 'lucide-react';
+import { ArrowLeft, BarChart3, TrendingUp, DollarSign, FileText, TrendingDown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { formatCurrency } from '../utils/currency';
 import { format } from 'date-fns';
 import { uz } from 'date-fns/locale';
+import SalesModal from '../components/SalesModal';
 
 interface Transaction {
   id: string;
@@ -21,11 +22,26 @@ export default function ExpenseStatistics() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>([]);
+  const [sales, setSales] = useState<number>(0);
+  const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
 
   useEffect(() => {
     fetchCategories();
     fetchTransactions();
+    loadSales();
   }, []);
+
+  const loadSales = () => {
+    const savedSales = localStorage.getItem('salesAmount');
+    if (savedSales) {
+      setSales(parseFloat(savedSales));
+    }
+  };
+
+  const handleSaveSales = (amount: number) => {
+    localStorage.setItem('salesAmount', amount.toString());
+    setSales(amount);
+  };
 
   const fetchCategories = () => {
     const cats = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
@@ -50,14 +66,6 @@ export default function ExpenseStatistics() {
     }
   };
 
-  const getCategoryStats = (category: string) => {
-    const categoryTransactions = transactions.filter(t => t.category === category);
-    const total = categoryTransactions.reduce((sum, t) => sum + t.amount, 0);
-    return {
-      count: categoryTransactions.length,
-      total
-    };
-  };
 
   const getTotalExpenses = () => {
     return transactions.reduce((sum, t) => sum + t.amount, 0);
@@ -65,6 +73,15 @@ export default function ExpenseStatistics() {
 
   const getTotalCount = () => {
     return transactions.length;
+  };
+
+  const getProfitOrLoss = () => {
+    const totalExpenses = getTotalExpenses();
+    const profit = sales - totalExpenses;
+    return {
+      amount: profit,
+      isProfit: profit >= 0
+    };
   };
 
   if (loading) {
@@ -101,6 +118,24 @@ export default function ExpenseStatistics() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          onClick={() => setIsSalesModalOpen(true)}
+          className="cursor-pointer rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm transition-all hover:bg-black/30 hover:border-white/20"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10 text-green-400">
+              <DollarSign className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 uppercase tracking-wider">Savdo</p>
+              <p className="text-2xl font-bold text-white">{formatCurrency(sales)}</p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
           className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm"
         >
           <div className="flex items-center gap-4">
@@ -117,84 +152,33 @@ export default function ExpenseStatistics() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm"
-        >
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10 text-blue-400">
-              <FileText className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 uppercase tracking-wider">Jami operatsiyalar</p>
-              <p className="text-2xl font-bold text-white">{getTotalCount()}</p>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm"
         >
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10 text-green-400">
-              <TrendingUp className="h-6 w-6" />
+            <div className={`flex h-12 w-12 items-center justify-center rounded-full ${
+              getProfitOrLoss().isProfit ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'
+            }`}>
+              {getProfitOrLoss().isProfit ? (
+                <TrendingUp className="h-6 w-6" />
+              ) : (
+                <TrendingDown className="h-6 w-6" />
+              )}
             </div>
             <div>
-              <p className="text-xs text-slate-400 uppercase tracking-wider">Bo'limlar soni</p>
-              <p className="text-2xl font-bold text-white">{categories.length}</p>
+              <p className="text-xs text-slate-400 uppercase tracking-wider">
+                {getProfitOrLoss().isProfit ? 'Foyda' : 'Zarar'}
+              </p>
+              <p className={`text-2xl font-bold ${
+                getProfitOrLoss().isProfit ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {formatCurrency(Math.abs(getProfitOrLoss().amount))}
+              </p>
             </div>
           </div>
         </motion.div>
       </div>
 
-      {/* Category Statistics */}
-      {categories.length > 0 && (
-        <div>
-          <h2 className="mb-4 text-xl font-bold text-white">Bo'limlar bo'yicha statistika</h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {categories.map((category, index) => {
-              const stats = getCategoryStats(category);
-              return (
-                <motion.div
-                  key={category}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm"
-                >
-                  <h3 className="mb-4 text-lg font-bold text-white">{category}</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-slate-400">Jami:</span>
-                      <span className="text-lg font-bold text-white">{formatCurrency(stats.total)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-slate-400">Soni:</span>
-                      <span className="text-lg font-bold text-white">{stats.count}</span>
-                    </div>
-                    {getTotalExpenses() > 0 && (
-                      <div className="mt-3">
-                        <div className="flex justify-between text-xs text-slate-500 mb-1">
-                          <span>Foiz:</span>
-                          <span>{((stats.total / getTotalExpenses()) * 100).toFixed(1)}%</span>
-                        </div>
-                        <div className="h-2 rounded-full bg-white/5 overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-red-500 to-pink-500 transition-all"
-                            style={{ width: `${(stats.total / getTotalExpenses()) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Recent Transactions */}
       {transactions.length > 0 && (
@@ -224,6 +208,13 @@ export default function ExpenseStatistics() {
           </div>
         </div>
       )}
+
+      <SalesModal
+        isOpen={isSalesModalOpen}
+        onClose={() => setIsSalesModalOpen(false)}
+        onSave={handleSaveSales}
+        currentSales={sales}
+      />
     </div>
   );
 }
