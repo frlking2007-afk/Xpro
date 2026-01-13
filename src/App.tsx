@@ -9,6 +9,7 @@ import XproLanding from './pages/XproLanding';
 import XproOperations from './pages/XproOperations';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import ExpenseStatistics from './pages/ExpenseStatistics';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="xpro" element={<XproLanding />} />
               <Route path="xpro/operations" element={<XproOperations />} />
+              <Route path="expense-statistics" element={<ExpenseStatistics />} />
               <Route path="reports" element={<Reports />} />
               <Route path="settings" element={<Settings />} />
             </Route>

@@ -628,7 +628,7 @@ export default function XproOperations() {
           <div className="flex items-center gap-4">
             <div className="flex flex-col items-end">
               <span className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">
-                {activeTab === 'xarajat' ? 'Jami xarajat' : 'Jami kirim'}
+                {activeTab === 'xarajat' ? 'Umumiy xarajat' : 'Jami kirim'}
               </span>
               <span className="text-3xl font-mono font-bold text-white tracking-tight">
                 {formatCurrency(calculateTabBalance())}

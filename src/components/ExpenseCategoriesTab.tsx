@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trash2 } from 'lucide-react';
+import { Trash2, BarChart3 } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../utils/currency';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface Transaction {
   id: string;
@@ -33,6 +34,7 @@ export default function ExpenseCategoriesTab({
   isReadOnly = false
 }: ExpenseCategoriesTabProps) {
   const [categoryInputs, setCategoryInputs] = useState<Record<string, { amount: string; description: string }>>({});
+  const navigate = useNavigate();
 
   // Format number with spaces (50000 -> 50 000)
   const formatNumber = (value: string): string => {
@@ -156,20 +158,14 @@ export default function ExpenseCategoriesTab({
               </button>
             </form>
 
-            {/* Statistics */}
-            <div className="mt-4 rounded-xl border border-white/5 bg-white/5 p-4">
-              <p className="mb-2 text-xs font-medium text-slate-400 uppercase tracking-wider">Statistika</p>
-              <div className="space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Jami:</span>
-                  <span className="font-bold text-white">{formatCurrency(stats.total)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Soni:</span>
-                  <span className="font-bold text-white">{stats.count}</span>
-                </div>
-              </div>
-            </div>
+            {/* Statistics Button */}
+            <button
+              onClick={() => navigate('/expense-statistics')}
+              className="mt-4 w-full rounded-xl border border-blue-500/50 bg-blue-500/10 py-2.5 text-sm font-medium text-blue-400 transition-all hover:bg-blue-500/20 flex items-center justify-center gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Statistika
+            </button>
 
             {/* Category Transactions List */}
             {categoryTransactions.length > 0 && (
