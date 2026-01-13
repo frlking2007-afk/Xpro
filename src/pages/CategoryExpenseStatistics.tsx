@@ -35,6 +35,32 @@ export default function CategoryExpenseStatistics() {
     }
   }, [categoryName]);
 
+  // Listen for transaction updates when page is visible
+  useEffect(() => {
+    const handleTransactionUpdate = () => {
+      if (categoryName) {
+        fetchTransactions();
+      }
+    };
+    
+    window.addEventListener('transactionAdded', handleTransactionUpdate);
+    window.addEventListener('transactionDeleted', handleTransactionUpdate);
+    
+    // Refresh when page becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden && categoryName) {
+        fetchTransactions();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('transactionAdded', handleTransactionUpdate);
+      window.removeEventListener('transactionDeleted', handleTransactionUpdate);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [categoryName]);
+
   const fetchTransactions = async () => {
     if (!categoryName) return;
     
