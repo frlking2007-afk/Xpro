@@ -195,6 +195,7 @@ export default function XproOperations() {
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [isClearPasswordModalOpen, setIsClearPasswordModalOpen] = useState(false);
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
+  const [isEditShiftNameModalOpen, setIsEditShiftNameModalOpen] = useState(false);
   const [expenseCategories, setExpenseCategories] = useState<string[]>([]);
   
   // Get shift_id from URL params
@@ -916,6 +917,13 @@ export default function XproOperations() {
         isOpen={isAddCategoryModalOpen}
         onClose={() => setIsAddCategoryModalOpen(false)}
         onConfirm={handleAddCategory}
+      />
+
+      <EditShiftNameModal
+        isOpen={isEditShiftNameModalOpen}
+        onClose={() => setIsEditShiftNameModalOpen(false)}
+        onSave={handleUpdateShiftName}
+        currentName={currentShift?.name || null}
       />
     </div>
   );
