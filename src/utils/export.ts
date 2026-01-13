@@ -102,6 +102,8 @@ export function generateExpenseReceiptHTML(
         page-break-inside: avoid;
         height: auto !important;
         min-height: auto !important;
+        orphans: 999;
+        widows: 999;
       }
       .section-title {
         page-break-after: avoid;
@@ -261,9 +263,9 @@ export function generateExpenseReceiptHTML(
   html += `<div class="divider"></div>`;
 
   // Expenses History
-  html += `<div class="section-title" style="page-break-before: avoid; break-before: avoid;">Xarajatlar tarixi:</div>`;
-  html += `<div class="divider"></div>`;
-  html += `<div style="page-break-inside: avoid; break-inside: avoid; page-break-before: avoid; break-before: avoid;">`;
+  html += `<div style="page-break-inside: avoid; break-inside: avoid; orphans: 999; widows: 999;">`;
+  html += `<div class="section-title" style="page-break-before: avoid; break-before: avoid; page-break-after: avoid; break-after: avoid;">Xarajatlar tarixi:</div>`;
+  html += `<div class="divider" style="page-break-before: avoid; break-before: avoid; page-break-after: avoid; break-after: avoid;"></div>`;
   if (transactions.length === 0) {
     html += `<div class="info">Xarajatlar mavjud emas</div>`;
   } else {
@@ -349,6 +351,8 @@ export function generatePaymentReceiptHTML(
         page-break-inside: avoid;
         height: auto !important;
         min-height: auto !important;
+        orphans: 999;
+        widows: 999;
       }
       .section-title {
         page-break-after: avoid;
@@ -515,7 +519,7 @@ export function generatePaymentReceiptHTML(
       `;
     });
   }
-  html += `</div>`;
+  html += `</div></div>`;
 
   html += `
 </body>
