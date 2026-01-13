@@ -94,6 +94,15 @@ export function generateExpenseReceiptHTML(
       body {
         margin: 0;
         padding: 4px;
+        page-break-inside: avoid;
+      }
+      .item {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .divider {
+        page-break-inside: avoid;
+        break-inside: avoid;
       }
     }
     * {
@@ -130,6 +139,8 @@ export function generateExpenseReceiptHTML(
     .divider {
       border-top: 1px dashed #000;
       margin: 3px 0;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
     .section {
       margin: 3px 0;
@@ -311,6 +322,15 @@ export function generatePaymentReceiptHTML(
       body {
         margin: 0;
         padding: 4px;
+        page-break-inside: avoid;
+      }
+      .item {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .divider {
+        page-break-inside: avoid;
+        break-inside: avoid;
       }
     }
     * {
@@ -347,6 +367,8 @@ export function generatePaymentReceiptHTML(
     .divider {
       border-top: 1px dashed #000;
       margin: 3px 0;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
     .section {
       margin: 3px 0;
