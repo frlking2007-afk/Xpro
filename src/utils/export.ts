@@ -111,10 +111,19 @@ export function generateExpenseReceiptHTML(
         break-after: avoid;
         break-before: avoid;
       }
+      div[style*="page-break-inside: avoid"] {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        orphans: 999 !important;
+        widows: 999 !important;
+        display: block !important;
+      }
       .item {
         page-break-inside: avoid;
         break-inside: avoid;
         display: block;
+        orphans: 999;
+        widows: 999;
       }
       .divider {
         page-break-inside: avoid;
@@ -360,10 +369,19 @@ export function generatePaymentReceiptHTML(
         break-after: avoid;
         break-before: avoid;
       }
+      div[style*="page-break-inside: avoid"] {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        orphans: 999 !important;
+        widows: 999 !important;
+        display: block !important;
+      }
       .item {
         page-break-inside: avoid;
         break-inside: avoid;
         display: block;
+        orphans: 999;
+        widows: 999;
       }
       .divider {
         page-break-inside: avoid;
