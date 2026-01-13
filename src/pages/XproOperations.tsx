@@ -198,8 +198,9 @@ export default function XproOperations() {
   const [isEditShiftNameModalOpen, setIsEditShiftNameModalOpen] = useState(false);
   const [expenseCategories, setExpenseCategories] = useState<string[]>([]);
   
-  // Get shift_id from URL params
+  // Get shift_id and tab from URL params
   const viewShiftId = searchParams.get('shift_id');
+  const tabParam = searchParams.get('tab');
   const [viewShift, setViewShift] = useState<{ id: string; status: 'open' | 'closed'; opened_at: string; closed_at: string | null } | null>(null);
   const [isViewMode, setIsViewMode] = useState(false);
   const [loadingViewShift, setLoadingViewShift] = useState(false);

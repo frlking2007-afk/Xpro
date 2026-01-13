@@ -130,7 +130,7 @@ export default function CategoryExpenseStatistics() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate('/expense-statistics')}
+            onClick={() => navigate('/xpro/operations?tab=xarajat')}
             className="rounded-xl border border-white/10 bg-white/5 p-2 text-white transition-colors hover:bg-white/10"
           >
             <ArrowLeft className="h-5 w-5" />
