@@ -202,33 +202,15 @@ export default function ExpenseCategoriesTab({
               Statistika
             </button>
 
-            {/* Category Transactions List */}
-            {categoryTransactions.length > 0 && (
-              <div className="mt-4 space-y-2">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Operatsiyalar</p>
-                <div className="max-h-40 space-y-1.5 overflow-y-auto">
-                  {categoryTransactions.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between rounded-lg border border-white/5 bg-white/5 p-2 text-xs"
-                    >
-                      <div>
-                        <p className="font-semibold text-white">{formatCurrency(item.amount)}</p>
-                        <p className="text-slate-400">{item.description || 'Izohsiz'}</p>
-                      </div>
-                      {!isReadOnly && (
-                        <button
-                          onClick={() => onDeleteTransaction(item.id)}
-                          className="rounded p-1 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-400"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Total Expense for Category */}
+            <div className="mt-4 rounded-xl border border-white/5 bg-white/5 p-4">
+              <p className="mb-2 text-xs font-medium text-slate-400 uppercase tracking-wider">Umumiy xarajat</p>
+              <p className="text-2xl font-bold text-white">
+                {formatCurrency(
+                  categoryTransactions.reduce((sum, t) => sum + t.amount, 0)
+                )}
+              </p>
+            </div>
           </motion.div>
         );
       })}
