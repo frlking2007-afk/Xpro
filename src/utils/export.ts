@@ -188,7 +188,10 @@ export function generateExpenseReceiptHTML(
 <body>
 `;
 
-  // Category Name (no date/time in header)
+  // Date (larger)
+  html += `<div class="date">${format(now, 'dd.MM.yyyy', { locale: uz })}</div>`;
+
+  // Category Name
   html += `<div class="title center">${categoryName}</div>`;
 
   html += `<div class="divider"></div>`;
@@ -197,7 +200,7 @@ export function generateExpenseReceiptHTML(
   html += `<div class="section">`;
   html += `<div class="row">`;
   html += `<span class="row-label">Savdo:</span>`;
-  html += `<span class="row-value">${formatCurrency(sales)}</span>`;
+  html += `<span class="row-value">${formatAmount(sales)}</span>`;
   html += `</div>`;
   html += `</div>`;
 
@@ -205,7 +208,7 @@ export function generateExpenseReceiptHTML(
   html += `<div class="section">`;
   html += `<div class="row">`;
   html += `<span class="row-label">Umumiy xarajat:</span>`;
-  html += `<span class="row-value">${formatCurrency(totalExpenses)}</span>`;
+  html += `<span class="row-value">${formatAmount(totalExpenses)}</span>`;
   html += `</div>`;
   html += `</div>`;
 
@@ -213,7 +216,7 @@ export function generateExpenseReceiptHTML(
   html += `<div class="section">`;
   html += `<div class="row">`;
   html += `<span class="row-label">${profitOrLoss >= 0 ? 'Foyda:' : 'Zarar:'}</span>`;
-  html += `<span class="row-value">${formatCurrency(Math.abs(profitOrLoss))}</span>`;
+  html += `<span class="row-value">${formatAmount(Math.abs(profitOrLoss))}</span>`;
   html += `</div>`;
   html += `</div>`;
 
@@ -228,17 +231,17 @@ export function generateExpenseReceiptHTML(
       const desc = transaction.description || 'Izohsiz';
       // Remove category prefix if exists
       const cleanDesc = desc.replace(`[${categoryName}]`, '').trim();
-      const amount = formatCurrency(transaction.amount);
+      const amount = formatAmount(transaction.amount);
       const transactionDate = new Date(transaction.date);
       const timeStr = format(transactionDate, 'HH:mm', { locale: uz });
       
       html += `
       <div class="item">
+        <div class="item-amount">${index + 1}. ${amount}</div>
         <div class="item-desc">
-          ${index + 1}. ${cleanDesc}
+          ${cleanDesc}
           <div class="item-time">${timeStr}</div>
         </div>
-        <div class="item-amount">${amount}</div>
       </div>
       `;
     });
@@ -391,7 +394,10 @@ export function generatePaymentReceiptHTML(
 <body>
 `;
 
-  // Payment Name (no date/time in header)
+  // Date (larger)
+  html += `<div class="date">${format(now, 'dd.MM.yyyy', { locale: uz })}</div>`;
+
+  // Payment Name
   html += `<div class="title center">${paymentName.toUpperCase()}</div>`;
 
   html += `<div class="divider"></div>`;
@@ -400,7 +406,7 @@ export function generatePaymentReceiptHTML(
   html += `<div class="section">`;
   html += `<div class="row">`;
   html += `<span class="row-label">Umumiy balans:</span>`;
-  html += `<span class="row-value">${formatCurrency(totalBalance)}</span>`;
+  html += `<span class="row-value">${formatAmount(totalBalance)}</span>`;
   html += `</div>`;
   html += `</div>`;
 
@@ -413,17 +419,17 @@ export function generatePaymentReceiptHTML(
   } else {
     transactions.forEach((transaction, index) => {
       const desc = transaction.description || 'Izohsiz';
-      const amount = formatCurrency(transaction.amount);
+      const amount = formatAmount(transaction.amount);
       const transactionDate = new Date(transaction.date);
       const timeStr = format(transactionDate, 'HH:mm', { locale: uz });
       
       html += `
       <div class="item">
+        <div class="item-amount">${index + 1}. ${amount}</div>
         <div class="item-desc">
-          ${index + 1}. ${desc}
+          ${desc}
           <div class="item-time">${timeStr}</div>
         </div>
-        <div class="item-amount">${amount}</div>
       </div>
       `;
     });
