@@ -81,14 +81,6 @@ export default function ExpenseCategoriesTab({
     return transactions.filter(t => t.category === category);
   };
 
-  const getCategoryStats = (category: string) => {
-    const categoryTransactions = getCategoryTransactions(category);
-    const total = categoryTransactions.reduce((sum, t) => sum + t.amount, 0);
-    return {
-      count: categoryTransactions.length,
-      total
-    };
-  };
 
   if (categories.length === 0) {
     return (
@@ -102,7 +94,6 @@ export default function ExpenseCategoriesTab({
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
       {categories.map((category) => {
-        const stats = getCategoryStats(category);
         const categoryTransactions = getCategoryTransactions(category);
         
         return (
