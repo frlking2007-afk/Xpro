@@ -369,14 +369,15 @@ export function generatePaymentReceiptHTML(
       color: #666;
       margin-top: 1px;
     }
-    .item-desc {
-      flex: 1;
-      word-wrap: break-word;
-      margin-right: 4px;
-    }
     .item-amount {
       font-weight: bold;
       white-space: nowrap;
+      margin-right: 6px;
+    }
+    .item-desc {
+      flex: 1;
+      word-wrap: break-word;
+      font-weight: bold;
     }
     .total {
       border-top: 2px solid #000;
