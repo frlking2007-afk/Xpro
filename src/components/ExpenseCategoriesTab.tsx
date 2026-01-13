@@ -45,6 +45,7 @@ export default function ExpenseCategoriesTab({
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState<Record<string, boolean>>({});
   const navigate = useNavigate();
 
   // Format number with spaces (50000 -> 50 000)
@@ -69,7 +70,7 @@ export default function ExpenseCategoriesTab({
     }));
   };
 
-  const handleSave = (e: React.FormEvent, category: string) => {
+  const handleSave = async (e: React.FormEvent, category: string) => {
     e.preventDefault();
     const input = categoryInputs[category];
     if (!input?.amount) return;
@@ -78,14 +79,26 @@ export default function ExpenseCategoriesTab({
       return;
     }
 
-    const numericAmount = parseFloat(input.amount.replace(/\s/g, ''));
-    onAddExpense(category, numericAmount, input.description || '');
-    
-    // Clear inputs for this category
-    setCategoryInputs(prev => ({
-      ...prev,
-      [category]: { amount: '', description: '' }
-    }));
+    // Set loading for this specific category
+    setLoadingCategories(prev => ({ ...prev, [category]: true }));
+
+    try {
+      const numericAmount = parseFloat(input.amount.replace(/\s/g, ''));
+      await onAddExpense(category, numericAmount, input.description || '');
+      
+      // Clear inputs for this category
+      setCategoryInputs(prev => ({
+        ...prev,
+        [category]: { amount: '', description: '' }
+      }));
+    } finally {
+      // Remove loading for this specific category
+      setLoadingCategories(prev => {
+        const newState = { ...prev };
+        delete newState[category];
+        return newState;
+      });
+    }
   };
 
   const getCategoryTransactions = (category: string) => {
@@ -173,10 +186,10 @@ export default function ExpenseCategoriesTab({
 
               <button
                 type="submit"
-                disabled={loading || isReadOnly}
+                disabled={loadingCategories[category] || isReadOnly}
                 className="w-full rounded-xl bg-gradient-to-r from-red-600 to-pink-600 py-2.5 text-sm font-bold text-white transition-all hover:from-red-500 hover:to-pink-500 shadow-lg shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Saqlanmoqda...' : isReadOnly ? 'Faqat ko\'rish' : 'Saqlash'}
+                {loadingCategories[category] ? 'Saqlanmoqda...' : isReadOnly ? 'Faqat ko\'rish' : 'Saqlash'}
               </button>
             </form>
 

@@ -35,17 +35,61 @@ export default function CategoryExpenseStatistics() {
     
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First try to fetch by category column
+      let { data, error } = await supabase
         .from('transactions')
         .select('*')
         .eq('type', 'xarajat')
         .eq('category', categoryName)
         .order('date', { ascending: false });
 
-      if (error) throw error;
+      // If category column doesn't exist or returns empty, try filtering by description
+      if (error || !data || data.length === 0) {
+        // Fetch all xarajat transactions
+        const { data: allData, error: allError } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('type', 'xarajat')
+          .order('date', { ascending: false });
+
+        if (allError) throw allError;
+
+        // Filter by category name in description (format: [CategoryName])
+        data = (allData || []).filter(t => {
+          // Check if category column exists and matches
+          if (t.category === categoryName) return true;
+          // Check if description contains [CategoryName]
+          if (t.description && t.description.includes(`[${categoryName}]`)) return true;
+          return false;
+        });
+      }
+
+      if (error && !data) throw error;
       setTransactions(data || []);
     } catch (error: any) {
       console.error('Error fetching transactions:', error);
+      // If error, try alternative method
+      try {
+        const { data: allData, error: allError } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('type', 'xarajat')
+          .order('date', { ascending: false });
+
+        if (allError) throw allError;
+
+        // Filter by description
+        const filtered = (allData || []).filter(t => {
+          if (t.category === categoryName) return true;
+          if (t.description && t.description.includes(`[${categoryName}]`)) return true;
+          return false;
+        });
+
+        setTransactions(filtered);
+      } catch (fallbackError: any) {
+        console.error('Fallback error:', fallbackError);
+        setTransactions([]);
+      }
     } finally {
       setLoading(false);
     }

@@ -594,24 +594,18 @@ export default function XproOperations() {
       return;
     }
     
-    setLoading(true);
     try {
-      // First try with category column
+      // Prepare insert data
       let insertData: any = {
         amount,
-        description: description || categoryName,
         type: 'xarajat',
         date: new Date().toISOString(),
         shift_id: isViewMode ? viewShift?.id : currentShift?.id
       };
 
-      // Try to add category if column exists
-      try {
-        insertData.category = categoryName;
-      } catch (e) {
-        // Category column doesn't exist, store in description
-        insertData.description = `[${categoryName}] ${description || categoryName}`;
-      }
+      // Try to add category column first
+      insertData.category = categoryName;
+      insertData.description = description || categoryName;
 
       const { data, error } = await supabase
         .from('transactions')
@@ -620,10 +614,10 @@ export default function XproOperations() {
         .single();
 
       if (error) {
-        // If category column error, try without it
-        if (error.message.includes('category')) {
-          insertData.description = `[${categoryName}] ${description || categoryName}`;
+        // If category column doesn't exist, store in description
+        if (error.message.includes('category') || error.message.includes('column') || error.code === '42703') {
           delete insertData.category;
+          insertData.description = `[${categoryName}] ${description || categoryName}`;
           
           const { data: retryData, error: retryError } = await supabase
             .from('transactions')
@@ -632,20 +626,24 @@ export default function XproOperations() {
             .single();
           
           if (retryError) throw retryError;
-          setTransactions([retryData, ...transactions]);
+          
+          // Add category to the returned data for consistency
+          const transactionWithCategory = { ...retryData, category: categoryName };
+          setTransactions([transactionWithCategory, ...transactions]);
         } else {
           throw error;
         }
       } else {
-        setTransactions([data, ...transactions]);
+        // Ensure category is set even if column doesn't exist
+        const transactionWithCategory = { ...data, category: categoryName };
+        setTransactions([transactionWithCategory, ...transactions]);
       }
 
       toast.success("Muvaffaqiyatli saqlandi!");
     } catch (error: any) {
       console.error('Error adding expense:', error);
       toast.error('Xatolik: ' + error.message);
-    } finally {
-      setLoading(false);
+      throw error; // Re-throw to let component handle loading state
     }
   };
 
