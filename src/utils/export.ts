@@ -511,7 +511,10 @@ export function generatePaymentReceiptHTML(
       html += `<div class="item"><div class="item-amount">${amount}</div><div class="item-desc">${desc}<div class="item-time">${timeStr}</div></div></div><div class="divider"></div>`;
     });
   }
-  html += `</div></div>`;
+  html += `</div>`;
+
+  // Close the main container
+  html += `</div>`;
 
   html += `
 </body>
