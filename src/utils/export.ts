@@ -384,6 +384,8 @@ export function generatePaymentReceiptHTML(
       flex: 1;
       word-wrap: break-word;
       font-weight: bold;
+      font-size: ${descSize};
+      color: #000;
     }
     .total {
       border-top: 2px solid #000;
