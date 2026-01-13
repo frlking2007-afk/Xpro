@@ -247,31 +247,13 @@ export function generateExpenseReceiptHTML(
   html += `<div class="title center">${categoryName}</div>`;
 
   // Sales
-  html += `<div class="section">`;
-  html += `<div class="row">`;
-  html += `<span class="row-label">Savdo:</span>`;
-  html += `<span class="row-value">${formatAmount(sales)}</span>`;
-  html += `</div>`;
-  html += `</div>`;
-  html += `<div class="divider"></div>`;
+  html += `<div class="section"><div class="row"><span class="row-label">Savdo:</span><span class="row-value">${formatAmount(sales)}</span></div></div><div class="divider"></div>`;
 
   // Total Expenses
-  html += `<div class="section">`;
-  html += `<div class="row">`;
-  html += `<span class="row-label">Umumiy xarajat:</span>`;
-  html += `<span class="row-value">${formatAmount(totalExpenses)}</span>`;
-  html += `</div>`;
-  html += `</div>`;
-  html += `<div class="divider"></div>`;
+  html += `<div class="section"><div class="row"><span class="row-label">Umumiy xarajat:</span><span class="row-value">${formatAmount(totalExpenses)}</span></div></div><div class="divider"></div>`;
 
   // Profit/Loss
-  html += `<div class="section">`;
-  html += `<div class="row">`;
-  html += `<span class="row-label">${profitOrLoss >= 0 ? 'Foyda:' : 'Zarar:'}</span>`;
-  html += `<span class="row-value">${formatAmount(Math.abs(profitOrLoss))}</span>`;
-  html += `</div>`;
-  html += `</div>`;
-  html += `<div class="divider"></div>`;
+  html += `<div class="section"><div class="row"><span class="row-label">${profitOrLoss >= 0 ? 'Foyda:' : 'Zarar:'}</span><span class="row-value">${formatAmount(Math.abs(profitOrLoss))}</span></div></div><div class="divider"></div>`;
 
   // Expenses History
   html += `<div style="page-break-inside: avoid; break-inside: avoid; orphans: 999; widows: 999;">`;
