@@ -267,7 +267,8 @@ export default function XproOperations() {
         .from('transactions')
         .select('*')
         .eq('shift_id', shiftId)
-        .order('date', { ascending: false });
+        .order('date', { ascending: false })
+        .limit(1000); // Optimize: limit results
 
       if (error) throw error;
       setTransactions(data || []);
@@ -451,6 +452,112 @@ export default function XproOperations() {
     setIsAddCategoryModalOpen(false);
   };
 
+  const handleEditCategory = (oldName: string, newName: string) => {
+    if (oldName === newName) return;
+    
+    const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+    if (categories.includes(newName)) {
+      toast.error(`"${newName}" bo'limi allaqachon mavjud`);
+      return;
+    }
+    
+    const index = categories.indexOf(oldName);
+    if (index !== -1) {
+      categories[index] = newName;
+      localStorage.setItem('expenseCategories', JSON.stringify(categories));
+      setExpenseCategories(categories);
+      window.dispatchEvent(new Event('categoryUpdated'));
+      
+      // Update transactions with old category name
+      updateTransactionsCategory(oldName, newName);
+      
+      toast.success(`"${oldName}" bo'limi "${newName}" ga o'zgartirildi`);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryName: string) => {
+    const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+    const filtered = categories.filter((cat: string) => cat !== categoryName);
+    localStorage.setItem('expenseCategories', JSON.stringify(filtered));
+    setExpenseCategories(filtered);
+    window.dispatchEvent(new Event('categoryUpdated'));
+    
+    // Delete all transactions for this category
+    try {
+      const categoryTransactions = transactions.filter(t => 
+        t.category === categoryName || 
+        (t.type === 'xarajat' && t.description?.includes(`[${categoryName}]`))
+      );
+      
+      if (categoryTransactions.length > 0) {
+        const ids = categoryTransactions.map(t => t.id);
+        const { error } = await supabase
+          .from('transactions')
+          .delete()
+          .in('id', ids);
+        
+        if (error) throw error;
+        
+        setTransactions(transactions.filter(t => !ids.includes(t.id)));
+      }
+      
+      toast.success(`"${categoryName}" bo'limi o'chirildi`);
+    } catch (error: any) {
+      console.error('Error deleting category transactions:', error);
+      toast.error('Bo\'lim o\'chirildi, lekin ba\'zi operatsiyalar o\'chirilmadi');
+    }
+  };
+
+  const updateTransactionsCategory = async (oldName: string, newName: string) => {
+    try {
+      const categoryTransactions = transactions.filter(t => 
+        t.category === oldName || 
+        (t.type === 'xarajat' && t.description?.includes(`[${oldName}]`))
+      );
+      
+      for (const transaction of categoryTransactions) {
+        const updateData: any = {};
+        
+        // Try to update category column if it exists
+        try {
+          const { error: categoryError } = await supabase
+            .from('transactions')
+            .update({ category: newName })
+            .eq('id', transaction.id);
+          
+          if (!categoryError) {
+            // Successfully updated category column
+            continue;
+          }
+        } catch (e) {
+          // Category column doesn't exist, update description
+        }
+        
+        // Update description if category column doesn't exist
+        const newDescription = transaction.description?.replace(
+          `[${oldName}]`,
+          `[${newName}]`
+        ) || `[${newName}]`;
+        
+        const { error } = await supabase
+          .from('transactions')
+          .update({ description: newDescription })
+          .eq('id', transaction.id);
+        
+        if (error) console.error('Error updating transaction:', error);
+      }
+      
+      // Refresh transactions
+      if (currentShift && !isViewMode) {
+        fetchTransactions();
+      } else if (isViewMode && viewShift) {
+        fetchTransactionsForShift(viewShift.id);
+      }
+    } catch (error: any) {
+      console.error('Error updating transactions category:', error);
+    }
+  };
+
   const handleAddExpenseToCategory = async (categoryName: string, amount: number, description: string) => {
     if (!currentShift && !isViewMode) {
       toast.error("Smena ochiq emas!");
@@ -459,26 +566,53 @@ export default function XproOperations() {
     
     setLoading(true);
     try {
+      // First try with category column
+      let insertData: any = {
+        amount,
+        description: description || categoryName,
+        type: 'xarajat',
+        date: new Date().toISOString(),
+        shift_id: isViewMode ? viewShift?.id : currentShift?.id
+      };
+
+      // Try to add category if column exists
+      try {
+        insertData.category = categoryName;
+      } catch (e) {
+        // Category column doesn't exist, store in description
+        insertData.description = `[${categoryName}] ${description || categoryName}`;
+      }
+
       const { data, error } = await supabase
         .from('transactions')
-        .insert([
-          {
-            amount,
-            description: description || categoryName,
-            type: 'xarajat',
-            date: new Date().toISOString(),
-            shift_id: isViewMode ? viewShift?.id : currentShift?.id,
-            category: categoryName
-          }
-        ])
+        .insert([insertData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // If category column error, try without it
+        if (error.message.includes('category')) {
+          insertData.description = `[${categoryName}] ${description || categoryName}`;
+          delete insertData.category;
+          
+          const { data: retryData, error: retryError } = await supabase
+            .from('transactions')
+            .insert([insertData])
+            .select()
+            .single();
+          
+          if (retryError) throw retryError;
+          setTransactions([retryData, ...transactions]);
+        } else {
+          throw error;
+        }
+      } else {
+        setTransactions([data, ...transactions]);
+      }
 
-      setTransactions([data, ...transactions]);
       toast.success("Muvaffaqiyatli saqlandi!");
     } catch (error: any) {
+      console.error('Error adding expense:', error);
       toast.error('Xatolik: ' + error.message);
     } finally {
       setLoading(false);
@@ -686,6 +820,8 @@ export default function XproOperations() {
             transactions={filteredTransactions}
             onAddExpense={handleAddExpenseToCategory}
             onDeleteTransaction={handleDeleteTransaction}
+            onEditCategory={handleEditCategory}
+            onDeleteCategory={handleDeleteCategory}
             loading={loading}
             shiftId={isViewMode ? viewShift?.id : currentShift?.id}
             isReadOnly={isViewMode}

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trash2, BarChart3 } from 'lucide-react';
+import { Trash2, BarChart3, Edit, X } from 'lucide-react';
 import { formatCurrency, getCurrencySymbol } from '../utils/currency';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import EditCategoryModal from './EditCategoryModal';
+import ConfirmModal from './ConfirmModal';
 
 interface Transaction {
   id: string;
@@ -19,6 +21,8 @@ interface ExpenseCategoriesTabProps {
   transactions: Transaction[];
   onAddExpense: (category: string, amount: number, description: string) => void;
   onDeleteTransaction: (id: string) => void;
+  onEditCategory?: (oldName: string, newName: string) => void;
+  onDeleteCategory?: (categoryName: string) => void;
   loading: boolean;
   shiftId: string | undefined;
   isReadOnly?: boolean;
@@ -29,11 +33,15 @@ export default function ExpenseCategoriesTab({
   transactions,
   onAddExpense,
   onDeleteTransaction,
+  onEditCategory,
+  onDeleteCategory,
   loading,
   shiftId,
   isReadOnly = false
 }: ExpenseCategoriesTabProps) {
   const [categoryInputs, setCategoryInputs] = useState<Record<string, { amount: string; description: string }>>({});
+  const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Format number with spaces (50000 -> 50 000)
@@ -103,8 +111,28 @@ export default function ExpenseCategoriesTab({
             animate={{ opacity: 1, y: 0 }}
             className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm"
           >
-            {/* Category Name */}
-            <h3 className="mb-4 text-lg font-bold text-white">{category}</h3>
+            {/* Category Name with Edit/Delete buttons */}
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-white">{category}</h3>
+              {!isReadOnly && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setEditingCategory(category)}
+                    className="rounded-lg p-1.5 text-blue-400 transition-all hover:bg-blue-500/20 hover:text-blue-300"
+                    title="Tahrirlash"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setDeletingCategory(category)}
+                    className="rounded-lg p-1.5 text-red-400 transition-all hover:bg-red-500/20 hover:text-red-300"
+                    title="O'chirish"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Input Form */}
             <form onSubmit={(e) => handleSave(e, category)} className="space-y-4">
@@ -188,6 +216,36 @@ export default function ExpenseCategoriesTab({
           </motion.div>
         );
       })}
+
+      {/* Edit Category Modal */}
+      {editingCategory && onEditCategory && (
+        <EditCategoryModal
+          isOpen={!!editingCategory}
+          onClose={() => setEditingCategory(null)}
+          onSave={(oldName, newName) => {
+            onEditCategory(oldName, newName);
+            setEditingCategory(null);
+          }}
+          currentName={editingCategory}
+        />
+      )}
+
+      {/* Delete Category Confirmation Modal */}
+      {deletingCategory && onDeleteCategory && (
+        <ConfirmModal
+          isOpen={!!deletingCategory}
+          onClose={() => setDeletingCategory(null)}
+          onConfirm={() => {
+            onDeleteCategory(deletingCategory);
+            setDeletingCategory(null);
+          }}
+          title="Bo'limni o'chirish"
+          message={`"${deletingCategory}" bo'limini o'chirishni tasdiqlaysizmi? Bu amalni ortga qaytarib bo'lmaydi.`}
+          confirmText="O'chirish"
+          cancelText="Bekor qilish"
+          isDanger={true}
+        />
+      )}
     </div>
   );
 }
