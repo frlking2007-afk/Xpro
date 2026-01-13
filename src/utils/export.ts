@@ -245,6 +245,7 @@ export function generateExpenseReceiptHTML(
   // Expenses History
   html += `<div class="section-title">Xarajatlar tarixi:</div>`;
   html += `<div class="divider"></div>`;
+  html += `<div style="page-break-inside: avoid; break-inside: avoid;">`;
   if (transactions.length === 0) {
     html += `<div class="info">Xarajatlar mavjud emas</div>`;
   } else {
@@ -456,6 +457,7 @@ export function generatePaymentReceiptHTML(
   // Operations History
   html += `<div class="section-title">Operatsiyalar tarixi:</div>`;
   html += `<div class="divider"></div>`;
+  html += `<div style="page-break-inside: avoid; break-inside: avoid;">`;
   if (transactions.length === 0) {
     html += `<div class="info">Operatsiyalar mavjud emas</div>`;
   } else {
