@@ -212,7 +212,7 @@ export function generateExpenseReceiptHTML(
       font-weight: bold;
       font-size: ${descSize};
       color: #000;
-      line-height: 1.4;
+      line-height: 1.2;
     }
     .item-amount {
       font-weight: bold;
@@ -450,7 +450,7 @@ export function generatePaymentReceiptHTML(
       font-weight: bold;
       font-size: ${descSize};
       color: #000;
-      line-height: 1.4;
+      line-height: 1.2;
     }
     .total {
       border-top: 2px solid #000;
