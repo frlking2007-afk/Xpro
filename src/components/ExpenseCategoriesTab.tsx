@@ -102,7 +102,13 @@ export default function ExpenseCategoriesTab({
   };
 
   const getCategoryTransactions = (category: string) => {
-    return transactions.filter(t => t.category === category);
+    return transactions.filter(t => {
+      // Check if category column exists and matches
+      if (t.category === category) return true;
+      // Check if description contains [CategoryName] format
+      if (t.type === 'xarajat' && t.description && t.description.includes(`[${category}]`)) return true;
+      return false;
+    });
   };
 
 
