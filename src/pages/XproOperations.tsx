@@ -310,7 +310,7 @@ export default function XproOperations() {
   // Listen for transaction deletions/updates
   useEffect(() => {
     const handleTransactionUpdate = () => {
-      // Refresh transactions when deleted from other pages
+      // Refresh transactions when deleted or added from other pages
       if (currentShift && !isViewMode) {
         fetchTransactions();
       } else if (isViewMode && viewShift) {
@@ -318,7 +318,11 @@ export default function XproOperations() {
       }
     };
     window.addEventListener('transactionDeleted', handleTransactionUpdate);
-    return () => window.removeEventListener('transactionDeleted', handleTransactionUpdate);
+    window.addEventListener('transactionAdded', handleTransactionUpdate);
+    return () => {
+      window.removeEventListener('transactionDeleted', handleTransactionUpdate);
+      window.removeEventListener('transactionAdded', handleTransactionUpdate);
+    };
   }, [currentShift, isViewMode, viewShift]);
 
   const fetchTransactions = async () => {
@@ -660,6 +664,9 @@ export default function XproOperations() {
         const transactionWithCategory = { ...data, category: categoryName };
         setTransactions([transactionWithCategory, ...transactions]);
       }
+
+      // Dispatch event to notify other components
+      window.dispatchEvent(new Event('transactionAdded'));
 
       toast.success("Muvaffaqiyatli saqlandi!");
     } catch (error: any) {
