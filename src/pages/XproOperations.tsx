@@ -83,59 +83,58 @@ const PaymentTab = ({
 
   return (
     <div className="space-y-8">
-      {/* Input Form */}
-      <div className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm">
-        
-        <form onSubmit={handleSave} className="space-y-4">
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-slate-400 uppercase tracking-wider">Summa</label>
-            <div className="relative">
+      {/* Input Form - Hidden for xarajat */}
+      {type !== 'xarajat' && (
+        <div className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm">
+          <form onSubmit={handleSave} className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-slate-400 uppercase tracking-wider">Summa</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={amount}
+                  onChange={handleAmountChange}
+                  placeholder="0"
+                  disabled={isReadOnly}
+                  className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-4 pr-12 text-lg font-bold text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  required
+                />
+                <span className="absolute right-4 top-3.5 text-sm font-medium text-slate-500">{getCurrencySymbol()}</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-slate-400 uppercase tracking-wider">Tavsif (Ixtiyoriy)</label>
               <input
                 type="text"
-                value={amount}
-                onChange={handleAmountChange}
-                placeholder="0"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Izoh yozing..."
                 disabled={isReadOnly}
-                className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-4 pr-12 text-lg font-bold text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                required
+                className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 px-4 text-sm text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               />
-              <span className="absolute right-4 top-3.5 text-sm font-medium text-slate-500">{getCurrencySymbol()}</span>
             </div>
-          </div>
 
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-slate-400 uppercase tracking-wider">Tavsif (Ixtiyoriy)</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Izoh yozing..."
-              disabled={isReadOnly}
-              className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 px-4 text-sm text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-          </div>
+            <button
+              type="submit"
+              disabled={loading || isReadOnly}
+              className={`group mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white transition-all shadow-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-blue-500/20 ${loading || isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {loading ? 'Saqlanmoqda...' : isReadOnly ? 'Faqat ko\'rish rejimi' : 'Saqlash'}
+              {!loading && !isReadOnly && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
+            </button>
+          </form>
+        </div>
+      )}
 
-          <button
-            type="submit"
-            disabled={loading || isReadOnly}
-            className={`group mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white transition-all shadow-lg ${
-              type === 'xarajat' 
-                ? 'bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 shadow-red-500/20' 
-                : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-blue-500/20'
-            } ${loading || isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {loading ? 'Saqlanmoqda...' : isReadOnly ? 'Faqat ko\'rish rejimi' : 'Saqlash'}
-            {!loading && !isReadOnly && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
-          </button>
-        </form>
-      </div>
-
-      {/* History List */}
+      {/* History List - Hidden title for xarajat */}
       <div>
-        <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-400 uppercase tracking-wider">
-          <History className="h-4 w-4" />
-          Bugungi operatsiyalar
-        </h3>
+        {type !== 'xarajat' && (
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-400 uppercase tracking-wider">
+            <History className="h-4 w-4" />
+            Bugungi operatsiyalar
+          </h3>
+        )}
         
         <div className="space-y-3">
           {transactions.length === 0 ? (
