@@ -135,6 +135,10 @@ export default function CategoryExpenseStatistics() {
       if (error) throw error;
 
       setTransactions(transactions.filter(t => t.id !== id));
+      
+      // Dispatch event to notify other components
+      window.dispatchEvent(new Event('transactionDeleted'));
+      
       toast.success("O'chirildi!");
     } catch (error: any) {
       console.error('Error deleting transaction:', error);

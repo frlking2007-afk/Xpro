@@ -307,6 +307,20 @@ export default function XproOperations() {
     return () => window.removeEventListener('currencyUpdated', handleCurrencyUpdate);
   }, [transactions]);
 
+  // Listen for transaction deletions/updates
+  useEffect(() => {
+    const handleTransactionUpdate = () => {
+      // Refresh transactions when deleted from other pages
+      if (currentShift && !isViewMode) {
+        fetchTransactions();
+      } else if (isViewMode && viewShift) {
+        fetchTransactionsForShift(viewShift.id);
+      }
+    };
+    window.addEventListener('transactionDeleted', handleTransactionUpdate);
+    return () => window.removeEventListener('transactionDeleted', handleTransactionUpdate);
+  }, [currentShift, isViewMode, viewShift]);
+
   const fetchTransactions = async () => {
     if (!currentShift) return;
     try {
