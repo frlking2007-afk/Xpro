@@ -9,6 +9,7 @@ import { useShift } from '../hooks/useShift';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal';
 import PasswordModal from '../components/PasswordModal';
+import AddCategoryModal from '../components/AddCategoryModal';
 import { verifyPassword, isPasswordSet } from '../utils/password';
 import { formatCurrency, getCurrencySymbol } from '../utils/currency';
 
@@ -190,6 +191,7 @@ export default function XproOperations() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [isClearPasswordModalOpen, setIsClearPasswordModalOpen] = useState(false);
+  const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   
   // Get shift_id from URL params
   const viewShiftId = searchParams.get('shift_id');
@@ -415,6 +417,19 @@ export default function XproOperations() {
     setIsClearPasswordModalOpen(false);
   };
 
+  const handleAddCategory = (categoryName: string) => {
+    // Save category to localStorage for now
+    const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+    if (!categories.includes(categoryName)) {
+      categories.push(categoryName);
+      localStorage.setItem('expenseCategories', JSON.stringify(categories));
+      toast.success(`"${categoryName}" bo'limi qo'shildi`);
+    } else {
+      toast.info(`"${categoryName}" bo'limi allaqachon mavjud`);
+    }
+    setIsAddCategoryModalOpen(false);
+  };
+
   const handleCloseShiftConfirm = async () => {
     const totalBalance = calculateTotalShiftBalance(); 
     const success = await closeShift(totalBalance);
@@ -567,10 +582,7 @@ export default function XproOperations() {
             {activeTab === 'xarajat' && (
               <div className="flex flex-col gap-2">
                 <button
-                  onClick={() => {
-                    // Bo'lim qo'shish funksiyasi
-                    toast.info('Bo\'lim qo\'shish funksiyasi tez orada qo\'shiladi');
-                  }}
+                  onClick={() => setIsAddCategoryModalOpen(true)}
                   className="flex items-center gap-2 rounded-xl border border-blue-500/50 bg-blue-500/10 px-4 py-2.5 text-sm font-medium text-blue-400 hover:bg-blue-500/20 transition-colors"
                 >
                   <FolderPlus className="h-4 w-4" />
@@ -659,6 +671,12 @@ export default function XproOperations() {
         onConfirm={handleClearPasswordConfirm}
         title="Parolni kiriting"
         message="Barcha xarajatlarni o'chirish uchun parolni kiriting"
+      />
+
+      <AddCategoryModal
+        isOpen={isAddCategoryModalOpen}
+        onClose={() => setIsAddCategoryModalOpen(false)}
+        onConfirm={handleAddCategory}
       />
     </div>
   );
