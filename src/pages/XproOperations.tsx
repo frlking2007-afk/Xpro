@@ -1129,6 +1129,24 @@ export default function XproOperations() {
         onSave={handleUpdateShiftName}
         currentName={currentShift?.name || null}
       />
+
+      {exportSettingsItem && (
+        <ExportSettingsModal
+          isOpen={exportSettingsModalOpen}
+          onClose={() => {
+            setExportSettingsModalOpen(false);
+            setExportSettingsItem(null);
+          }}
+          onSave={(settings) => {
+            // Settings are saved in the modal itself
+            setExportSettingsModalOpen(false);
+            setExportSettingsItem(null);
+          }}
+          itemName={exportSettingsItem.name}
+          itemType={exportSettingsItem.type}
+          currentSettings={exportSettingsItem ? getExportSettings(exportSettingsItem.type, exportSettingsItem.name) : undefined}
+        />
+      )}
     </div>
   );
 }
