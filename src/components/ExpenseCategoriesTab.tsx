@@ -245,10 +245,9 @@ export default function ExpenseCategoriesTab({
             toast.error('Noto\'g\'ri parol');
             return;
           }
+          // Password is correct, proceed with deletion
           setIsPasswordModalOpen(false);
-          // Show confirmation modal after password is verified
           if (deletingCategory && onDeleteCategory) {
-            // Password is correct, proceed with deletion
             onDeleteCategory(deletingCategory);
             setDeletingCategory(null);
           }
@@ -260,11 +259,13 @@ export default function ExpenseCategoriesTab({
       {/* Delete Category Confirmation Modal (only if password is not set) */}
       {deletingCategory && onDeleteCategory && !isPasswordSet() && (
         <ConfirmModal
-          isOpen={!!deletingCategory}
+          isOpen={!!deletingCategory && !isPasswordModalOpen}
           onClose={() => setDeletingCategory(null)}
           onConfirm={() => {
-            onDeleteCategory(deletingCategory);
-            setDeletingCategory(null);
+            if (onDeleteCategory && deletingCategory) {
+              onDeleteCategory(deletingCategory);
+              setDeletingCategory(null);
+            }
           }}
           title="Bo'limni o'chirish"
           message={`"${deletingCategory}" bo'limini o'chirishni tasdiqlaysizmi? Bu amalni ortga qaytarib bo'lmaydi.`}
