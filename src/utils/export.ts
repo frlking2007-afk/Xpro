@@ -479,6 +479,7 @@ export function generatePaymentReceiptHTML(
       `;
     });
   }
+  html += `</div>`;
 
   html += `
 </body>
