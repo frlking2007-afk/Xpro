@@ -188,10 +188,7 @@ export function generateExpenseReceiptHTML(
 <body>
 `;
 
-  // Date
-  html += `<div class="info center">${format(now, 'dd.MM.yyyy', { locale: uz })}</div>`;
-
-  // Category Name
+  // Category Name (no date/time in header)
   html += `<div class="title center">${categoryName}</div>`;
 
   html += `<div class="divider"></div>`;
