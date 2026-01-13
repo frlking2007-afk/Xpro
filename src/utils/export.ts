@@ -166,7 +166,10 @@ export function generateExpenseReceiptHTML(
     .item-desc {
       flex: 1;
       word-wrap: break-word;
-      margin-right: 4px;
+      font-weight: bold;
+      font-size: ${descSize};
+      color: #000;
+      line-height: 1.4;
     }
     .item-amount {
       font-weight: bold;
