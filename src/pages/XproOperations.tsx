@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight, Lock, Calendar, FolderPlus, Trash } from 'lucide-react';
+import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight, Lock, Calendar, FolderPlus, Trash, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { uz } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import PasswordModal from '../components/PasswordModal';
 import AddCategoryModal from '../components/AddCategoryModal';
 import ExpenseCategoriesTab from '../components/ExpenseCategoriesTab';
+import EditShiftNameModal from '../components/EditShiftNameModal';
 import { verifyPassword, isPasswordSet } from '../utils/password';
 import { formatCurrency, getCurrencySymbol } from '../utils/currency';
 
@@ -558,6 +559,34 @@ export default function XproOperations() {
     }
   };
 
+  const handleUpdateShiftName = async (name: string) => {
+    if (!currentShift) return;
+    
+    try {
+      const { error } = await supabase
+        .from('shifts')
+        .update({ name })
+        .eq('id', currentShift.id);
+
+      if (error) {
+        // If name column doesn't exist, silently fail
+        if (error.message.includes('name')) {
+          toast.info('Smena nomi funksiyasi hali qo\'llanmagan. Iltimos, database migration\'ni bajarishingiz kerak.');
+          return;
+        }
+        throw error;
+      }
+
+      // Refresh shift data
+      refreshShift();
+      toast.success('Smena nomi yangilandi!');
+      setIsEditShiftNameModalOpen(false);
+    } catch (error: any) {
+      console.error('Error updating shift name:', error);
+      toast.error('Smena nomini yangilashda xatolik: ' + error.message);
+    }
+  };
+
   const handleAddExpenseToCategory = async (categoryName: string, amount: number, description: string) => {
     if (!currentShift && !isViewMode) {
       toast.error("Smena ochiq emas!");
@@ -695,11 +724,20 @@ export default function XproOperations() {
           <Calendar className="h-4 w-4 text-blue-400" />
           <span>Smena: <span className="text-white">
             {isViewMode && viewShift 
-              ? format(new Date(viewShift.opened_at), 'd-MMMM yyyy', { locale: uz })
+              ? (viewShift.name || format(new Date(viewShift.opened_at), 'd-MMMM yyyy', { locale: uz }))
               : currentShift 
-                ? format(new Date(currentShift.opened_at), 'd-MMMM yyyy', { locale: uz })
+                ? (currentShift.name || format(new Date(currentShift.opened_at), 'd-MMMM yyyy', { locale: uz }))
                 : ''}
           </span></span>
+          {!isViewMode && currentShift && (
+            <button
+              onClick={() => setIsEditShiftNameModalOpen(true)}
+              className="ml-2 rounded-lg p-1 text-blue-400 transition-all hover:bg-blue-500/20 hover:text-blue-300"
+              title="Smena nomini tahrirlash"
+            >
+              <Edit className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
         
         {activeTab === 'kassa' && !isViewMode && (
