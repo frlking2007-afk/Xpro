@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, BarChart3, DollarSign, TrendingUp, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, BarChart3, DollarSign, TrendingUp, Calendar, FileText, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { formatCurrency } from '../utils/currency';
 import { format } from 'date-fns';
 import { uz } from 'date-fns/locale';
+import { toast } from 'sonner';
+import PasswordModal from '../components/PasswordModal';
+import { verifyPassword, isPasswordSet } from '../utils/password';
 
 interface Transaction {
   id: string;
@@ -23,6 +26,8 @@ export default function CategoryExpenseStatistics() {
   
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (categoryName) {
@@ -106,6 +111,48 @@ export default function CategoryExpenseStatistics() {
   const getAverageExpense = () => {
     if (transactions.length === 0) return 0;
     return getTotalExpenses() / transactions.length;
+  };
+
+  const handleDeleteTransaction = async (id: string) => {
+    // Check if password is set
+    if (isPasswordSet()) {
+      setTransactionToDelete(id);
+      setIsPasswordModalOpen(true);
+      return;
+    }
+
+    // If no password is set, delete directly
+    await performDelete(id);
+  };
+
+  const performDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setTransactions(transactions.filter(t => t.id !== id));
+      toast.success("O'chirildi!");
+    } catch (error: any) {
+      console.error('Error deleting transaction:', error);
+      toast.error('O\'chirishda xatolik: ' + error.message);
+    }
+  };
+
+  const handlePasswordConfirm = (password: string) => {
+    if (!verifyPassword(password)) {
+      toast.error('Noto\'g\'ri parol');
+      return;
+    }
+
+    if (transactionToDelete) {
+      performDelete(transactionToDelete);
+      setTransactionToDelete(null);
+    }
+    setIsPasswordModalOpen(false);
   };
 
   if (!categoryName) {
@@ -238,12 +285,30 @@ export default function CategoryExpenseStatistics() {
                       </p>
                     </div>
                   </div>
+                  <button
+                    onClick={() => handleDeleteTransaction(transaction.id)}
+                    className="rounded-lg p-2 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-400"
+                    title="O'chirish"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </motion.div>
               ))}
             </div>
           </div>
         )}
       </div>
+
+      <PasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => {
+          setIsPasswordModalOpen(false);
+          setTransactionToDelete(null);
+        }}
+        onConfirm={handlePasswordConfirm}
+        title="Parolni kiriting"
+        message="Xarajatni o'chirish uchun parolni kiriting"
+      />
     </div>
   );
 }
