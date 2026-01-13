@@ -207,6 +207,13 @@ export default function XproOperations() {
 
   const activeTabInfo = tabs.find(t => t.id === activeTab);
 
+  // Set active tab from URL parameter if provided
+  useEffect(() => {
+    if (tabParam && tabs.some(t => t.id === tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
   // Load expense categories from localStorage
   useEffect(() => {
     const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
