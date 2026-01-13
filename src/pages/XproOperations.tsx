@@ -10,6 +10,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal';
 import PasswordModal from '../components/PasswordModal';
 import AddCategoryModal from '../components/AddCategoryModal';
+import ExpenseCategoriesTab from '../components/ExpenseCategoriesTab';
 import { verifyPassword, isPasswordSet } from '../utils/password';
 import { formatCurrency, getCurrencySymbol } from '../utils/currency';
 
@@ -28,6 +29,7 @@ interface Transaction {
   description: string;
   date: string;
   type: string;
+  category?: string;
 }
 
 const PaymentTab = ({ 
@@ -192,6 +194,7 @@ export default function XproOperations() {
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [isClearPasswordModalOpen, setIsClearPasswordModalOpen] = useState(false);
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
+  const [expenseCategories, setExpenseCategories] = useState<string[]>([]);
   
   // Get shift_id from URL params
   const viewShiftId = searchParams.get('shift_id');
@@ -200,6 +203,22 @@ export default function XproOperations() {
   const [loadingViewShift, setLoadingViewShift] = useState(false);
 
   const activeTabInfo = tabs.find(t => t.id === activeTab);
+
+  // Load expense categories from localStorage
+  useEffect(() => {
+    const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+    setExpenseCategories(categories);
+  }, []);
+
+  // Listen for category updates
+  useEffect(() => {
+    const handleCategoryUpdate = () => {
+      const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+      setExpenseCategories(categories);
+    };
+    window.addEventListener('categoryUpdated', handleCategoryUpdate);
+    return () => window.removeEventListener('categoryUpdated', handleCategoryUpdate);
+  }, []);
 
   // Fetch view shift if shift_id is provided
   useEffect(() => {
@@ -423,11 +442,47 @@ export default function XproOperations() {
     if (!categories.includes(categoryName)) {
       categories.push(categoryName);
       localStorage.setItem('expenseCategories', JSON.stringify(categories));
+      setExpenseCategories(categories);
+      window.dispatchEvent(new Event('categoryUpdated'));
       toast.success(`"${categoryName}" bo'limi qo'shildi`);
     } else {
       toast.info(`"${categoryName}" bo'limi allaqachon mavjud`);
     }
     setIsAddCategoryModalOpen(false);
+  };
+
+  const handleAddExpenseToCategory = async (categoryName: string, amount: number, description: string) => {
+    if (!currentShift && !isViewMode) {
+      toast.error("Smena ochiq emas!");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert([
+          {
+            amount,
+            description: description || categoryName,
+            type: 'xarajat',
+            date: new Date().toISOString(),
+            shift_id: isViewMode ? viewShift?.id : currentShift?.id,
+            category: categoryName
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setTransactions([data, ...transactions]);
+      toast.success("Muvaffaqiyatli saqlandi!");
+    } catch (error: any) {
+      toast.error('Xatolik: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCloseShiftConfirm = async () => {
@@ -625,7 +680,17 @@ export default function XproOperations() {
         )}
 
         {/* Tab Specific Content */}
-        {['kassa', 'click', 'uzcard', 'humo', 'xarajat'].includes(activeTab) && activeTabInfo ? (
+        {activeTab === 'xarajat' && activeTabInfo ? (
+          <ExpenseCategoriesTab
+            categories={expenseCategories}
+            transactions={filteredTransactions}
+            onAddExpense={handleAddExpenseToCategory}
+            onDeleteTransaction={handleDeleteTransaction}
+            loading={loading}
+            shiftId={isViewMode ? viewShift?.id : currentShift?.id}
+            isReadOnly={isViewMode}
+          />
+        ) : ['kassa', 'click', 'uzcard', 'humo'].includes(activeTab) && activeTabInfo ? (
           <PaymentTab 
             type={activeTab} 
             color={activeTabInfo.color} 
