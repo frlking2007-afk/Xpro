@@ -576,13 +576,6 @@ export default function XproOperations() {
                   <FolderPlus className="h-4 w-4" />
                   Bo'lim qo'shish
                 </button>
-                <button
-                  onClick={handleClearAllTransactions}
-                  className="flex items-center gap-2 rounded-xl border border-red-500/50 bg-red-500/10 px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/20 transition-colors"
-                >
-                  <Trash className="h-4 w-4" />
-                  Tozalash
-                </button>
               </div>
             )}
           </div>
