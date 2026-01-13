@@ -48,27 +48,36 @@ export function getDefaultSettings(): ExportSettings {
   };
 }
 
-// Generate receipt HTML for printing (Xprinter format)
-export function generateReceiptHTML(
+// Get category sales from localStorage
+function getCategorySales(categoryName: string): number {
+  const saved = localStorage.getItem(`categorySales_${categoryName}`);
+  return saved ? parseFloat(saved) : 0;
+}
+
+// Generate receipt HTML for expenses (categories)
+export function generateExpenseReceiptHTML(
   transactions: Transaction[],
-  title: string,
+  categoryName: string,
   settings: ExportSettings,
   shiftName?: string
 ): string {
-  const total = transactions.reduce((sum, t) => sum + t.amount, 0);
-  const currency = getCurrencySymbol();
+  const totalExpenses = transactions.reduce((sum, t) => sum + t.amount, 0);
+  const sales = getCategorySales(categoryName);
+  const profitOrLoss = sales - totalExpenses;
   const now = new Date();
   
   // Calculate width based on paper size
   const width = settings.paperWidth === '58mm' ? '48mm' : '72mm';
-  const fontSize = settings.fontSize === 'small' ? '10px' : settings.fontSize === 'medium' ? '12px' : '14px';
+  const fontSize = settings.fontSize === 'small' ? '9px' : settings.fontSize === 'medium' ? '11px' : '13px';
+  const titleSize = settings.fontSize === 'small' ? '13px' : settings.fontSize === 'medium' ? '15px' : '17px';
+  const lineHeight = '1.2';
   
   let html = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>${title}</title>
+  <title>${categoryName} - Xarajatlar</title>
   <style>
     @media print {
       @page {
@@ -77,48 +86,81 @@ export function generateReceiptHTML(
       }
       body {
         margin: 0;
-        padding: 8px;
+        padding: 4px;
       }
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
     body {
       font-family: 'Courier New', monospace;
       width: ${width};
       margin: 0 auto;
-      padding: 8px;
+      padding: 4px;
       font-size: ${fontSize};
-      line-height: 1.4;
+      line-height: ${lineHeight};
       background: white;
       color: black;
     }
     .header {
       text-align: center;
       border-bottom: 1px dashed #000;
-      padding-bottom: 8px;
-      margin-bottom: 8px;
+      padding-bottom: 4px;
+      margin-bottom: 4px;
     }
     .title {
       font-weight: bold;
-      font-size: ${settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px'};
-      margin-bottom: 4px;
+      font-size: ${titleSize};
+      margin-bottom: 2px;
     }
     .info {
-      font-size: ${settings.fontSize === 'small' ? '9px' : settings.fontSize === 'medium' ? '10px' : '12px'};
-      color: #666;
+      font-size: ${fontSize};
+      color: #000;
+      margin: 1px 0;
     }
     .divider {
       border-top: 1px dashed #000;
-      margin: 8px 0;
+      margin: 3px 0;
+    }
+    .section {
+      margin: 3px 0;
+    }
+    .section-title {
+      font-weight: bold;
+      font-size: ${fontSize};
+      margin-bottom: 2px;
+      text-decoration: underline;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin: 1px 0;
+      font-size: ${fontSize};
+    }
+    .row-label {
+      font-weight: bold;
+    }
+    .row-value {
+      font-weight: bold;
     }
     .item {
-      margin: 6px 0;
+      margin: 1px 0;
+      font-size: ${fontSize};
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
     }
+    .item-time {
+      font-size: ${parseInt(fontSize) - 1}px;
+      color: #666;
+      margin-top: 1px;
+    }
     .item-desc {
       flex: 1;
       word-wrap: break-word;
-      margin-right: 8px;
+      margin-right: 4px;
     }
     .item-amount {
       font-weight: bold;
@@ -126,19 +168,17 @@ export function generateReceiptHTML(
     }
     .total {
       border-top: 2px solid #000;
-      margin-top: 8px;
-      padding-top: 8px;
-      display: flex;
-      justify-content: space-between;
+      margin-top: 4px;
+      padding-top: 3px;
       font-weight: bold;
-      font-size: ${settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px'};
+      font-size: ${parseInt(fontSize) + 1}px;
     }
     .footer {
       text-align: center;
       border-top: 1px dashed #000;
-      padding-top: 8px;
-      margin-top: 8px;
-      font-size: ${settings.fontSize === 'small' ? '9px' : settings.fontSize === 'medium' ? '10px' : '12px'};
+      padding-top: 4px;
+      margin-top: 4px;
+      font-size: ${parseInt(fontSize) - 1}px;
     }
     .center {
       text-align: center;
@@ -148,58 +188,70 @@ export function generateReceiptHTML(
 <body>
 `;
 
-  // Header
-  if (settings.showHeader) {
-    html += `<div class="header">`;
-    html += `<div class="title">${settings.headerText || title}</div>`;
-    if (shiftName) {
-      html += `<div class="info">${shiftName}</div>`;
-    }
-    if (settings.showDate || settings.showTime) {
-      const dateTimeParts: string[] = [];
-      if (settings.showDate) {
-        dateTimeParts.push(format(now, 'd MMMM yyyy', { locale: uz }));
-      }
-      if (settings.showTime) {
-        dateTimeParts.push(format(now, 'HH:mm', { locale: uz }));
-      }
-      if (dateTimeParts.length > 0) {
-        html += `<div class="info">${dateTimeParts.join(' ')}</div>`;
-      }
-    }
-    html += `</div>`;
+  // Date
+  html += `<div class="info center">${format(now, 'dd.MM.yyyy', { locale: uz })}</div>`;
+
+  // Category Name
+  html += `<div class="title center">${categoryName}</div>`;
+
+  html += `<div class="divider"></div>`;
+
+  // Sales
+  html += `<div class="section">`;
+  html += `<div class="row">`;
+  html += `<span class="row-label">Savdo:</span>`;
+  html += `<span class="row-value">${formatCurrency(sales)}</span>`;
+  html += `</div>`;
+  html += `</div>`;
+
+  // Total Expenses
+  html += `<div class="section">`;
+  html += `<div class="row">`;
+  html += `<span class="row-label">Umumiy xarajat:</span>`;
+  html += `<span class="row-value">${formatCurrency(totalExpenses)}</span>`;
+  html += `</div>`;
+  html += `</div>`;
+
+  // Profit/Loss
+  html += `<div class="section">`;
+  html += `<div class="row">`;
+  html += `<span class="row-label">${profitOrLoss >= 0 ? 'Foyda:' : 'Zarar:'}</span>`;
+  html += `<span class="row-value">${formatCurrency(Math.abs(profitOrLoss))}</span>`;
+  html += `</div>`;
+  html += `</div>`;
+
+  html += `<div class="divider"></div>`;
+
+  // Expenses History
+  html += `<div class="section-title">Xarajatlar tarixi:</div>`;
+  if (transactions.length === 0) {
+    html += `<div class="info">Xarajatlar mavjud emas</div>`;
+  } else {
+    transactions.forEach((transaction, index) => {
+      const desc = transaction.description || 'Izohsiz';
+      // Remove category prefix if exists
+      const cleanDesc = desc.replace(`[${categoryName}]`, '').trim();
+      const amount = formatCurrency(transaction.amount);
+      const transactionDate = new Date(transaction.date);
+      const timeStr = format(transactionDate, 'HH:mm', { locale: uz });
+      
+      html += `
+      <div class="item">
+        <div class="item-desc">
+          ${index + 1}. ${cleanDesc}
+          <div class="item-time">${timeStr}</div>
+        </div>
+        <div class="item-amount">${amount}</div>
+      </div>
+      `;
+    });
   }
 
-  // Items
   html += `<div class="divider"></div>`;
-  transactions.forEach((transaction, index) => {
-    const desc = transaction.description || 'Izohsiz';
-    const amount = formatCurrency(transaction.amount);
-    html += `
-    <div class="item">
-      <div class="item-desc">${index + 1}. ${desc}</div>
-      <div class="item-amount">${amount}</div>
-    </div>
-    `;
-  });
-
-  // Total
-  html += `<div class="divider"></div>`;
-  html += `
-  <div class="total">
-    <span>JAMI:</span>
-    <span>${formatCurrency(total)}</span>
-  </div>
-  `;
 
   // Footer
-  if (settings.showFooter) {
-    html += `<div class="footer">`;
-    if (settings.footerText) {
-      html += `<div>${settings.footerText}</div>`;
-    }
-    html += `<div class="info">Jami: ${transactions.length} ta operatsiya</div>`;
-    html += `</div>`;
+  if (settings.showFooter && settings.footerText) {
+    html += `<div class="footer">${settings.footerText}</div>`;
   }
 
   html += `
@@ -208,6 +260,205 @@ export function generateReceiptHTML(
 `;
 
   return html;
+}
+
+// Generate receipt HTML for payment types (uzcard, humo, click)
+export function generatePaymentReceiptHTML(
+  transactions: Transaction[],
+  paymentName: string,
+  settings: ExportSettings,
+  shiftName?: string
+): string {
+  const totalBalance = transactions.reduce((sum, t) => sum + t.amount, 0);
+  const now = new Date();
+  
+  // Calculate width based on paper size
+  const width = settings.paperWidth === '58mm' ? '48mm' : '72mm';
+  const fontSize = settings.fontSize === 'small' ? '9px' : settings.fontSize === 'medium' ? '11px' : '13px';
+  const titleSize = settings.fontSize === 'small' ? '13px' : settings.fontSize === 'medium' ? '15px' : '17px';
+  const lineHeight = '1.2';
+  
+  let html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${paymentName.toUpperCase()}</title>
+  <style>
+    @media print {
+      @page {
+        size: ${settings.paperWidth};
+        margin: 0;
+      }
+      body {
+        margin: 0;
+        padding: 4px;
+      }
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Courier New', monospace;
+      width: ${width};
+      margin: 0 auto;
+      padding: 4px;
+      font-size: ${fontSize};
+      line-height: ${lineHeight};
+      background: white;
+      color: black;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 1px dashed #000;
+      padding-bottom: 4px;
+      margin-bottom: 4px;
+    }
+    .title {
+      font-weight: bold;
+      font-size: ${titleSize};
+      margin-bottom: 2px;
+    }
+    .info {
+      font-size: ${fontSize};
+      color: #000;
+      margin: 1px 0;
+    }
+    .divider {
+      border-top: 1px dashed #000;
+      margin: 3px 0;
+    }
+    .section {
+      margin: 3px 0;
+    }
+    .section-title {
+      font-weight: bold;
+      font-size: ${fontSize};
+      margin-bottom: 2px;
+      text-decoration: underline;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin: 1px 0;
+      font-size: ${fontSize};
+    }
+    .row-label {
+      font-weight: bold;
+    }
+    .row-value {
+      font-weight: bold;
+    }
+    .item {
+      margin: 1px 0;
+      font-size: ${fontSize};
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .item-time {
+      font-size: ${parseInt(fontSize) - 1}px;
+      color: #666;
+      margin-top: 1px;
+    }
+    .item-desc {
+      flex: 1;
+      word-wrap: break-word;
+      margin-right: 4px;
+    }
+    .item-amount {
+      font-weight: bold;
+      white-space: nowrap;
+    }
+    .total {
+      border-top: 2px solid #000;
+      margin-top: 4px;
+      padding-top: 3px;
+      font-weight: bold;
+      font-size: ${parseInt(fontSize) + 1}px;
+    }
+    .footer {
+      text-align: center;
+      border-top: 1px dashed #000;
+      padding-top: 4px;
+      margin-top: 4px;
+      font-size: ${parseInt(fontSize) - 1}px;
+    }
+    .center {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+`;
+
+  // Date
+  html += `<div class="info center">${format(now, 'dd.MM.yyyy', { locale: uz })}</div>`;
+
+  // Payment Name
+  html += `<div class="title center">${paymentName.toUpperCase()}</div>`;
+
+  html += `<div class="divider"></div>`;
+
+  // Total Balance
+  html += `<div class="section">`;
+  html += `<div class="row">`;
+  html += `<span class="row-label">Umumiy balans:</span>`;
+  html += `<span class="row-value">${formatCurrency(totalBalance)}</span>`;
+  html += `</div>`;
+  html += `</div>`;
+
+  html += `<div class="divider"></div>`;
+
+  // Operations History
+  html += `<div class="section-title">Operatsiyalar tarixi:</div>`;
+  if (transactions.length === 0) {
+    html += `<div class="info">Operatsiyalar mavjud emas</div>`;
+  } else {
+    transactions.forEach((transaction, index) => {
+      const desc = transaction.description || 'Izohsiz';
+      const amount = formatCurrency(transaction.amount);
+      const transactionDate = new Date(transaction.date);
+      const timeStr = format(transactionDate, 'HH:mm', { locale: uz });
+      
+      html += `
+      <div class="item">
+        <div class="item-desc">
+          ${index + 1}. ${desc}
+          <div class="item-time">${timeStr}</div>
+        </div>
+        <div class="item-amount">${amount}</div>
+      </div>
+      `;
+    });
+  }
+
+  html += `<div class="divider"></div>`;
+
+  // Footer
+  if (settings.showFooter && settings.footerText) {
+    html += `<div class="footer">${settings.footerText}</div>`;
+  }
+
+  html += `
+</body>
+</html>
+`;
+
+  return html;
+}
+
+// Legacy function for backward compatibility
+export function generateReceiptHTML(
+  transactions: Transaction[],
+  title: string,
+  settings: ExportSettings,
+  shiftName?: string
+): string {
+  // This is a fallback - should use generateExpenseReceiptHTML or generatePaymentReceiptHTML instead
+  return generateExpenseReceiptHTML(transactions, title, settings, shiftName);
 }
 
 // Print receipt
@@ -223,8 +474,6 @@ export function printReceipt(html: string) {
   // Wait for content to load, then print
   setTimeout(() => {
     printWindow.print();
-    // Close window after printing (optional)
-    // printWindow.close();
   }, 250);
 }
 

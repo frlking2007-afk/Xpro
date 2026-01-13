@@ -15,7 +15,7 @@ import EditShiftNameModal from '../components/EditShiftNameModal';
 import { verifyPassword, isPasswordSet } from '../utils/password';
 import { formatCurrency, getCurrencySymbol } from '../utils/currency';
 import ExportSettingsModal from '../components/ExportSettingsModal';
-import { generateReceiptHTML, printReceipt, getExportSettings, ExportSettings } from '../utils/export';
+import { generateExpenseReceiptHTML, generatePaymentReceiptHTML, printReceipt, getExportSettings, ExportSettings } from '../utils/export';
 
 const tabs = [
   { id: 'kassa', label: 'KASSA', icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
@@ -226,8 +226,16 @@ const ExportTab = ({
       }
 
       const settings = getExportSettings(type, name);
-      const title = type === 'category' ? `${name} - Xarajatlar` : name.toUpperCase();
-      const html = generateReceiptHTML(filteredTransactions, title, settings, shiftName);
+      
+      let html: string;
+      if (type === 'category') {
+        // Generate expense receipt
+        html = generateExpenseReceiptHTML(filteredTransactions, name, settings, shiftName);
+      } else {
+        // Generate payment receipt
+        html = generatePaymentReceiptHTML(filteredTransactions, name, settings, shiftName);
+      }
+      
       printReceipt(html);
       toast.success('Chek tayyorlandi!');
     } catch (error: any) {
