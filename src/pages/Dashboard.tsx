@@ -96,6 +96,15 @@ export default function Dashboard() {
 
   const currentMetric = metricOptions.find(m => m.value === chartMetric) || metricOptions[0];
 
+  // Check if error is 403 Forbidden
+  const is403Error = error instanceof Error && (
+    error.message.includes('Ruxsat yo\'q') ||
+    error.message.includes('Login muddati tugagan') ||
+    error.message.includes('403') ||
+    error.message.includes('PGRST301') ||
+    error.message.includes('42501')
+  );
+
   // Error state
   if (isError) {
     return (
@@ -108,7 +117,8 @@ export default function Dashboard() {
         </div>
         <ErrorState 
           message={error instanceof Error ? error.message : 'Ma\'lumotlarni yuklashda xatolik yuz berdi'} 
-          onRetry={() => refetch()} 
+          onRetry={!is403Error ? () => refetch() : undefined}
+          is403Error={is403Error}
         />
       </div>
     );

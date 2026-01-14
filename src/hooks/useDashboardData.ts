@@ -9,7 +9,7 @@ import { isSameMonth } from 'date-fns/isSameMonth';
 import { eachMonthOfInterval } from 'date-fns/eachMonthOfInterval';
 import { format } from 'date-fns/format';
 import { uz } from 'date-fns/locale/uz';
-import { supabase } from '../lib/supabase';
+import { supabase, handleSupabaseError } from '../lib/supabase';
 import { DashboardData, DashboardStats, ChartDataPoint, Transaction } from '../types';
 
 interface UseDashboardDataParams {
@@ -49,7 +49,18 @@ const fetchTransactions = async (start: Date, end: Date): Promise<Transaction[]>
     .order('date', { ascending: false });
 
   if (error) {
-    throw new Error(`Ma'lumotlarni yuklashda xatolik: ${error.message}`);
+    // Handle 403 Forbidden error specifically
+    if (error.code === 'PGRST301' || error.code === '42501' || error.status === 403 || error.code === '403') {
+      const errorMessage = handleSupabaseError(error);
+      console.error('403 Forbidden error:', error);
+      // Sign out user if session is invalid
+      await supabase.auth.signOut();
+      throw new Error(errorMessage);
+    }
+    
+    // Handle other errors
+    const errorMessage = handleSupabaseError(error);
+    throw new Error(errorMessage);
   }
 
   return data || [];
