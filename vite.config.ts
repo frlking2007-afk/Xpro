@@ -45,11 +45,6 @@ export default defineConfig({
             return 'react-query-vendor';
           }
           
-          // TanStack Table - separate chunk
-          if (id.includes('node_modules/@tanstack/react-table')) {
-            return 'react-table-vendor';
-          }
-          
           // UI libraries
           if (id.includes('node_modules/framer-motion') || id.includes('node_modules/lucide-react')) {
             return 'ui-vendor';
@@ -63,11 +58,6 @@ export default defineConfig({
           // Form libraries
           if (id.includes('node_modules/react-hook-form') || id.includes('node_modules/@hookform/resolvers') || id.includes('node_modules/zod')) {
             return 'form-vendor';
-          }
-          
-          // 3D libraries - separate chunk (very large)
-          if (id.includes('node_modules/three') || id.includes('node_modules/postprocessing')) {
-            return 'three-vendor';
           }
           
           // Date library
@@ -102,6 +92,7 @@ export default defineConfig({
       'react-router-dom',
       '@supabase/supabase-js',
     ],
-    exclude: ['three', 'postprocessing'], // Exclude heavy 3D libraries from pre-bundling
+    // Exclude heavy and unused libraries from pre-bundling
+    exclude: ['@tanstack/react-query-devtools'],
   },
 })
