@@ -159,11 +159,13 @@ export function generateExpenseReceiptHTML(
     }
     .date {
       font-size: ${dateSize};
-      font-weight: bold;
+      font-weight: 900;
       text-align: center;
       margin: 0;
       padding: 0;
       line-height: 1;
+      color: #000;
+      -webkit-font-smoothing: antialiased;
     }
     .header {
       text-align: center;
@@ -304,10 +306,8 @@ export function generateExpenseReceiptHTML(
       // Remove category prefix if exists
       const cleanDesc = desc.replace(`[${categoryName}]`, '').trim();
       const amount = formatAmount(transaction.amount);
-      const transactionDate = new Date(transaction.date);
-      const timeStr = format(transactionDate, 'HH:mm', { locale: uz });
       
-      html += `<div class="item"><div class="item-amount">${amount}</div><div class="item-desc">${cleanDesc}<div class="item-time">${timeStr}</div></div></div><div class="divider"></div>`;
+      html += `<div class="item"><div class="item-amount">${amount}</div><div class="item-desc">${cleanDesc}</div></div><div class="divider"></div>`;
     });
   }
 
@@ -428,11 +428,13 @@ export function generatePaymentReceiptHTML(
     }
     .date {
       font-size: ${dateSize};
-      font-weight: bold;
+      font-weight: 900;
       text-align: center;
       margin: 0;
       padding: 0;
       line-height: 1;
+      color: #000;
+      -webkit-font-smoothing: antialiased;
     }
     .header {
       text-align: center;
