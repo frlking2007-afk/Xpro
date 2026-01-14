@@ -571,9 +571,7 @@ export function generatePaymentReceiptHTML(
     transactions.forEach((transaction) => {
       const desc = transaction.description || 'Izohsiz';
       const amount = formatAmount(transaction.amount);
-      const transactionDate = new Date(transaction.date);
-      const timeStr = format(transactionDate, 'HH:mm', { locale: uz });
-      html += `<div class="item"><div class="item-amount">${amount}</div><div class="item-desc">${desc}<div class="item-time">${timeStr}</div></div></div><div class="divider"></div>`;
+      html += `<div class="item"><div class="item-amount">${amount}</div><div class="item-desc">${desc}</div></div><div class="divider"></div>`;
     });
   }
   html += `</div>`;
