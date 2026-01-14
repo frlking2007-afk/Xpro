@@ -68,11 +68,12 @@ export function generateExpenseReceiptHTML(
   
   // Calculate width based on paper size
   const width = settings.paperWidth === '58mm' ? '48mm' : '72mm';
-  const fontSize = settings.fontSize === 'small' ? '8px' : settings.fontSize === 'medium' ? '10px' : '12px';
-  const titleSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
-  const dateSize = settings.fontSize === 'small' ? '13px' : settings.fontSize === 'medium' ? '15px' : '17px';
-  const descSize = settings.fontSize === 'small' ? '10px' : settings.fontSize === 'medium' ? '12px' : '14px';
-  const lineHeight = '1.1';
+  // Further reduce font sizes to fit everything on one page
+  const fontSize = settings.fontSize === 'small' ? '7px' : settings.fontSize === 'medium' ? '9px' : '11px';
+  const titleSize = settings.fontSize === 'small' ? '11px' : settings.fontSize === 'medium' ? '13px' : '15px';
+  const dateSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
+  const descSize = settings.fontSize === 'small' ? '9px' : settings.fontSize === 'medium' ? '11px' : '13px';
+  const lineHeight = '1';
   
   // Format number without currency symbol
   const formatAmount = (amount: number): string => {
@@ -98,13 +99,13 @@ export function generateExpenseReceiptHTML(
       }
       body {
         margin: 0 !important;
-        padding: 1px !important;
-        page-break-inside: avoid;
+        padding: 0 !important;
+        page-break-inside: avoid !important;
         height: auto !important;
         min-height: auto !important;
         max-height: none !important;
-        orphans: 999;
-        widows: 999;
+        orphans: 999 !important;
+        widows: 999 !important;
       }
       .section-title {
         page-break-after: avoid;
@@ -146,7 +147,7 @@ export function generateExpenseReceiptHTML(
       font-family: 'Courier New', monospace;
       width: ${width};
       margin: 0 auto;
-      padding: 1px;
+      padding: 0;
       font-size: ${fontSize};
       line-height: ${lineHeight};
       background: white;
@@ -155,42 +156,61 @@ export function generateExpenseReceiptHTML(
       min-height: auto;
       max-height: none;
     }
+    .date {
+      font-size: ${dateSize};
+      font-weight: bold;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      line-height: 1;
+    }
     .header {
       text-align: center;
       border-bottom: 1px dashed #000;
-      padding-bottom: 4px;
-      margin-bottom: 4px;
+      padding-bottom: 2px;
+      margin-bottom: 2px;
     }
     .title {
       font-weight: bold;
       font-size: ${titleSize};
-      margin-bottom: 2px;
+      margin: 0;
+      padding: 0;
+      line-height: 1;
     }
     .info {
       font-size: ${fontSize};
       color: #000;
-      margin: 1px 0;
+      margin: 0;
+      padding: 0;
+      line-height: 1;
     }
     .divider {
       border-top: 1px dashed #000;
-      margin: 3px 0;
+      margin: 0;
+      padding: 0;
+      height: 1px;
       page-break-inside: avoid;
       break-inside: avoid;
     }
     .section {
-      margin: 2px 0;
+      margin: 0;
+      padding: 0;
     }
     .section-title {
       font-weight: bold;
       font-size: ${fontSize};
-      margin-bottom: 2px;
+      margin: 0;
+      padding: 0;
       text-decoration: underline;
+      line-height: 1;
     }
     .row {
       display: flex;
       justify-content: space-between;
-      margin: 1px 0;
+      margin: 0;
+      padding: 0;
       font-size: ${fontSize};
+      line-height: 1;
     }
     .row-label {
       font-weight: bold;
@@ -199,16 +219,20 @@ export function generateExpenseReceiptHTML(
       font-weight: bold;
     }
     .item {
-      margin: 1px 0;
+      margin: 0;
+      padding: 0;
       font-size: ${fontSize};
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
+      line-height: 1;
     }
     .item-time {
       font-size: ${parseInt(fontSize) - 1}px;
       color: #666;
-      margin-top: 1px;
+      margin: 0;
+      padding: 0;
+      line-height: 1;
     }
     .item-desc {
       flex: 1;
@@ -216,25 +240,31 @@ export function generateExpenseReceiptHTML(
       font-weight: bold;
       font-size: ${descSize};
       color: #000;
-      line-height: 1.2;
+      line-height: 1;
+      margin: 0;
+      padding: 0;
     }
     .item-amount {
       font-weight: bold;
       white-space: nowrap;
+      margin: 0;
+      padding: 0;
     }
     .total {
       border-top: 2px solid #000;
-      margin-top: 4px;
-      padding-top: 3px;
+      margin-top: 2px;
+      padding-top: 2px;
       font-weight: bold;
       font-size: ${parseInt(fontSize) + 1}px;
+      line-height: 1;
     }
     .footer {
       text-align: center;
       border-top: 1px dashed #000;
-      padding-top: 4px;
-      margin-top: 4px;
+      padding-top: 2px;
+      margin-top: 2px;
       font-size: ${parseInt(fontSize) - 1}px;
+      line-height: 1;
     }
     .center {
       text-align: center;
@@ -307,11 +337,12 @@ export function generatePaymentReceiptHTML(
   
   // Calculate width based on paper size
   const width = settings.paperWidth === '58mm' ? '48mm' : '72mm';
-  const fontSize = settings.fontSize === 'small' ? '8px' : settings.fontSize === 'medium' ? '10px' : '12px';
-  const titleSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
-  const dateSize = settings.fontSize === 'small' ? '13px' : settings.fontSize === 'medium' ? '15px' : '17px';
-  const descSize = settings.fontSize === 'small' ? '10px' : settings.fontSize === 'medium' ? '12px' : '14px';
-  const lineHeight = '1.1';
+  // Further reduce font sizes to fit everything on one page
+  const fontSize = settings.fontSize === 'small' ? '7px' : settings.fontSize === 'medium' ? '9px' : '11px';
+  const titleSize = settings.fontSize === 'small' ? '11px' : settings.fontSize === 'medium' ? '13px' : '15px';
+  const dateSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
+  const descSize = settings.fontSize === 'small' ? '9px' : settings.fontSize === 'medium' ? '11px' : '13px';
+  const lineHeight = '1';
   
   // Format number without currency symbol
   const formatAmount = (amount: number): string => {
@@ -337,13 +368,13 @@ export function generatePaymentReceiptHTML(
       }
       body {
         margin: 0 !important;
-        padding: 1px !important;
-        page-break-inside: avoid;
+        padding: 0 !important;
+        page-break-inside: avoid !important;
         height: auto !important;
         min-height: auto !important;
         max-height: none !important;
-        orphans: 999;
-        widows: 999;
+        orphans: 999 !important;
+        widows: 999 !important;
       }
       .section-title {
         page-break-after: avoid;
