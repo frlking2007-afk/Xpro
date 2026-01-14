@@ -24,16 +24,61 @@ export default defineConfig({
     // Optimize chunk splitting
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Vendor chunks
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'ui-vendor': ['framer-motion', 'lucide-react'],
-          'chart-vendor': ['recharts'],
-          'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
-          'three-vendor': ['three', 'postprocessing'],
-          'query-vendor': ['@tanstack/react-query', '@tanstack/react-table'],
-          'supabase-vendor': ['@supabase/supabase-js'],
-          'date-vendor': ['date-fns'],
+        manualChunks: (id) => {
+          // React core libraries - combine react and react-dom to avoid circular deps
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+            return 'react-vendor';
+          }
+          
+          // React Router - separate chunk
+          if (id.includes('node_modules/react-router')) {
+            return 'react-router-vendor';
+          }
+          
+          // Supabase - separate chunk
+          if (id.includes('node_modules/@supabase/supabase-js')) {
+            return 'supabase-vendor';
+          }
+          
+          // TanStack Query - separate chunk
+          if (id.includes('node_modules/@tanstack/react-query')) {
+            return 'react-query-vendor';
+          }
+          
+          // TanStack Table - separate chunk
+          if (id.includes('node_modules/@tanstack/react-table')) {
+            return 'react-table-vendor';
+          }
+          
+          // UI libraries
+          if (id.includes('node_modules/framer-motion') || id.includes('node_modules/lucide-react')) {
+            return 'ui-vendor';
+          }
+          
+          // Chart library - separate chunk (large)
+          if (id.includes('node_modules/recharts')) {
+            return 'chart-vendor';
+          }
+          
+          // Form libraries
+          if (id.includes('node_modules/react-hook-form') || id.includes('node_modules/@hookform/resolvers') || id.includes('node_modules/zod')) {
+            return 'form-vendor';
+          }
+          
+          // 3D libraries - separate chunk (very large)
+          if (id.includes('node_modules/three') || id.includes('node_modules/postprocessing')) {
+            return 'three-vendor';
+          }
+          
+          // Date library
+          if (id.includes('node_modules/date-fns')) {
+            return 'date-vendor';
+          }
+          
+          // Other node_modules - catch all (but exclude react to avoid circular deps)
+          if (id.includes('node_modules') && !id.includes('react')) {
+            return 'vendor';
+          }
         },
         // Optimize asset names
         chunkFileNames: 'assets/js/[name]-[hash].js',
