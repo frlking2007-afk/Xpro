@@ -73,7 +73,7 @@ export function generateExpenseReceiptHTML(
   const fontSize = settings.fontSize === 'small' ? '7px' : settings.fontSize === 'medium' ? '9px' : '11px';
   const titleSize = settings.fontSize === 'small' ? '11px' : settings.fontSize === 'medium' ? '13px' : '15px';
   // Date size - larger and bolder
-  const dateSize = settings.fontSize === 'small' ? '16px' : settings.fontSize === 'medium' ? '18px' : '20px';
+  const dateSize = settings.fontSize === 'small' ? '20px' : settings.fontSize === 'medium' ? '18px' : '20px';
   const descSize = settings.fontSize === 'small' ? '9px' : settings.fontSize === 'medium' ? '11px' : '13px';
   const lineHeight = '1';
   
@@ -343,7 +343,8 @@ export function generatePaymentReceiptHTML(
   const fontSize = settings.fontSize === 'small' ? '7px' : settings.fontSize === 'medium' ? '9px' : '11px';
   const titleSize = settings.fontSize === 'small' ? '11px' : settings.fontSize === 'medium' ? '13px' : '15px';
   // Date size - larger and bolder
-  const dateSize = settings.fontSize === 'small' ? '16px' : settings.fontSize === 'medium' ? '18px' : '20px';
+  // Date size - larger and bolder
+  const dateSize = settings.fontSize === 'small' ? '20px' : settings.fontSize === 'medium' ? '18px' : '20px';
   const descSize = settings.fontSize === 'small' ? '9px' : settings.fontSize === 'medium' ? '11px' : '13px';
   const lineHeight = '1';
   
