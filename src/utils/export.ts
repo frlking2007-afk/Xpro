@@ -416,7 +416,7 @@ export function generatePaymentReceiptHTML(
       font-family: 'Courier New', monospace;
       width: ${width};
       margin: 0 auto;
-      padding: 1px;
+      padding: 0;
       font-size: ${fontSize};
       line-height: ${lineHeight};
       background: white;
@@ -425,42 +425,61 @@ export function generatePaymentReceiptHTML(
       min-height: auto;
       max-height: none;
     }
+    .date {
+      font-size: ${dateSize};
+      font-weight: bold;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      line-height: 1;
+    }
     .header {
       text-align: center;
       border-bottom: 1px dashed #000;
-      padding-bottom: 4px;
-      margin-bottom: 4px;
+      padding-bottom: 2px;
+      margin-bottom: 2px;
     }
     .title {
       font-weight: bold;
       font-size: ${titleSize};
-      margin-bottom: 2px;
+      margin: 0;
+      padding: 0;
+      line-height: 1;
     }
     .info {
       font-size: ${fontSize};
       color: #000;
-      margin: 1px 0;
+      margin: 0;
+      padding: 0;
+      line-height: 1;
     }
     .divider {
       border-top: 1px dashed #000;
-      margin: 3px 0;
+      margin: 0;
+      padding: 0;
+      height: 1px;
       page-break-inside: avoid;
       break-inside: avoid;
     }
     .section {
-      margin: 2px 0;
+      margin: 0;
+      padding: 0;
     }
     .section-title {
       font-weight: bold;
       font-size: ${fontSize};
-      margin-bottom: 2px;
+      margin: 0;
+      padding: 0;
       text-decoration: underline;
+      line-height: 1;
     }
     .row {
       display: flex;
       justify-content: space-between;
-      margin: 1px 0;
+      margin: 0;
+      padding: 0;
       font-size: ${fontSize};
+      line-height: 1;
     }
     .row-label {
       font-weight: bold;
@@ -469,20 +488,26 @@ export function generatePaymentReceiptHTML(
       font-weight: bold;
     }
     .item {
-      margin: 1px 0;
+      margin: 0;
+      padding: 0;
       font-size: ${fontSize};
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
+      line-height: 1;
     }
     .item-time {
       font-size: ${parseInt(fontSize) - 1}px;
       color: #666;
-      margin-top: 1px;
+      margin: 0;
+      padding: 0;
+      line-height: 1;
     }
     .item-amount {
       font-weight: bold;
       white-space: nowrap;
+      margin: 0;
+      padding: 0;
       margin-right: 6px;
     }
     .item-desc {
@@ -491,21 +516,25 @@ export function generatePaymentReceiptHTML(
       font-weight: bold;
       font-size: ${descSize};
       color: #000;
-      line-height: 1.2;
+      line-height: 1;
+      margin: 0;
+      padding: 0;
     }
     .total {
       border-top: 2px solid #000;
-      margin-top: 4px;
-      padding-top: 3px;
+      margin-top: 2px;
+      padding-top: 2px;
       font-weight: bold;
       font-size: ${parseInt(fontSize) + 1}px;
+      line-height: 1;
     }
     .footer {
       text-align: center;
       border-top: 1px dashed #000;
-      padding-top: 4px;
-      margin-top: 4px;
+      padding-top: 2px;
+      margin-top: 2px;
       font-size: ${parseInt(fontSize) - 1}px;
+      line-height: 1;
     }
     .center {
       text-align: center;
