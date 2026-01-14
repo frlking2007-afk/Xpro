@@ -1,3 +1,4 @@
+// Export utilities for generating receipt HTML - optimized for single page printing
 import { format } from 'date-fns';
 import { uz } from 'date-fns/locale';
 import { formatCurrency, getCurrencySymbol } from './currency';
