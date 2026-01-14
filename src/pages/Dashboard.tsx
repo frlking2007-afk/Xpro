@@ -1,8 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { startOfMonth } from 'date-fns';
+
+// Lazy load heavy chart library
+const AreaChart = lazy(() => import('recharts').then(module => ({ default: module.AreaChart })));
+const Area = lazy(() => import('recharts').then(module => ({ default: module.Area })));
+const XAxis = lazy(() => import('recharts').then(module => ({ default: module.XAxis })));
+const YAxis = lazy(() => import('recharts').then(module => ({ default: module.YAxis })));
+const CartesianGrid = lazy(() => import('recharts').then(module => ({ default: module.CartesianGrid })));
+const Tooltip = lazy(() => import('recharts').then(module => ({ default: module.Tooltip })));
+const ResponsiveContainer = lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })));
 import DateFilter from '../components/DateFilter';
 import MetricSelector from '../components/MetricSelector';
 import { formatCurrency } from '../utils/currency';
@@ -179,48 +187,50 @@ export default function Dashboard() {
             </div>
 
             <div className="h-80 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data.chartData}>
-                  <defs>
-                    <linearGradient id="colorMetric" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={currentMetric.color} stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor={currentMetric.color} stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                  <XAxis 
-                    dataKey="name" 
-                    stroke="#94a3b8" 
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false} 
-                  />
-                  <YAxis 
-                    stroke="#94a3b8" 
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false} 
-                    tickFormatter={(value) => `${value/1000}k`} 
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#0f172a', 
-                      border: '1px solid #1e293b', 
-                      borderRadius: '8px' 
-                    }}
-                    itemStyle={{ color: '#fff' }}
-                    formatter={(value: number) => [formatCurrency(value), currentMetric.label]}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey={chartMetric} 
-                    stroke={currentMetric.color} 
-                    strokeWidth={3} 
-                    fillOpacity={1} 
-                    fill="url(#colorMetric)" 
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              <Suspense fallback={<div className="h-full w-full flex items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-white/20 border-t-white"></div></div>}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={data.chartData}>
+                    <defs>
+                      <linearGradient id="colorMetric" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={currentMetric.color} stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor={currentMetric.color} stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                    <XAxis 
+                      dataKey="name" 
+                      stroke="#94a3b8" 
+                      fontSize={12} 
+                      tickLine={false} 
+                      axisLine={false} 
+                    />
+                    <YAxis 
+                      stroke="#94a3b8" 
+                      fontSize={12} 
+                      tickLine={false} 
+                      axisLine={false} 
+                      tickFormatter={(value) => `${value/1000}k`} 
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#0f172a', 
+                        border: '1px solid #1e293b', 
+                        borderRadius: '8px' 
+                      }}
+                      itemStyle={{ color: '#fff' }}
+                      formatter={(value: number) => [formatCurrency(value), currentMetric.label]}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey={chartMetric} 
+                      stroke={currentMetric.color} 
+                      strokeWidth={3} 
+                      fillOpacity={1} 
+                      fill="url(#colorMetric)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </Suspense>
             </div>
           </motion.div>
         ) : null}

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Lock, Mail, ArrowRight, Zap, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import Hyperspeed from '../components/Hyperspeed';
+
+// Lazy load heavy Hyperspeed component (contains three.js and postprocessing)
+const Hyperspeed = lazy(() => import('../components/Hyperspeed'));
 import { hyperspeedPresets } from '../components/HyperSpeedPresets';
 
 export default function Login() {
@@ -42,9 +44,11 @@ export default function Login() {
 
   return (
     <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#050505]">
-      {/* Hyperspeed Background */}
+      {/* Hyperspeed Background - Lazy loaded */}
       <div className="absolute inset-0 z-0 opacity-40">
-        <Hyperspeed effectOptions={hyperspeedPresets.two} />
+        <Suspense fallback={<div className="h-full w-full bg-gradient-to-br from-blue-900/20 to-purple-900/20" />}>
+          <Hyperspeed effectOptions={hyperspeedPresets.two} />
+        </Suspense>
       </div>
 
       <div className="relative z-10 w-full max-w-md px-4">

@@ -1,6 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { startOfDay, endOfDay, subDays, startOfYear, endOfYear, isSameMonth, eachMonthOfInterval, format } from 'date-fns';
-import { uz } from 'date-fns/locale';
+// Tree-shake date-fns imports - only import what we need
+import { startOfDay } from 'date-fns/startOfDay';
+import { endOfDay } from 'date-fns/endOfDay';
+import { subDays } from 'date-fns/subDays';
+import { startOfYear } from 'date-fns/startOfYear';
+import { endOfYear } from 'date-fns/endOfYear';
+import { isSameMonth } from 'date-fns/isSameMonth';
+import { eachMonthOfInterval } from 'date-fns/eachMonthOfInterval';
+import { format } from 'date-fns/format';
+import { uz } from 'date-fns/locale/uz';
 import { supabase } from '../lib/supabase';
 import { DashboardData, DashboardStats, ChartDataPoint, Transaction } from '../types';
 
