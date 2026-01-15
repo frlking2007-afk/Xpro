@@ -6,12 +6,6 @@ import { toast } from 'sonner';
 interface ExportSettings {
   paperWidth: '58mm' | '80mm';
   fontSize: 'small' | 'medium' | 'large';
-  showHeader: boolean;
-  showFooter: boolean;
-  showDate: boolean;
-  showTime: boolean;
-  headerText?: string;
-  footerText?: string;
 }
 
 interface ExportSettingsModalProps {
@@ -26,12 +20,6 @@ interface ExportSettingsModalProps {
 const defaultSettings: ExportSettings = {
   paperWidth: '58mm',
   fontSize: 'medium',
-  showHeader: true,
-  showFooter: true,
-  showDate: true,
-  showTime: true,
-  headerText: '',
-  footerText: '',
 };
 
 export default function ExportSettingsModal({
@@ -171,84 +159,6 @@ export default function ExportSettingsModal({
                           </div>
                         </button>
                       ))}
-                    </div>
-                  </div>
-
-                  {/* Display Options */}
-                  <div>
-                    <label className="mb-3 block text-sm font-semibold text-white">
-                      Ko'rsatish sozlamalari
-                    </label>
-                    <div className="space-y-3">
-                      <label className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4 cursor-pointer hover:bg-white/10 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-5 w-5 text-blue-400" />
-                          <span className="text-sm font-medium text-white">Sarlavha ko'rsatish</span>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={settings.showHeader}
-                          onChange={(e) => setSettings({ ...settings, showHeader: e.target.checked })}
-                          className="h-5 w-5 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-2 focus:ring-blue-500"
-                        />
-                      </label>
-                      {settings.showHeader && (
-                        <input
-                          type="text"
-                          value={settings.headerText || ''}
-                          onChange={(e) => setSettings({ ...settings, headerText: e.target.value })}
-                          placeholder="Sarlavha matni (ixtiyoriy)"
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none"
-                        />
-                      )}
-
-                      <label className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4 cursor-pointer hover:bg-white/10 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-5 w-5 text-blue-400" />
-                          <span className="text-sm font-medium text-white">Yakuniy matn ko'rsatish</span>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={settings.showFooter}
-                          onChange={(e) => setSettings({ ...settings, showFooter: e.target.checked })}
-                          className="h-5 w-5 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-2 focus:ring-blue-500"
-                        />
-                      </label>
-                      {settings.showFooter && (
-                        <input
-                          type="text"
-                          value={settings.footerText || ''}
-                          onChange={(e) => setSettings({ ...settings, footerText: e.target.value })}
-                          placeholder="Yakuniy matn (ixtiyoriy)"
-                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none"
-                        />
-                      )}
-
-                      <label className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4 cursor-pointer hover:bg-white/10 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-5 w-5 text-blue-400" />
-                          <span className="text-sm font-medium text-white">Sana ko'rsatish</span>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={settings.showDate}
-                          onChange={(e) => setSettings({ ...settings, showDate: e.target.checked })}
-                          className="h-5 w-5 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-2 focus:ring-blue-500"
-                        />
-                      </label>
-
-                      <label className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4 cursor-pointer hover:bg-white/10 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-5 w-5 text-blue-400" />
-                          <span className="text-sm font-medium text-white">Vaqt ko'rsatish</span>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={settings.showTime}
-                          onChange={(e) => setSettings({ ...settings, showTime: e.target.checked })}
-                          className="h-5 w-5 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-2 focus:ring-blue-500"
-                        />
-                      </label>
                     </div>
                   </div>
 

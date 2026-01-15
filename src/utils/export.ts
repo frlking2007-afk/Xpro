@@ -5,12 +5,6 @@ import { formatCurrency, getCurrencySymbol } from './currency';
 export interface ExportSettings {
   paperWidth: '58mm' | '80mm';
   fontSize: 'small' | 'medium' | 'large';
-  showHeader: boolean;
-  showFooter: boolean;
-  showDate: boolean;
-  showTime: boolean;
-  headerText?: string;
-  footerText?: string;
 }
 
 export interface Transaction {
@@ -39,12 +33,6 @@ export function getDefaultSettings(): ExportSettings {
   return {
     paperWidth: '58mm',
     fontSize: 'medium',
-    showHeader: true,
-    showFooter: true,
-    showDate: true,
-    showTime: true,
-    headerText: '',
-    footerText: '',
   };
 }
 
@@ -69,10 +57,10 @@ export function generateExpenseReceiptHTML(
   // Calculate width based on paper size
   // 80mm printer: 72.1mm printable width (as shown in printer settings)
   const width = settings.paperWidth === '58mm' ? '48mm' : '72.1mm';
-  const fontSize = settings.fontSize === 'small' ? '10px' : settings.fontSize === 'medium' ? '12px' : '14px';
-  const titleSize = settings.fontSize === 'small' ? '14px' : settings.fontSize === 'medium' ? '16px' : '18px';
+  const fontSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
+  const titleSize = settings.fontSize === 'small' ? '16px' : settings.fontSize === 'medium' ? '18px' : '20px';
   const dateSize = settings.fontSize === 'small' ? '20px' : settings.fontSize === 'medium' ? '24px' : '28px';
-  const descSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
+  const descSize = settings.fontSize === 'small' ? '14px' : settings.fontSize === 'medium' ? '16px' : '18px';
   const lineHeight = '1.1';
   
   // Format number without currency symbol
@@ -285,12 +273,7 @@ export function generateExpenseReceiptHTML(
     });
   }
 
-  html += `<div class="divider"></div>`;
-
-  // Footer
-  if (settings.showFooter && settings.footerText) {
-    html += `<div class="footer">${settings.footerText}</div>`;
-  }
+  html += `</div>`;
 
   html += `
 </body>
@@ -313,10 +296,10 @@ export function generatePaymentReceiptHTML(
   // Calculate width based on paper size
   // 80mm printer: 72.1mm printable width (as shown in printer settings)
   const width = settings.paperWidth === '58mm' ? '48mm' : '72.1mm';
-  const fontSize = settings.fontSize === 'small' ? '10px' : settings.fontSize === 'medium' ? '12px' : '14px';
-  const titleSize = settings.fontSize === 'small' ? '14px' : settings.fontSize === 'medium' ? '16px' : '18px';
+  const fontSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
+  const titleSize = settings.fontSize === 'small' ? '16px' : settings.fontSize === 'medium' ? '18px' : '20px';
   const dateSize = settings.fontSize === 'small' ? '20px' : settings.fontSize === 'medium' ? '24px' : '28px';
-  const descSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
+  const descSize = settings.fontSize === 'small' ? '14px' : settings.fontSize === 'medium' ? '16px' : '18px';
   const lineHeight = '1.1';
   
   // Format number without currency symbol
