@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import PasswordModal from '../components/PasswordModal';
 import { verifyPassword, isPasswordSet } from '../utils/password';
 import SalesModal from '../components/SalesModal';
+import { useShift } from '../hooks/useShift';
 
 interface Transaction {
   id: string;
@@ -24,6 +25,7 @@ export default function CategoryExpenseStatistics() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const categoryName = searchParams.get('category');
+  const { currentShift } = useShift();
   
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,13 +79,22 @@ export default function CategoryExpenseStatistics() {
     
     setLoading(true);
     try {
-      console.log('📊 Fetching transactions for category:', categoryName);
+      console.log('📊 Fetching transactions for category:', categoryName, 'shift:', currentShift?.id);
       
-      // First try to fetch by category column
-      let { data, error } = await supabase
+      // Build query with shift_id filter if available
+      let query = supabase
         .from('transactions')
         .select('*')
-        .eq('type', 'xarajat')
+        .eq('type', 'xarajat');
+      
+      // Add shift_id filter if current shift exists
+      if (currentShift?.id) {
+        query = query.eq('shift_id', currentShift.id);
+        console.log('✅ Filtering by shift_id:', currentShift.id);
+      }
+      
+      // First try to fetch by category column
+      let { data, error } = await query
         .eq('category', categoryName)
         .order('date', { ascending: false });
 
@@ -93,11 +104,17 @@ export default function CategoryExpenseStatistics() {
       if (error || !data || data.length === 0) {
         console.log('ℹ️ Category column query returned empty, trying description filter...');
         
-        // Fetch all xarajat transactions
-        const { data: allData, error: allError } = await supabase
+        // Fetch all xarajat transactions (with shift_id filter if available)
+        let allQuery = supabase
           .from('transactions')
           .select('*')
-          .eq('type', 'xarajat')
+          .eq('type', 'xarajat');
+        
+        if (currentShift?.id) {
+          allQuery = allQuery.eq('shift_id', currentShift.id);
+        }
+        
+        const { data: allData, error: allError } = await allQuery
           .order('date', { ascending: false });
 
         if (allError) throw allError;
@@ -134,10 +151,16 @@ export default function CategoryExpenseStatistics() {
       console.error('Error fetching transactions:', error);
       // If error, try alternative method
       try {
-        const { data: allData, error: allError } = await supabase
+        let fallbackQuery = supabase
           .from('transactions')
           .select('*')
-          .eq('type', 'xarajat')
+          .eq('type', 'xarajat');
+        
+        if (currentShift?.id) {
+          fallbackQuery = fallbackQuery.eq('shift_id', currentShift.id);
+        }
+        
+        const { data: allData, error: allError } = await fallbackQuery
           .order('date', { ascending: false });
 
         if (allError) throw allError;
@@ -146,6 +169,7 @@ export default function CategoryExpenseStatistics() {
         const filtered = (allData || []).filter(t => {
           if (t.category === categoryName) return true;
           if (t.description && t.description.includes(`[${categoryName}]`)) return true;
+          if (t.description && t.description.trim() === categoryName) return true;
           return false;
         });
 
