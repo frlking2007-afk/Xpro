@@ -108,12 +108,17 @@ export default function CategoryExpenseStatistics() {
         data = (allData || []).filter(t => {
           // Check if category column exists and matches
           if (t.category === categoryName) {
-            console.log('✅ Found by category column:', t.id);
+            console.log('✅ Found by category column:', t.id, t.category);
             return true;
           }
           // Check if description contains [CategoryName]
           if (t.description && t.description.includes(`[${categoryName}]`)) {
             console.log('✅ Found by description:', t.id, t.description);
+            return true;
+          }
+          // Also check for exact match without brackets (for backward compatibility)
+          if (t.description && t.description.trim() === categoryName) {
+            console.log('✅ Found by exact description match:', t.id, t.description);
             return true;
           }
           return false;

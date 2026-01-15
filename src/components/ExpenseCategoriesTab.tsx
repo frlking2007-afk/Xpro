@@ -104,9 +104,20 @@ export default function ExpenseCategoriesTab({
   const getCategoryTransactions = (category: string) => {
     return transactions.filter(t => {
       // Check if category column exists and matches
-      if (t.category === category) return true;
+      if (t.category === category) {
+        console.log('✅ ExpenseCategoriesTab: Found by category column:', t.id, t.category);
+        return true;
+      }
       // Check if description contains [CategoryName] format
-      if (t.type === 'xarajat' && t.description && t.description.includes(`[${category}]`)) return true;
+      if (t.type === 'xarajat' && t.description && t.description.includes(`[${category}]`)) {
+        console.log('✅ ExpenseCategoriesTab: Found by description:', t.id, t.description);
+        return true;
+      }
+      // Also check for exact match without brackets (for backward compatibility)
+      if (t.type === 'xarajat' && t.description && t.description.trim() === category) {
+        console.log('✅ ExpenseCategoriesTab: Found by exact description match:', t.id, t.description);
+        return true;
+      }
       return false;
     });
   };
