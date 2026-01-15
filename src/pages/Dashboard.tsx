@@ -331,9 +331,10 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
+          <div className="h-80 w-full min-h-[300px]">
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%" minHeight={300}>
+                <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorMetric" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={currentMetric.color} stopOpacity={0.3}/>

@@ -19,6 +19,12 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder') || s
   console.log('🔧 Creating Supabase client...');
   console.log('🔧 Supabase URL:', supabaseUrl);
   console.log('🔧 Supabase Key (first 20 chars):', supabaseAnonKey.substring(0, 20) + '...');
+  console.log('🔧 Supabase Key length:', supabaseAnonKey.length);
+  
+  // Validate API key format
+  if (supabaseAnonKey.length < 50) {
+    console.error('⚠️ Warning: Supabase API key seems too short!');
+  }
   
   supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
@@ -32,11 +38,12 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder') || s
     global: {
       headers: {
         'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`,
       },
     },
   });
   
-  console.log('✅ Supabase client created');
+  console.log('✅ Supabase client created with API key headers');
   
   // Test connection and authentication
   supabase.auth.getSession()
