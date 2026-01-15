@@ -230,13 +230,13 @@ export default function Dashboard() {
 
       setStats({
         jamiFoyda: currentMetrics.jamiFoyda,
-        jamiZarar: currentMetrics.kassa, // "Kassa" nomi bilan ko'rsatiladi
-        sofFoyda: currentMetrics.azamAka, // "Azam aka" nomi bilan ko'rsatiladi
-        kechagiFoyda: currentMetrics.olimAka, // "Olim aka" nomi bilan ko'rsatiladi
+        olimAka: currentMetrics.olimAka, // "Olim aka"
+        kassa: currentMetrics.kassa, // "Kassa"
+        azamAka: currentMetrics.azamAka, // "Azam aka"
         jamiFoydaChange: calculateChange(currentMetrics.jamiFoyda, prevMetrics.jamiFoyda),
-        jamiZararChange: calculateChange(currentMetrics.kassa, prevMetrics.kassa),
-        sofFoydaChange: calculateChange(currentMetrics.azamAka, prevMetrics.azamAka),
-        kechagiFoydaChange: calculateChange(currentMetrics.olimAka, prevMetrics.olimAka)
+        olimAkaChange: calculateChange(currentMetrics.olimAka, prevMetrics.olimAka),
+        kassaChange: calculateChange(currentMetrics.kassa, prevMetrics.kassa),
+        azamAkaChange: calculateChange(currentMetrics.azamAka, prevMetrics.azamAka)
       });
 
       // Prepare Chart Data (Group by Day or Month based on range)
@@ -318,23 +318,23 @@ export default function Dashboard() {
           color="bg-blue-500" 
         />
         <StatCard 
-          title="Kechagi Foyda" 
-          value={formatCurrency(stats.kechagiFoyda)}
-          change={stats.kechagiFoydaChange} 
+          title="Olim aka" 
+          value={formatCurrency(stats.olimAka)}
+          change={stats.olimAkaChange} 
           icon={Wallet}
           color="bg-emerald-500" 
         />
         <StatCard 
-          title="Jami Zarar" 
-          value={formatCurrency(stats.jamiZarar)}
-          change={stats.jamiZararChange} 
+          title="Kassa" 
+          value={formatCurrency(stats.kassa)}
+          change={stats.kassaChange} 
           icon={TrendingDown}
           color="bg-red-500" 
         />
         <StatCard 
-          title="Sof Foyda" 
-          value={formatCurrency(stats.sofFoyda)}
-          change={stats.sofFoydaChange} 
+          title="Azam aka" 
+          value={formatCurrency(stats.azamAka)}
+          change={stats.azamAkaChange} 
           icon={TrendingUp}
           color="bg-purple-500" 
         />
