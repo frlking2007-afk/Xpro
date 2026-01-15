@@ -71,11 +71,22 @@ export default function Dashboard() {
     try {
       console.log('📊 Fetching dashboard stats...', { start: dateRange.start, end: dateRange.end });
       
+      // Check environment variables before making requests
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        console.error('❌ Supabase environment variables are missing!');
+        toast.error('Supabase sozlamalari topilmadi. Environment variables\'ni tekshiring.');
+        return;
+      }
+      
+      console.log('📡 Supabase URL:', supabaseUrl ? 'Set' : 'Missing');
+      console.log('📡 Supabase Key:', supabaseKey ? 'Set (' + supabaseKey.length + ' chars)' : 'Missing');
+      
       // First, try to fetch all transactions to see if table exists and what columns it has
       // Then filter by date in JavaScript (safer approach if date column format is unknown)
       console.log('📡 Attempting to fetch all transactions first...');
-      console.log('📡 Supabase URL:', import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Missing');
-      console.log('📡 Supabase Key:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Missing');
       
       const { data: allTransactions, error: allError } = await supabase
         .from('transactions')
