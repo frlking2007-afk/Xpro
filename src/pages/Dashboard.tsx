@@ -43,13 +43,13 @@ export default function Dashboard() {
   const [chartMetric, setChartMetric] = useState('savdo');
   const [stats, setStats] = useState({
     jamiFoyda: 0,
-    kechagiFoyda: 0,
-    jamiZarar: 0,
-    sofFoyda: 0,
+    olimAka: 0, // "Olim aka" (old name: kechagiFoyda)
+    kassa: 0, // "Kassa" (old name: jamiZarar)
+    azamAka: 0, // "Azam aka" (old name: sofFoyda)
     jamiFoydaChange: '0%',
-    kechagiFoydaChange: '0%',
-    jamiZararChange: '0%',
-    sofFoydaChange: '0%'
+    olimAkaChange: '0%', // (old name: kechagiFoydaChange)
+    kassaChange: '0%', // (old name: jamiZararChange)
+    azamAkaChange: '0%' // (old name: sofFoydaChange)
   });
   const [chartData, setChartData] = useState<any[]>([]);
 
