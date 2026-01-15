@@ -781,13 +781,15 @@ export default function XproOperations() {
           .order('created_at', { ascending: true });
 
         if (error) {
-          // If table doesn't exist, try to create it or fallback to localStorage
-          if (error.code === '42P01' || error.message.includes('does not exist')) {
-            console.log('expense_categories table not found, using localStorage');
+          // If table doesn't exist, fallback to localStorage
+          if (error.code === '42P01' || error.code === 'PGRST205' || error.message.includes('does not exist') || error.message.includes('Could not find the table')) {
+            console.log('ℹ️ expense_categories table not found in Supabase, using localStorage');
+            console.log('ℹ️ To create the table, run migration: supabase/migrations/005_expense_categories.sql');
             const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
             setExpenseCategories(categories);
             return;
           }
+          console.error('❌ Error loading categories:', error);
           throw error;
         }
 

@@ -21,9 +21,12 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder') || s
   console.log('🔧 Supabase Key (first 20 chars):', supabaseAnonKey.substring(0, 20) + '...');
   console.log('🔧 Supabase Key length:', supabaseAnonKey.length);
   
-  // Validate API key format
-  if (supabaseAnonKey.length < 50) {
-    console.error('⚠️ Warning: Supabase API key seems too short!');
+  // Validate API key format (anon key is usually 100+ characters)
+  if (supabaseAnonKey.length < 100) {
+    console.warn('⚠️ Warning: Supabase API key seems too short! Expected 100+ characters, got:', supabaseAnonKey.length);
+    console.warn('⚠️ This might cause authentication issues. Please check your VITE_SUPABASE_ANON_KEY in Vercel.');
+  } else {
+    console.log('✅ API key length is valid:', supabaseAnonKey.length, 'characters');
   }
   
   supabase = createClient(supabaseUrl, supabaseAnonKey, {

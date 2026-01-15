@@ -46,11 +46,21 @@ const Sidebar = ({ isOpen, toggle }: { isOpen: boolean; toggle: () => void }) =>
 
       // Try to get from user_profiles table
       try {
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('user_id', user.id)
           .single();
+        
+        if (profileError) {
+          // If table doesn't exist, skip silently
+          if (profileError.code === '42P01' || profileError.code === 'PGRST205' || profileError.message.includes('does not exist') || profileError.message.includes('Could not find the table')) {
+            console.log('ℹ️ user_profiles table not found in Supabase, using user metadata');
+            console.log('ℹ️ To create the table, run migration: supabase/migrations/002_user_profiles.sql');
+          } else {
+            console.warn('⚠️ Error loading user profile:', profileError.message);
+          }
+        }
 
         if (profile) {
           setUserProfile({

@@ -31,15 +31,26 @@ export default function Settings() {
       // Load user profile (try to get from user_profiles, fallback to user metadata)
       let profile = null;
       try {
-        const { data } = await supabase
+        const { data, error: profileError } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('user_id', user.id)
           .single();
-        profile = data;
-      } catch (error) {
+        
+        if (profileError) {
+          // If table doesn't exist, skip silently
+          if (profileError.code === '42P01' || profileError.code === 'PGRST205' || profileError.message.includes('does not exist') || profileError.message.includes('Could not find the table')) {
+            console.log('ℹ️ user_profiles table not found in Supabase, using user metadata');
+            console.log('ℹ️ To create the table, run migration: supabase/migrations/002_user_profiles.sql');
+          } else {
+            console.warn('⚠️ Error loading user profile:', profileError.message);
+          }
+        } else {
+          profile = data;
+        }
+      } catch (error: any) {
         // Table might not exist yet, use user metadata as fallback
-        console.log('user_profiles table not found, using user metadata');
+        console.log('ℹ️ user_profiles table not found, using user metadata');
       }
 
       if (profile) {
