@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, BarChart3, DollarSign, TrendingUp, Calendar, FileText, Trash2 } from 'lucide-react';
+import { ArrowLeft, BarChart3, DollarSign, TrendingUp, Calendar, FileText, Trash2, Edit, Check, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { formatCurrency } from '../utils/currency';
 import { format } from 'date-fns';
@@ -31,6 +31,9 @@ export default function CategoryExpenseStatistics() {
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null);
   const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
   const [categorySales, setCategorySales] = useState<number>(0);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAmount, setEditAmount] = useState<string>('');
+  const [editDescription, setEditDescription] = useState<string>('');
 
   useEffect(() => {
     if (categoryName) {
@@ -195,6 +198,64 @@ export default function CategoryExpenseStatistics() {
     setIsPasswordModalOpen(false);
   };
 
+  // Format number with spaces (50000 -> 50 000)
+  const formatNumber = (value: string): string => {
+    const numericValue = value.replace(/\s/g, '').replace(/[^0-9]/g, '');
+    if (!numericValue) return '';
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  };
+
+  const handleEditTransaction = (transaction: Transaction) => {
+    setEditingId(transaction.id);
+    setEditAmount(Math.abs(transaction.amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '));
+    setEditDescription(transaction.description || '');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditAmount('');
+    setEditDescription('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId || !editAmount) return;
+
+    try {
+      const numericAmount = parseFloat(editAmount.replace(/\s/g, ''));
+      if (isNaN(numericAmount) || numericAmount <= 0) {
+        toast.error('Noto\'g\'ri summa');
+        return;
+      }
+
+      // Update transaction in Supabase
+      const { error } = await supabase
+        .from('transactions')
+        .update({
+          amount: numericAmount,
+          description: editDescription || null
+        })
+        .eq('id', editingId);
+
+      if (error) throw error;
+
+      // Update local state
+      setTransactions(transactions.map(t => 
+        t.id === editingId 
+          ? { ...t, amount: numericAmount, description: editDescription }
+          : t
+      ));
+
+      // Dispatch event to notify other components
+      window.dispatchEvent(new Event('transactionUpdated'));
+      
+      toast.success('O\'zgartirildi!');
+      handleCancelEdit();
+    } catch (error: any) {
+      console.error('Error updating transaction:', error);
+      toast.error('O\'zgartirishda xatolik: ' + error.message);
+    }
+  };
+
   if (!categoryName) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -315,32 +376,87 @@ export default function CategoryExpenseStatistics() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-4 transition-colors hover:bg-white/10 hover:border-white/10"
+                  className={`rounded-xl border border-white/5 bg-white/5 p-4 transition-colors hover:bg-white/10 hover:border-white/10 ${
+                    editingId === transaction.id ? 'border-blue-500/50 bg-blue-500/5' : ''
+                  }`}
                 >
-                  <div className="flex items-center gap-4 flex-1">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-400">
-                      <DollarSign className="h-5 w-5" />
+                  {editingId === transaction.id ? (
+                    // Edit Mode
+                    <div className="space-y-3">
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-slate-400">Summa</label>
+                        <input
+                          type="text"
+                          value={editAmount}
+                          onChange={(e) => setEditAmount(formatNumber(e.target.value))}
+                          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                          autoFocus
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-slate-400">Tavsif</label>
+                        <input
+                          type="text"
+                          value={editDescription}
+                          onChange={(e) => setEditDescription(e.target.value)}
+                          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleSaveEdit}
+                          className="flex-1 rounded-lg bg-green-500/20 px-3 py-2 text-green-400 transition-all hover:bg-green-500/30 flex items-center justify-center gap-2"
+                        >
+                          <Check className="h-4 w-4" />
+                          Saqlash
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="flex-1 rounded-lg bg-red-500/20 px-3 py-2 text-red-400 transition-all hover:bg-red-500/30 flex items-center justify-center gap-2"
+                        >
+                          <X className="h-4 w-4" />
+                          Bekor qilish
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-bold text-white text-lg">
-                        {formatCurrency(transaction.amount)}
-                      </p>
-                      <p className="text-sm text-slate-400 mt-1">
-                        {transaction.description || 'Izohsiz'}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {format(new Date(transaction.date), 'd MMMM yyyy, HH:mm', { locale: uz })}
-                      </p>
+                  ) : (
+                    // View Mode
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-400">
+                          <DollarSign className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-white text-lg">
+                            {formatCurrency(transaction.amount)}
+                          </p>
+                          <p className="text-sm text-slate-400 mt-1">
+                            {transaction.description || 'Izohsiz'}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {format(new Date(transaction.date), 'd MMMM yyyy, HH:mm', { locale: uz })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEditTransaction(transaction)}
+                          className="rounded-lg p-2 text-slate-500 transition-all hover:bg-blue-500/20 hover:text-blue-400"
+                          title="Tahrirlash"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTransaction(transaction.id)}
+                          className="rounded-lg p-2 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-400"
+                          title="O'chirish"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteTransaction(transaction.id)}
-                    className="rounded-lg p-2 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-400"
-                    title="O'chirish"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  )}
                 </motion.div>
               ))}
             </div>
