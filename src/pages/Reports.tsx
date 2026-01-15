@@ -133,15 +133,40 @@ export default function Reports() {
   const fetchShifts = async () => {
     setLoadingShifts(true);
     try {
+      console.log('📊 Fetching shifts for Reports...');
+      
+      // Check environment variables
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        console.error('❌ Supabase environment variables are missing!');
+        toast.error('Supabase sozlamalari topilmadi.');
+        setShifts([]);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('shifts')
         .select('*')
         .order('opened_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase error fetching shifts:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error.details);
+        toast.error(`Smenalarni yuklashda xatolik: ${error.message}`);
+        setShifts([]);
+        return;
+      }
+      
+      console.log('✅ Shifts fetched:', data?.length || 0, 'items');
       setShifts(data || []);
-    } catch (error) {
-      console.error('Error fetching shifts:', error);
+    } catch (error: any) {
+      console.error('❌ Exception in fetchShifts:', error);
+      toast.error('Smenalarni yuklashda xatolik: ' + (error.message || 'Noma\'lum xatolik'));
+      setShifts([]);
     } finally {
       setLoadingShifts(false);
     }
