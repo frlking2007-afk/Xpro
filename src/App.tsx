@@ -2,6 +2,7 @@ import React, { Suspense, lazy, ErrorInfo } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { Analytics } from '@vercel/analytics/react';
 import DashboardLayout from './layouts/DashboardLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -97,6 +98,7 @@ function App() {
           </Suspense>
         </BrowserRouter>
         <SpeedInsights />
+        <Analytics />
       </>
     );
   } catch (error) {
