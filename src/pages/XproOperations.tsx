@@ -863,15 +863,24 @@ export default function XproOperations() {
   const fetchViewShift = async (shiftId: string) => {
     setLoadingViewShift(true);
     try {
+      console.log('📡 Fetching view shift:', shiftId);
+      
       const { data, error } = await supabase
         .from('shifts')
         .select('id, status, opened_at, closed_at')
         .eq('id', shiftId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase error fetching view shift:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error);
+        throw error;
+      }
 
       if (data) {
+        console.log('✅ View shift fetched successfully:', data);
         setViewShift({
           id: data.id,
           status: data.status,
@@ -880,10 +889,12 @@ export default function XproOperations() {
         });
         setIsViewMode(true);
         await fetchTransactionsForShift(shiftId);
+      } else {
+        console.log('ℹ️ No shift data found');
       }
     } catch (error: any) {
-      console.error('Error fetching view shift:', error);
-      toast.error('Smena topilmadi');
+      console.error('❌ Exception in fetchViewShift:', error);
+      toast.error('Smena topilmadi: ' + (error.message || 'Noma\'lum xatolik'));
       navigate('/reports');
     } finally {
       setLoadingViewShift(false);
@@ -893,6 +904,8 @@ export default function XproOperations() {
   const fetchTransactionsForShift = async (shiftId: string) => {
     setLoading(true);
     try {
+      console.log('📡 Fetching transactions for shift (view mode):', shiftId);
+      
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
@@ -900,11 +913,26 @@ export default function XproOperations() {
         .order('date', { ascending: false })
         .limit(1000); // Optimize: limit results
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase error fetching transactions for shift:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error);
+        toast.error(`Operatsiyalarni yuklashda xatolik: ${error.message}`);
+        setTransactions([]);
+        return;
+      }
+
+      console.log('✅ Transactions fetched successfully (view mode):', data?.length || 0, 'items');
       setTransactions(data || []);
+      
+      if (!data || data.length === 0) {
+        console.log('ℹ️ No transactions found for this shift');
+      }
     } catch (error: any) {
-      console.error('Error fetching transactions:', error);
-      toast.error('Operatsiyalarni yuklashda xatolik');
+      console.error('❌ Exception in fetchTransactionsForShift:', error);
+      toast.error('Operatsiyalarni yuklashda xatolik: ' + (error.message || 'Noma\'lum xatolik'));
+      setTransactions([]);
     } finally {
       setLoading(false);
     }
@@ -948,18 +976,40 @@ export default function XproOperations() {
   }, [currentShift, isViewMode, viewShift]);
 
   const fetchTransactions = async () => {
-    if (!currentShift) return;
+    if (!currentShift) {
+      console.log('⚠️ No current shift, skipping fetchTransactions');
+      return;
+    }
+    
     try {
+      console.log('📡 Fetching transactions for shift:', currentShift.id);
+      
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
         .eq('shift_id', currentShift.id) // Filter by Shift ID
         .order('date', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase error fetching transactions:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error);
+        toast.error(`Ma'lumotlarni yuklashda xatolik: ${error.message}`);
+        setTransactions([]);
+        return;
+      }
+
+      console.log('✅ Transactions fetched successfully:', data?.length || 0, 'items');
       setTransactions(data || []);
+      
+      if (!data || data.length === 0) {
+        console.log('ℹ️ No transactions found for this shift');
+      }
     } catch (error: any) {
-      // toast.error('Ma\'lumotlarni yuklashda xatolik: ' + error.message);
+      console.error('❌ Exception in fetchTransactions:', error);
+      toast.error('Ma\'lumotlarni yuklashda xatolik: ' + (error.message || 'Noma\'lum xatolik'));
+      setTransactions([]);
     }
   };
 
@@ -971,6 +1021,8 @@ export default function XproOperations() {
     
     setLoading(true);
     try {
+      console.log('📝 Adding transaction:', { amount, description, type: activeTab, shift_id: currentShift.id });
+      
       const { data, error } = await supabase
         .from('transactions')
         .insert([
@@ -985,12 +1037,21 @@ export default function XproOperations() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase error adding transaction:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error);
+        throw error;
+      }
 
+      console.log('✅ Transaction added successfully:', data);
       setTransactions([data, ...transactions]);
+      window.dispatchEvent(new Event('transactionAdded'));
       toast.success("Muvaffaqiyatli saqlandi!");
     } catch (error: any) {
-      toast.error('Xatolik: ' + error.message);
+      console.error('❌ Exception in handleAddTransaction:', error);
+      toast.error('Xatolik: ' + (error.message || 'Noma\'lum xatolik'));
     } finally {
       setLoading(false);
     }
@@ -998,18 +1059,28 @@ export default function XproOperations() {
 
   const handleEditTransaction = async (id: string, amount: number, description: string) => {
     try {
+      console.log('✏️ Editing transaction:', { id, amount, description });
+      
       const { error } = await supabase
         .from('transactions')
         .update({ amount, description })
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase error editing transaction:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error);
+        throw error;
+      }
 
+      console.log('✅ Transaction edited successfully');
       setTransactions(transactions.map(t => t.id === id ? { ...t, amount, description } : t));
       window.dispatchEvent(new Event('transactionUpdated'));
       toast.success("Tahrirlandi!");
     } catch (error: any) {
-      toast.error('Tahrirlashda xatolik: ' + error.message);
+      console.error('❌ Exception in handleEditTransaction:', error);
+      toast.error('Tahrirlashda xatolik: ' + (error.message || 'Noma\'lum xatolik'));
     }
   };
 
@@ -1027,17 +1098,28 @@ export default function XproOperations() {
 
   const performDelete = async (id: string) => {
     try {
+      console.log('🗑️ Deleting transaction:', id);
+      
       const { error } = await supabase
         .from('transactions')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase error deleting transaction:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error);
+        throw error;
+      }
 
+      console.log('✅ Transaction deleted successfully');
       setTransactions(transactions.filter(t => t.id !== id));
+      window.dispatchEvent(new Event('transactionDeleted'));
       toast.success("O'chirildi!");
     } catch (error: any) {
-      toast.error('O\'chirishda xatolik: ' + error.message);
+      console.error('❌ Exception in performDelete:', error);
+      toast.error('O\'chirishda xatolik: ' + (error.message || 'Noma\'lum xatolik'));
     }
   };
 

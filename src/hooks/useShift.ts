@@ -22,6 +22,8 @@ export function useShift() {
 
   const fetchCurrentShift = async () => {
     try {
+      console.log('📡 Fetching current shift...');
+      
       // Find the latest OPEN shift
       const { data, error } = await supabase
         .from('shifts')
@@ -31,13 +33,25 @@ export function useShift() {
         .limit(1)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
-        console.error('Error fetching shift:', error);
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // PGRST116 means no rows found - this is normal if no shift is open
+          console.log('ℹ️ No open shift found');
+        } else {
+          console.error('❌ Supabase error fetching shift:', error);
+          console.error('Error code:', error.code);
+          console.error('Error message:', error.message);
+          console.error('Error details:', error);
+        }
+        setCurrentShift(null);
+        return;
       }
 
+      console.log('✅ Current shift fetched successfully:', data);
       setCurrentShift(data);
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      console.error('❌ Exception in fetchCurrentShift:', error);
+      setCurrentShift(null);
     } finally {
       setLoading(false);
     }
