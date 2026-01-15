@@ -159,8 +159,14 @@ export default function Settings() {
           });
 
         if (profileError) {
-          // If table doesn't exist, save to user metadata as fallback
-          console.warn('user_profiles table error, using metadata:', profileError);
+          // If table doesn't exist, fallback to user metadata
+          if (profileError.code === '42P01' || profileError.code === 'PGRST205' || profileError.message.includes('does not exist') || profileError.message.includes('Could not find the table')) {
+            console.log('ℹ️ user_profiles table not found, using user metadata');
+            console.log('ℹ️ To create the table, run migration: supabase/migrations/002_user_profiles.sql');
+          } else {
+            console.warn('⚠️ user_profiles table error:', profileError.message);
+          }
+          // Fallback to user metadata
           await supabase.auth.updateUser({
             data: { full_name: fullName, avatar_url: avatarUrl }
           });
