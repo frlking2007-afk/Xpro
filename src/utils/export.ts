@@ -71,7 +71,7 @@ export function generateExpenseReceiptHTML(
   const width = settings.paperWidth === '58mm' ? '48mm' : '72.1mm';
   const fontSize = settings.fontSize === 'small' ? '8px' : settings.fontSize === 'medium' ? '10px' : '12px';
   const titleSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
-  const dateSize = settings.fontSize === 'small' ? '13px' : settings.fontSize === 'medium' ? '15px' : '17px';
+  const dateSize = settings.fontSize === 'small' ? '20px' : settings.fontSize === 'medium' ? '24px' : '28px';
   const descSize = settings.fontSize === 'small' ? '10px' : settings.fontSize === 'medium' ? '12px' : '14px';
   const lineHeight = '1.1';
   
@@ -240,6 +240,15 @@ export function generateExpenseReceiptHTML(
     .center {
       text-align: center;
     }
+    .date {
+      font-size: ${dateSize};
+      font-weight: 900;
+      text-align: center;
+      margin: 4px 0;
+      padding: 0;
+      line-height: 1.2;
+      color: #000;
+    }
   </style>
 </head>
 <body>
@@ -248,7 +257,7 @@ export function generateExpenseReceiptHTML(
   // Wrap ALL content in one container to prevent any page breaks
   html += `<div style="page-break-inside: avoid !important; break-inside: avoid !important; orphans: 999 !important; widows: 999 !important; display: block !important;">`;
   
-  // Date (larger)
+  // Date (larger, centered, bold)
   html += `<div class="date">${format(now, 'dd.MM.yyyy', { locale: uz })}</div>`;
 
   // Category Name
@@ -311,7 +320,7 @@ export function generatePaymentReceiptHTML(
   const width = settings.paperWidth === '58mm' ? '48mm' : '72.1mm';
   const fontSize = settings.fontSize === 'small' ? '8px' : settings.fontSize === 'medium' ? '10px' : '12px';
   const titleSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
-  const dateSize = settings.fontSize === 'small' ? '13px' : settings.fontSize === 'medium' ? '15px' : '17px';
+  const dateSize = settings.fontSize === 'small' ? '20px' : settings.fontSize === 'medium' ? '24px' : '28px';
   const descSize = settings.fontSize === 'small' ? '10px' : settings.fontSize === 'medium' ? '12px' : '14px';
   const lineHeight = '1.1';
   
@@ -481,6 +490,15 @@ export function generatePaymentReceiptHTML(
     .center {
       text-align: center;
     }
+    .date {
+      font-size: ${dateSize};
+      font-weight: 900;
+      text-align: center;
+      margin: 4px 0;
+      padding: 0;
+      line-height: 1.2;
+      color: #000;
+    }
   </style>
 </head>
 <body>
@@ -489,7 +507,7 @@ export function generatePaymentReceiptHTML(
   // Wrap ALL content in one container to prevent any page breaks
   html += `<div style="page-break-inside: avoid !important; break-inside: avoid !important; orphans: 999 !important; widows: 999 !important; display: block !important;">`;
   
-  // Date (larger)
+  // Date (larger, centered, bold)
   html += `<div class="date">${format(now, 'dd.MM.yyyy', { locale: uz })}</div>`;
 
   // Payment Name
