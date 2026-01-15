@@ -136,17 +136,6 @@ export default function Dashboard() {
       
       console.log('✅ Current period transactions filtered:', currentData.length, 'items');
 
-      if (currentError) {
-        console.error('❌ Supabase error fetching current period transactions:', currentError);
-        console.error('Error code:', currentError.code);
-        console.error('Error message:', currentError.message);
-        console.error('Error details:', currentError);
-        toast.error(`Statistikani yuklashda xatolik: ${currentError.message}`);
-        return;
-      }
-
-      console.log('✅ Current period transactions fetched:', currentData?.length || 0, 'items');
-
       // Fetch previous period data for comparison (simple comparison: same duration before start date)
       const duration = dateRange.end.getTime() - dateRange.start.getTime();
       const prevStart = new Date(dateRange.start.getTime() - duration);
