@@ -69,10 +69,10 @@ export function generateExpenseReceiptHTML(
   // Calculate width based on paper size
   // 80mm printer: 72.1mm printable width (as shown in printer settings)
   const width = settings.paperWidth === '58mm' ? '48mm' : '72.1mm';
-  const fontSize = settings.fontSize === 'small' ? '8px' : settings.fontSize === 'medium' ? '10px' : '12px';
-  const titleSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
+  const fontSize = settings.fontSize === 'small' ? '10px' : settings.fontSize === 'medium' ? '12px' : '14px';
+  const titleSize = settings.fontSize === 'small' ? '14px' : settings.fontSize === 'medium' ? '16px' : '18px';
   const dateSize = settings.fontSize === 'small' ? '20px' : settings.fontSize === 'medium' ? '24px' : '28px';
-  const descSize = settings.fontSize === 'small' ? '10px' : settings.fontSize === 'medium' ? '12px' : '14px';
+  const descSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
   const lineHeight = '1.1';
   
   // Format number without currency symbol
@@ -163,12 +163,13 @@ export function generateExpenseReceiptHTML(
       margin-bottom: 4px;
     }
     .title {
-      font-weight: bold;
+      font-weight: 900;
       font-size: ${titleSize};
       margin-bottom: 2px;
     }
     .info {
       font-size: ${fontSize};
+      font-weight: 900;
       color: #000;
       margin: 1px 0;
     }
@@ -182,7 +183,7 @@ export function generateExpenseReceiptHTML(
       margin: 2px 0;
     }
     .section-title {
-      font-weight: bold;
+      font-weight: 900;
       font-size: ${fontSize};
       margin-bottom: 2px;
       text-decoration: underline;
@@ -194,10 +195,10 @@ export function generateExpenseReceiptHTML(
       font-size: ${fontSize};
     }
     .row-label {
-      font-weight: bold;
+      font-weight: 900;
     }
     .row-value {
-      font-weight: bold;
+      font-weight: 900;
     }
     .item {
       margin: 1px 0;
@@ -206,28 +207,23 @@ export function generateExpenseReceiptHTML(
       justify-content: space-between;
       align-items: flex-start;
     }
-    .item-time {
-      font-size: ${parseInt(fontSize) - 1}px;
-      color: #666;
-      margin-top: 1px;
-    }
     .item-desc {
       flex: 1;
       word-wrap: break-word;
-      font-weight: bold;
+      font-weight: 900;
       font-size: ${descSize};
       color: #000;
       line-height: 1.2;
     }
     .item-amount {
-      font-weight: bold;
+      font-weight: 900;
       white-space: nowrap;
     }
     .total {
       border-top: 2px solid #000;
       margin-top: 4px;
       padding-top: 3px;
-      font-weight: bold;
+      font-weight: 900;
       font-size: ${parseInt(fontSize) + 1}px;
     }
     .footer {
@@ -236,6 +232,7 @@ export function generateExpenseReceiptHTML(
       padding-top: 4px;
       margin-top: 4px;
       font-size: ${parseInt(fontSize) - 1}px;
+      font-weight: 900;
     }
     .center {
       text-align: center;
@@ -283,10 +280,8 @@ export function generateExpenseReceiptHTML(
       // Remove category prefix if exists
       const cleanDesc = desc.replace(`[${categoryName}]`, '').trim();
       const amount = formatAmount(transaction.amount);
-      const transactionDate = new Date(transaction.date);
-      const timeStr = format(transactionDate, 'HH:mm', { locale: uz });
       
-      html += `<div class="item"><div class="item-amount">${amount}</div><div class="item-desc">${cleanDesc}<div class="item-time">${timeStr}</div></div></div><div class="divider"></div>`;
+      html += `<div class="item"><div class="item-amount">${amount}</div><div class="item-desc">${cleanDesc}</div></div><div class="divider"></div>`;
     });
   }
 
@@ -318,10 +313,10 @@ export function generatePaymentReceiptHTML(
   // Calculate width based on paper size
   // 80mm printer: 72.1mm printable width (as shown in printer settings)
   const width = settings.paperWidth === '58mm' ? '48mm' : '72.1mm';
-  const fontSize = settings.fontSize === 'small' ? '8px' : settings.fontSize === 'medium' ? '10px' : '12px';
-  const titleSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
+  const fontSize = settings.fontSize === 'small' ? '10px' : settings.fontSize === 'medium' ? '12px' : '14px';
+  const titleSize = settings.fontSize === 'small' ? '14px' : settings.fontSize === 'medium' ? '16px' : '18px';
   const dateSize = settings.fontSize === 'small' ? '20px' : settings.fontSize === 'medium' ? '24px' : '28px';
-  const descSize = settings.fontSize === 'small' ? '10px' : settings.fontSize === 'medium' ? '12px' : '14px';
+  const descSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
   const lineHeight = '1.1';
   
   // Format number without currency symbol
@@ -412,12 +407,13 @@ export function generatePaymentReceiptHTML(
       margin-bottom: 4px;
     }
     .title {
-      font-weight: bold;
+      font-weight: 900;
       font-size: ${titleSize};
       margin-bottom: 2px;
     }
     .info {
       font-size: ${fontSize};
+      font-weight: 900;
       color: #000;
       margin: 1px 0;
     }
@@ -431,7 +427,7 @@ export function generatePaymentReceiptHTML(
       margin: 2px 0;
     }
     .section-title {
-      font-weight: bold;
+      font-weight: 900;
       font-size: ${fontSize};
       margin-bottom: 2px;
       text-decoration: underline;
@@ -443,10 +439,10 @@ export function generatePaymentReceiptHTML(
       font-size: ${fontSize};
     }
     .row-label {
-      font-weight: bold;
+      font-weight: 900;
     }
     .row-value {
-      font-weight: bold;
+      font-weight: 900;
     }
     .item {
       margin: 1px 0;
@@ -455,20 +451,15 @@ export function generatePaymentReceiptHTML(
       justify-content: space-between;
       align-items: flex-start;
     }
-    .item-time {
-      font-size: ${parseInt(fontSize) - 1}px;
-      color: #666;
-      margin-top: 1px;
-    }
     .item-amount {
-      font-weight: bold;
+      font-weight: 900;
       white-space: nowrap;
       margin-right: 6px;
     }
     .item-desc {
       flex: 1;
       word-wrap: break-word;
-      font-weight: bold;
+      font-weight: 900;
       font-size: ${descSize};
       color: #000;
       line-height: 1.2;
@@ -477,7 +468,7 @@ export function generatePaymentReceiptHTML(
       border-top: 2px solid #000;
       margin-top: 4px;
       padding-top: 3px;
-      font-weight: bold;
+      font-weight: 900;
       font-size: ${parseInt(fontSize) + 1}px;
     }
     .footer {
@@ -486,6 +477,7 @@ export function generatePaymentReceiptHTML(
       padding-top: 4px;
       margin-top: 4px;
       font-size: ${parseInt(fontSize) - 1}px;
+      font-weight: 900;
     }
     .center {
       text-align: center;
@@ -526,9 +518,7 @@ export function generatePaymentReceiptHTML(
     transactions.forEach((transaction) => {
       const desc = transaction.description || 'Izohsiz';
       const amount = formatAmount(transaction.amount);
-      const transactionDate = new Date(transaction.date);
-      const timeStr = format(transactionDate, 'HH:mm', { locale: uz });
-      html += `<div class="item"><div class="item-amount">${amount}</div><div class="item-desc">${desc}<div class="item-time">${timeStr}</div></div></div><div class="divider"></div>`;
+      html += `<div class="item"><div class="item-amount">${amount}</div><div class="item-desc">${desc}</div></div><div class="divider"></div>`;
     });
   }
   html += `</div></div>`;
