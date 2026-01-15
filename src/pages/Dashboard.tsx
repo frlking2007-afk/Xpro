@@ -71,14 +71,33 @@ export default function Dashboard() {
     try {
       console.log('📊 Fetching dashboard stats...', { start: dateRange.start, end: dateRange.end });
       
-      // 1. Fetch ALL transactions to calculate everything (or optimize with specific queries)
-      // For now, let's fetch all for simplicity, but in production, filtering by date in SQL is better.
-      // Fetching transactions within the selected date range
-      const { data: currentData, error: currentError } = await supabase
+      // First, try to fetch all transactions to see if table exists and what columns it has
+      // Then filter by date in JavaScript (safer approach if date column format is unknown)
+      console.log('📡 Attempting to fetch all transactions first...');
+      const { data: allTransactions, error: allError } = await supabase
         .from('transactions')
         .select('*')
-        .gte('date', dateRange.start.toISOString())
-        .lte('date', dateRange.end.toISOString());
+        .limit(10000); // Large limit to get all transactions
+      
+      if (allError) {
+        console.error('❌ Supabase error fetching transactions:', allError);
+        console.error('Error code:', allError.code);
+        console.error('Error message:', allError.message);
+        console.error('Error details:', allError);
+        toast.error(`Statistikani yuklashda xatolik: ${allError.message}`);
+        return;
+      }
+      
+      console.log('✅ All transactions fetched:', allTransactions?.length || 0, 'items');
+      
+      // Filter by date in JavaScript (more reliable)
+      const currentData = (allTransactions || []).filter(t => {
+        if (!t.date) return false;
+        const transactionDate = new Date(t.date);
+        return transactionDate >= dateRange.start && transactionDate <= dateRange.end;
+      });
+      
+      console.log('✅ Current period transactions filtered:', currentData.length, 'items');
 
       if (currentError) {
         console.error('❌ Supabase error fetching current period transactions:', currentError);
@@ -96,21 +115,14 @@ export default function Dashboard() {
       const prevStart = new Date(dateRange.start.getTime() - duration);
       const prevEnd = new Date(dateRange.end.getTime() - duration);
 
-      const { data: prevData, error: prevError } = await supabase
-        .from('transactions')
-        .select('*')
-        .gte('date', prevStart.toISOString())
-        .lte('date', prevEnd.toISOString());
-
-      if (prevError) {
-        console.error('❌ Supabase error fetching previous period transactions:', prevError);
-        console.error('Error code:', prevError.code);
-        console.error('Error message:', prevError.message);
-        // Don't throw, just use empty array for comparison
-        console.log('⚠️ Using empty array for previous period comparison');
-      } else {
-        console.log('✅ Previous period transactions fetched:', prevData?.length || 0, 'items');
-      }
+      // Filter previous period in JavaScript
+      const prevData = (allTransactions || []).filter(t => {
+        if (!t.date) return false;
+        const transactionDate = new Date(t.date);
+        return transactionDate >= prevStart && transactionDate <= prevEnd;
+      });
+      
+      console.log('✅ Previous period transactions filtered:', prevData.length, 'items');
 
       // Calculate Stats
       const calculateMetrics = (transactions: any[]) => {
@@ -139,29 +151,23 @@ export default function Dashboard() {
       const dayBeforeYesterdayStart = startOfDay(subDays(new Date(), 2));
       const dayBeforeYesterdayEnd = endOfDay(subDays(new Date(), 2));
 
-      const { data: yesterdayData, error: yesterdayError } = await supabase
-        .from('transactions')
-        .select('*')
-        .gte('date', yesterdayStart.toISOString())
-        .lte('date', yesterdayEnd.toISOString());
+      // Filter yesterday data in JavaScript
+      const yesterdayData = (allTransactions || []).filter(t => {
+        if (!t.date) return false;
+        const transactionDate = new Date(t.date);
+        return transactionDate >= yesterdayStart && transactionDate <= yesterdayEnd;
+      });
       
-      if (yesterdayError) {
-        console.error('❌ Supabase error fetching yesterday transactions:', yesterdayError);
-      } else {
-        console.log('✅ Yesterday transactions fetched:', yesterdayData?.length || 0, 'items');
-      }
+      console.log('✅ Yesterday transactions filtered:', yesterdayData.length, 'items');
       
-      const { data: dayBeforeYesterdayData, error: dayBeforeError } = await supabase
-        .from('transactions')
-        .select('*')
-        .gte('date', dayBeforeYesterdayStart.toISOString())
-        .lte('date', dayBeforeYesterdayEnd.toISOString());
+      // Filter day before yesterday data in JavaScript
+      const dayBeforeYesterdayData = (allTransactions || []).filter(t => {
+        if (!t.date) return false;
+        const transactionDate = new Date(t.date);
+        return transactionDate >= dayBeforeYesterdayStart && transactionDate <= dayBeforeYesterdayEnd;
+      });
       
-      if (dayBeforeError) {
-        console.error('❌ Supabase error fetching day before yesterday transactions:', dayBeforeError);
-      } else {
-        console.log('✅ Day before yesterday transactions fetched:', dayBeforeYesterdayData?.length || 0, 'items');
-      }
+      console.log('✅ Day before yesterday transactions filtered:', dayBeforeYesterdayData.length, 'items');
 
       const yesterdayProfit = (yesterdayData || [])
         .filter(t => t.type !== 'xarajat')
@@ -194,17 +200,14 @@ export default function Dashboard() {
       const startOfCurrentYear = startOfYear(new Date());
       const endOfCurrentYear = endOfYear(new Date());
       
-      const { data: yearData, error: yearError } = await supabase
-        .from('transactions')
-        .select('*')
-        .gte('date', startOfCurrentYear.toISOString())
-        .lte('date', endOfCurrentYear.toISOString());
+      // Filter year data in JavaScript
+      const yearData = (allTransactions || []).filter(t => {
+        if (!t.date) return false;
+        const transactionDate = new Date(t.date);
+        return transactionDate >= startOfCurrentYear && transactionDate <= endOfCurrentYear;
+      });
       
-      if (yearError) {
-        console.error('❌ Supabase error fetching year data:', yearError);
-      } else {
-        console.log('✅ Year data fetched:', yearData?.length || 0, 'items');
-      }
+      console.log('✅ Year data filtered:', yearData.length, 'items');
 
       const monthsData = days.map(month => {
         const monthTrans = (yearData || []).filter(t => isSameMonth(new Date(t.date), month));
