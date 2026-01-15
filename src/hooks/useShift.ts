@@ -59,6 +59,7 @@ export function useShift() {
 
   const openShift = async (startingBalance: number = 0, shiftName?: string) => {
     try {
+      console.log('🚀 Opening new shift...', { startingBalance, shiftName });
       const now = new Date();
       
       // Base insert data without name field
@@ -68,6 +69,8 @@ export function useShift() {
         opened_at: now.toISOString(),
       };
 
+      console.log('📝 Insert data:', insertData);
+
       // Try to insert without name first (safer approach)
       // If name column exists, we can add it later via migration
       let { data, error } = await supabase
@@ -76,29 +79,48 @@ export function useShift() {
         .select()
         .single();
 
+      if (error) {
+        console.error('❌ Supabase error inserting shift:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error);
+        console.error('Error hint:', (error as any).hint);
+        console.error('Error details object:', JSON.stringify(error, null, 2));
+        throw error;
+      }
+
+      console.log('✅ Shift inserted successfully:', data);
+
       // If successful but name column might exist, try to update with name
-      if (!error && data) {
+      if (data) {
         const defaultName = shiftName || `Smena ${now.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}`;
         
         // Try to update with name (silently fail if column doesn't exist)
         try {
-          await supabase
+          const { error: updateError } = await supabase
             .from('shifts')
             .update({ name: defaultName })
             .eq('id', data.id);
-        } catch (updateError) {
+          
+          if (updateError) {
+            console.log('ℹ️ Name column not available, skipping name update:', updateError.message);
+          } else {
+            console.log('✅ Shift name updated successfully');
+          }
+        } catch (updateError: any) {
           // Ignore update error if name column doesn't exist
-          console.log('Name column not available, skipping name update');
+          console.log('ℹ️ Name column not available, skipping name update:', updateError.message);
         }
       }
 
-      if (error) throw error;
       setCurrentShift(data);
       toast.success('Yangi smena ochildi!');
       return data;
     } catch (error: any) {
-      console.error('Error opening shift:', error);
-      toast.error('Smena ochishda xatolik: ' + error.message);
+      console.error('❌ Exception in openShift:', error);
+      const errorMessage = error.message || 'Noma\'lum xatolik';
+      console.error('Full error object:', error);
+      toast.error('Smena ochishda xatolik: ' + errorMessage);
       return null;
     }
   };

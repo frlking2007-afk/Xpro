@@ -69,6 +69,8 @@ export default function Dashboard() {
 
   const fetchStats = async () => {
     try {
+      console.log('📊 Fetching dashboard stats...', { start: dateRange.start, end: dateRange.end });
+      
       // 1. Fetch ALL transactions to calculate everything (or optimize with specific queries)
       // For now, let's fetch all for simplicity, but in production, filtering by date in SQL is better.
       // Fetching transactions within the selected date range
@@ -78,7 +80,16 @@ export default function Dashboard() {
         .gte('date', dateRange.start.toISOString())
         .lte('date', dateRange.end.toISOString());
 
-      if (currentError) throw currentError;
+      if (currentError) {
+        console.error('❌ Supabase error fetching current period transactions:', currentError);
+        console.error('Error code:', currentError.code);
+        console.error('Error message:', currentError.message);
+        console.error('Error details:', currentError);
+        toast.error(`Statistikani yuklashda xatolik: ${currentError.message}`);
+        return;
+      }
+
+      console.log('✅ Current period transactions fetched:', currentData?.length || 0, 'items');
 
       // Fetch previous period data for comparison (simple comparison: same duration before start date)
       const duration = dateRange.end.getTime() - dateRange.start.getTime();
@@ -91,7 +102,15 @@ export default function Dashboard() {
         .gte('date', prevStart.toISOString())
         .lte('date', prevEnd.toISOString());
 
-      if (prevError) throw prevError;
+      if (prevError) {
+        console.error('❌ Supabase error fetching previous period transactions:', prevError);
+        console.error('Error code:', prevError.code);
+        console.error('Error message:', prevError.message);
+        // Don't throw, just use empty array for comparison
+        console.log('⚠️ Using empty array for previous period comparison');
+      } else {
+        console.log('✅ Previous period transactions fetched:', prevData?.length || 0, 'items');
+      }
 
       // Calculate Stats
       const calculateMetrics = (transactions: any[]) => {
@@ -120,17 +139,29 @@ export default function Dashboard() {
       const dayBeforeYesterdayStart = startOfDay(subDays(new Date(), 2));
       const dayBeforeYesterdayEnd = endOfDay(subDays(new Date(), 2));
 
-      const { data: yesterdayData } = await supabase
+      const { data: yesterdayData, error: yesterdayError } = await supabase
         .from('transactions')
         .select('*')
         .gte('date', yesterdayStart.toISOString())
         .lte('date', yesterdayEnd.toISOString());
       
-      const { data: dayBeforeYesterdayData } = await supabase
+      if (yesterdayError) {
+        console.error('❌ Supabase error fetching yesterday transactions:', yesterdayError);
+      } else {
+        console.log('✅ Yesterday transactions fetched:', yesterdayData?.length || 0, 'items');
+      }
+      
+      const { data: dayBeforeYesterdayData, error: dayBeforeError } = await supabase
         .from('transactions')
         .select('*')
         .gte('date', dayBeforeYesterdayStart.toISOString())
         .lte('date', dayBeforeYesterdayEnd.toISOString());
+      
+      if (dayBeforeError) {
+        console.error('❌ Supabase error fetching day before yesterday transactions:', dayBeforeError);
+      } else {
+        console.log('✅ Day before yesterday transactions fetched:', dayBeforeYesterdayData?.length || 0, 'items');
+      }
 
       const yesterdayProfit = (yesterdayData || [])
         .filter(t => t.type !== 'xarajat')
@@ -163,11 +194,17 @@ export default function Dashboard() {
       const startOfCurrentYear = startOfYear(new Date());
       const endOfCurrentYear = endOfYear(new Date());
       
-      const { data: yearData } = await supabase
+      const { data: yearData, error: yearError } = await supabase
         .from('transactions')
         .select('*')
         .gte('date', startOfCurrentYear.toISOString())
         .lte('date', endOfCurrentYear.toISOString());
+      
+      if (yearError) {
+        console.error('❌ Supabase error fetching year data:', yearError);
+      } else {
+        console.log('✅ Year data fetched:', yearData?.length || 0, 'items');
+      }
 
       const monthsData = days.map(month => {
         const monthTrans = (yearData || []).filter(t => isSameMonth(new Date(t.date), month));
@@ -183,10 +220,17 @@ export default function Dashboard() {
       });
 
       setChartData(monthsData);
+      
+      console.log('✅ Dashboard stats calculated:', {
+        jamiFoyda: currentMetrics.jamiFoyda,
+        jamiZarar: currentMetrics.jamiZarar,
+        sofFoyda: currentMetrics.sofFoyda,
+        kechagiFoyda: yesterdayProfit
+      });
 
     } catch (error: any) {
-      console.error('Error fetching stats:', error);
-      // toast.error('Statistikani yuklashda xatolik');
+      console.error('❌ Exception in fetchStats:', error);
+      toast.error('Statistikani yuklashda xatolik: ' + (error.message || 'Noma\'lum xatolik'));
     }
   };
 
