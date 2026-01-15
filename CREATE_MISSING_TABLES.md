@@ -2,8 +2,10 @@
 
 ## Muammo
 Console'da quyidagi xatoliklar chiqmoqda:
-- `expense_categories` jadvali topilmayapti (404 Not Found)
-- `user_profiles` jadvali topilmayapti (404 Not Found)
+- `expense_categories` jadvali topilmayapti (404 Not Found / PGRST205)
+- `user_profiles` jadvali topilmayapti (404 Not Found / PGRST205)
+
+**Sabab:** Bu jadvallar Supabase'da yaratilmagan yoki RLS policies to'g'ri sozlangan emas.
 
 ## Yechim
 
@@ -17,7 +19,9 @@ Console'da quyidagi xatoliklar chiqmoqda:
 
 ### 3. `expense_categories` jadvalini yaratish
 
-Quyidagi SQL kodini nusxalab, SQL Editor'ga yopishtiring va **Run** tugmasini bosing:
+**Eng oson usul:** `QUICK_FIX_EXPENSE_CATEGORIES.sql` faylini oching va butun kodini nusxalab, SQL Editor'ga yopishtiring.
+
+Yoki quyidagi SQL kodini nusxalab, SQL Editor'ga yopishtiring va **Run** tugmasini bosing:
 
 ```sql
 -- Create expense_categories table to store user-specific expense categories
@@ -68,7 +72,9 @@ CREATE POLICY "Allow anon and authenticated to delete own categories"
 
 ### 4. `user_profiles` jadvalini yaratish
 
-Keyin quyidagi SQL kodini ishga tushiring:
+**Eng oson usul:** `QUICK_FIX_USER_PROFILES.sql` faylini oching va butun kodini nusxalab, SQL Editor'ga yopishtiring.
+
+Yoki quyidagi SQL kodini nusxalab, SQL Editor'ga yopishtiring va **Run** tugmasini bosing:
 
 ```sql
 -- User Profiles Table for Settings
