@@ -70,23 +70,61 @@ export default function Reports() {
   const fetchTransactions = async () => {
     setLoadingTransactions(true);
     try {
-      let query = supabase
+      console.log('📊 Fetching transactions for Reports...', { 
+        start: dateRange.start, 
+        end: dateRange.end, 
+        filterType 
+      });
+      
+      // Check environment variables
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        console.error('❌ Supabase environment variables are missing!');
+        toast.error('Supabase sozlamalari topilmadi.');
+        setTransactions([]);
+        return;
+      }
+      
+      // Fetch all transactions first (avoid date filtering issues in Supabase)
+      console.log('📡 Fetching all transactions...');
+      const { data: allTransactions, error: allError } = await supabase
         .from('transactions')
         .select('*')
-        .gte('date', dateRange.start.toISOString())
-        .lte('date', dateRange.end.toISOString())
-        .order('date', { ascending: false });
-
-      if (filterType !== 'all') {
-        query = query.eq('type', filterType);
+        .order('date', { ascending: false })
+        .limit(10000); // Large limit to get all transactions
+      
+      if (allError) {
+        console.error('❌ Supabase error fetching transactions:', allError);
+        console.error('Error code:', allError.code);
+        console.error('Error message:', allError.message);
+        console.error('Error details:', allError.details);
+        toast.error(`Ma'lumotlarni yuklashda xatolik: ${allError.message}`);
+        setTransactions([]);
+        return;
       }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setTransactions(data || []);
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
+      
+      console.log('✅ All transactions fetched:', allTransactions?.length || 0, 'items');
+      
+      // Filter by date in JavaScript (more reliable)
+      let filtered = (allTransactions || []).filter(t => {
+        if (!t.date) return false;
+        const transactionDate = new Date(t.date);
+        return transactionDate >= dateRange.start && transactionDate <= dateRange.end;
+      });
+      
+      // Filter by type if needed
+      if (filterType !== 'all') {
+        filtered = filtered.filter(t => t.type === filterType);
+      }
+      
+      console.log('✅ Filtered transactions:', filtered.length, 'items');
+      setTransactions(filtered);
+    } catch (error: any) {
+      console.error('❌ Exception in fetchTransactions:', error);
+      toast.error('Ma\'lumotlarni yuklashda xatolik: ' + (error.message || 'Noma\'lum xatolik'));
+      setTransactions([]);
     } finally {
       setLoadingTransactions(false);
     }
