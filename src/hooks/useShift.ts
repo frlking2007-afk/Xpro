@@ -83,6 +83,11 @@ export function useShift() {
       }
 
       console.log('📝 Insert data:', JSON.stringify(insertData, null, 2));
+      console.log('📝 Insert data types:', {
+        status: typeof insertData.status,
+        starting_balance: typeof insertData.starting_balance,
+        opened_at: typeof insertData.opened_at
+      });
 
       // Insert shift
       let { data, error } = await supabase
@@ -90,6 +95,8 @@ export function useShift() {
         .insert([insertData])
         .select()
         .single();
+      
+      console.log('📡 Supabase response:', { data, error });
 
       if (error) {
         console.error('❌ Supabase error inserting shift:', error);

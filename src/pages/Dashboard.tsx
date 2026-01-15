@@ -74,16 +74,31 @@ export default function Dashboard() {
       // First, try to fetch all transactions to see if table exists and what columns it has
       // Then filter by date in JavaScript (safer approach if date column format is unknown)
       console.log('📡 Attempting to fetch all transactions first...');
+      console.log('📡 Supabase URL:', import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Missing');
+      console.log('📡 Supabase Key:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Missing');
+      
       const { data: allTransactions, error: allError } = await supabase
         .from('transactions')
         .select('*')
         .limit(10000); // Large limit to get all transactions
       
+      console.log('📡 Supabase response:', { 
+        dataCount: allTransactions?.length || 0, 
+        error: allError ? {
+          code: allError.code,
+          message: allError.message,
+          details: allError.details,
+          hint: (allError as any).hint
+        } : null
+      });
+      
       if (allError) {
         console.error('❌ Supabase error fetching transactions:', allError);
         console.error('Error code:', allError.code);
         console.error('Error message:', allError.message);
-        console.error('Error details:', allError);
+        console.error('Error details:', allError.details);
+        console.error('Error hint:', (allError as any).hint);
+        console.error('Full error object:', JSON.stringify(allError, null, 2));
         
         // Provide user-friendly error message
         let userMessage = 'Statistikani yuklashda xatolik yuz berdi.';
