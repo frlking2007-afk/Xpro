@@ -514,14 +514,17 @@ export function generatePaymentReceiptHTML(
   return html;
 }
 
-// Generate receipt HTML for shift (tabaka) - includes all transactions
+// Generate receipt HTML for shift (tabaka) - only for Tabaka category
 export function generateShiftReceiptHTML(
-  allTransactions: Transaction[],
+  tabakaTransactions: Transaction[], // Only Tabaka category expenses
+  allTransactions: Transaction[], // All transactions for Click and Terminal
   shiftName: string,
   settings: ExportSettings
 ): string {
-  // Filter transactions by type
-  const xarajatTransactions = allTransactions.filter(t => t.type === 'xarajat');
+  // Filter only Tabaka category expenses
+  const xarajatTransactions = tabakaTransactions.filter(t => t.type === 'xarajat');
+  
+  // Get Click and Terminal from all transactions (not filtered by category)
   const clickTransactions = allTransactions.filter(t => t.type === 'click');
   const uzcardTransactions = allTransactions.filter(t => t.type === 'uzcard');
   const humoTransactions = allTransactions.filter(t => t.type === 'humo');
@@ -533,22 +536,9 @@ export function generateShiftReceiptHTML(
   const totalHumo = humoTransactions.reduce((sum, t) => sum + t.amount, 0);
   const totalTerminal = totalUzcard + totalHumo; // Terminal = Uzcard + Humo
   
-  // Get category sales from localStorage (for calculating profit)
-  // We need to sum all category sales
-  const allCategories = [...new Set(xarajatTransactions.map(t => {
-    if (t.category) return t.category;
-    // Extract category from description [CategoryName]
-    const match = t.description?.match(/\[([^\]]+)\]/);
-    return match ? match[1] : null;
-  }).filter(Boolean))];
-  
-  let totalSales = 0;
-  allCategories.forEach(category => {
-    const saved = localStorage.getItem(`categorySales_${category}`);
-    if (saved) {
-      totalSales += parseFloat(saved) || 0;
-    }
-  });
+  // Get Tabaka category sales from localStorage
+  const savedSales = localStorage.getItem(`categorySales_Tabaka`);
+  const totalSales = savedSales ? parseFloat(savedSales) : 0;
   
   // Calculate profit/loss: Savdo - (Umumiy xarajat + Click + Terminal)
   const profitOrLoss = totalSales - (totalXarajat + totalClick + totalTerminal);
@@ -557,10 +547,11 @@ export function generateShiftReceiptHTML(
   
   // Calculate width based on paper size
   const width = settings.paperWidth === '58mm' ? '48mm' : '72.1mm';
-  const fontSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
-  const titleSize = settings.fontSize === 'small' ? '16px' : settings.fontSize === 'medium' ? '18px' : '20px';
-  const dateSize = settings.fontSize === 'small' ? '20px' : settings.fontSize === 'medium' ? '24px' : '28px';
-  const descSize = settings.fontSize === 'small' ? '14px' : settings.fontSize === 'medium' ? '16px' : '18px';
+  // Increase font sizes for better readability
+  const fontSize = settings.fontSize === 'small' ? '16px' : settings.fontSize === 'medium' ? '18px' : '20px';
+  const titleSize = settings.fontSize === 'small' ? '20px' : settings.fontSize === 'medium' ? '22px' : '24px';
+  const dateSize = settings.fontSize === 'small' ? '24px' : settings.fontSize === 'medium' ? '28px' : '32px';
+  const descSize = settings.fontSize === 'small' ? '18px' : settings.fontSize === 'medium' ? '20px' : '22px';
   const lineHeight = '1.1';
   
   // Format number without currency symbol

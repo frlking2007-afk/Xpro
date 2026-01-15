@@ -623,15 +623,22 @@ const ExportTab = ({
     });
   };
 
-  const handleShiftExport = () => {
+  const handleTabakaExport = () => {
     try {
-      if (transactions.length === 0) {
-        toast.info('Eksport qilish uchun ma\'lumotlar mavjud emas');
+      // Filter only "Tabaka" category transactions
+      const tabakaTransactions = transactions.filter(t => {
+        if (t.category === 'Tabaka') return true;
+        if (t.type === 'xarajat' && t.description && t.description.includes('[Tabaka]')) return true;
+        return false;
+      });
+
+      if (tabakaTransactions.length === 0) {
+        toast.info('Tabaka bo\'limi uchun ma\'lumotlar mavjud emas');
         return;
       }
 
-      const settings = getExportSettings('category', 'tabaka');
-      const html = generateShiftReceiptHTML(transactions, shiftName, settings);
+      const settings = getExportSettings('category', 'Tabaka');
+      const html = generateShiftReceiptHTML(tabakaTransactions, transactions, shiftName, settings);
       printReceipt(html);
       toast.success('Chek tayyorlandi!');
     } catch (error: any) {
@@ -641,36 +648,6 @@ const ExportTab = ({
 
   return (
     <div className="space-y-8">
-      {/* Tabaka eksport */}
-      <div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-white">Tabaka</h3>
-            <span className="text-sm text-slate-400">{transactions.length} ta</span>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleShiftExport}
-              className="flex-1 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:from-green-500 hover:to-emerald-500 shadow-lg shadow-green-500/20"
-            >
-              <Upload className="h-4 w-4 inline mr-2" />
-              Eksport
-            </button>
-            <button
-              onClick={() => onOpenSettings('tabaka', 'category')}
-              className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-              title="Sozlamalar"
-            >
-              <Settings className="h-4 w-4" />
-            </button>
-          </div>
-        </motion.div>
-      </div>
-
       {/* Xarajatlar bo'limi */}
       <div>
         <h2 className="mb-4 text-xl font-bold text-white flex items-center gap-2">
@@ -683,7 +660,40 @@ const ExportTab = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {/* Tabaka - special handling */}
+            {expenseCategories.includes('Tabaka') && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-white">Tabaka</h3>
+                  <span className="text-sm text-slate-400">{getCategoryTransactions('Tabaka').length} ta</span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleTabakaExport}
+                    className="flex-1 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition-all hover:from-green-500 hover:to-emerald-500 shadow-lg shadow-green-500/20"
+                  >
+                    <Upload className="h-4 w-4 inline mr-2" />
+                    Eksport
+                  </button>
+                  <button
+                    onClick={() => onOpenSettings('Tabaka', 'category')}
+                    className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                    title="Sozlamalar"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+            {/* Other categories */}
             {expenseCategories.map((category) => {
+              // Skip Tabaka as it's already rendered above
+              if (category === 'Tabaka') return null;
+              
               const categoryTransactions = getCategoryTransactions(category);
               const count = categoryTransactions.length;
               return (
