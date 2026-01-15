@@ -16,13 +16,27 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder') || s
   // Create a dummy client to prevent app crash
   supabase = createClient('https://placeholder.supabase.co', 'placeholder-key');
 } else {
+  console.log('🔧 Creating Supabase client...');
+  console.log('🔧 Supabase URL:', supabaseUrl);
+  console.log('🔧 Supabase Key (first 20 chars):', supabaseAnonKey.substring(0, 20) + '...');
+  
   supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
     },
+    db: {
+      schema: 'public',
+    },
+    global: {
+      headers: {
+        'apikey': supabaseAnonKey,
+      },
+    },
   });
+  
+  console.log('✅ Supabase client created');
   
   // Test connection and authentication
   supabase.auth.getSession()

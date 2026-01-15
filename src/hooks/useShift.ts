@@ -92,23 +92,37 @@ export function useShift() {
         starting_balance: typeof insertData.starting_balance,
         opened_at: typeof insertData.opened_at
       });
+      console.log('📝 Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+      console.log('📝 Supabase Key exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
 
       // Insert shift
+      console.log('📡 Sending request to Supabase...');
       let { data, error } = await supabase
         .from('shifts')
         .insert([insertData])
         .select()
         .single();
       
-      console.log('📡 Supabase response:', { 
-        data: data ? 'Success' : 'No data', 
-        error: error ? {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: (error as any).hint
-        } : null
-      });
+      console.log('📡 Supabase response received');
+      console.log('📡 Response data:', data);
+      console.log('📡 Response error:', error);
+      
+      if (error) {
+        console.error('❌ Full error details:');
+        console.error('  - Code:', error.code);
+        console.error('  - Message:', error.message);
+        console.error('  - Details:', error.details);
+        console.error('  - Hint:', (error as any).hint);
+        console.error('  - Full error object:', JSON.stringify(error, null, 2));
+        
+        // Try to get more info from the error
+        if ((error as any).response) {
+          console.error('  - Response:', (error as any).response);
+        }
+        if ((error as any).status) {
+          console.error('  - Status:', (error as any).status);
+        }
+      }
 
       if (error) {
         console.error('❌ Supabase error inserting shift:', error);
