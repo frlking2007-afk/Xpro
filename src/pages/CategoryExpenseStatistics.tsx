@@ -77,6 +77,8 @@ export default function CategoryExpenseStatistics() {
     
     setLoading(true);
     try {
+      console.log('📊 Fetching transactions for category:', categoryName);
+      
       // First try to fetch by category column
       let { data, error } = await supabase
         .from('transactions')
@@ -85,8 +87,12 @@ export default function CategoryExpenseStatistics() {
         .eq('category', categoryName)
         .order('date', { ascending: false });
 
+      console.log('✅ Direct category query result:', { data: data?.length || 0, error: error?.message });
+
       // If category column doesn't exist or returns empty, try filtering by description
       if (error || !data || data.length === 0) {
+        console.log('ℹ️ Category column query returned empty, trying description filter...');
+        
         // Fetch all xarajat transactions
         const { data: allData, error: allError } = await supabase
           .from('transactions')
@@ -96,17 +102,28 @@ export default function CategoryExpenseStatistics() {
 
         if (allError) throw allError;
 
+        console.log('✅ All xarajat transactions fetched:', allData?.length || 0);
+
         // Filter by category name in description (format: [CategoryName])
         data = (allData || []).filter(t => {
           // Check if category column exists and matches
-          if (t.category === categoryName) return true;
+          if (t.category === categoryName) {
+            console.log('✅ Found by category column:', t.id);
+            return true;
+          }
           // Check if description contains [CategoryName]
-          if (t.description && t.description.includes(`[${categoryName}]`)) return true;
+          if (t.description && t.description.includes(`[${categoryName}]`)) {
+            console.log('✅ Found by description:', t.id, t.description);
+            return true;
+          }
           return false;
         });
+        
+        console.log('✅ Filtered transactions:', data.length);
       }
 
       if (error && !data) throw error;
+      console.log('✅ Final transactions count:', data?.length || 0);
       setTransactions(data || []);
     } catch (error: any) {
       console.error('Error fetching transactions:', error);
