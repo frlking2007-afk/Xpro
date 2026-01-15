@@ -61,19 +61,23 @@ export function useShift() {
     try {
       console.log('🚀 Opening new shift...', { startingBalance, shiftName });
       
-      // Get current user session
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) {
-        console.error('❌ Error getting user:', userError);
-        throw new Error('Foydalanuvchi ma\'lumotlari topilmadi. Iltimos, qayta kiring.');
+      // Check session (but don't fail if no session - anon key should work)
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.warn('⚠️ Session check error (continuing anyway):', sessionError.message);
+      } else if (session) {
+        console.log('✅ User session found:', session.user.email);
+      } else {
+        console.log('ℹ️ No user session - using anon key');
       }
       
       const now = new Date();
       
       // Base insert data - only include fields that exist in schema
+      // Make sure starting_balance is a number, not string
       const insertData: any = {
         status: 'open',
-        starting_balance: startingBalance,
+        starting_balance: Number(startingBalance) || 0,
         opened_at: now.toISOString(),
       };
 
@@ -96,7 +100,15 @@ export function useShift() {
         .select()
         .single();
       
-      console.log('📡 Supabase response:', { data, error });
+      console.log('📡 Supabase response:', { 
+        data: data ? 'Success' : 'No data', 
+        error: error ? {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: (error as any).hint
+        } : null
+      });
 
       if (error) {
         console.error('❌ Supabase error inserting shift:', error);
