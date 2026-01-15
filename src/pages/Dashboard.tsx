@@ -262,14 +262,32 @@ export default function Dashboard() {
 
       const monthsData = days.map(month => {
         const monthTrans = (yearData || []).filter(t => isSameMonth(new Date(t.date), month));
-        const kirim = monthTrans.filter(t => t.type !== 'xarajat').reduce((sum, t) => sum + t.amount, 0);
-        const chiqim = monthTrans.filter(t => t.type === 'xarajat').reduce((sum, t) => sum + t.amount, 0);
+        
+        // Filter KASSA transactions only
+        const kassaTransactions = monthTrans.filter(t => t.type === 'kassa');
+        
+        // Calculate based on KASSA operations
+        const jamiFoyda = kassaTransactions
+          .filter(t => t.amount > 0)
+          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        
+        const olimAka = kassaTransactions
+          .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('olim aka'))
+          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        
+        const azamAka = kassaTransactions
+          .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('azam aka'))
+          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        
+        const kassa = kassaTransactions
+          .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('kassa'))
+          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
         
         return {
           name: format(month, 'MMM', { locale: uz }),
-          savdo: kirim, // Jami Foyda
-          zarar: chiqim, // Jami Zarar
-          daromad: kirim - chiqim // Sof Foyda
+          savdo: jamiFoyda, // Jami Foyda
+          zarar: kassa, // Kassa
+          daromad: azamAka // Azam aka
         };
       });
 
