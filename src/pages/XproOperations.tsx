@@ -1226,7 +1226,7 @@ export default function XproOperations() {
 
         if (error) {
           // If table doesn't exist, fallback to localStorage
-          if (error.code === '42P01' || error.message.includes('does not exist')) {
+          if (error.code === '42P01' || error.code === 'PGRST205' || error.message.includes('does not exist') || error.message.includes('Could not find the table')) {
             const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
             if (!categories.includes(categoryName)) {
               categories.push(categoryName);
@@ -1286,7 +1286,7 @@ export default function XproOperations() {
 
           if (error) {
             // If table doesn't exist, fallback to localStorage
-            if (error.code === '42P01' || error.message.includes('does not exist')) {
+            if (error.code === '42P01' || error.code === 'PGRST205' || error.message.includes('does not exist') || error.message.includes('Could not find the table')) {
               const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
               const index = categories.indexOf(oldName);
               if (index !== -1) {
@@ -1356,7 +1356,7 @@ export default function XproOperations() {
 
           if (error) {
             // If table doesn't exist, fallback to localStorage
-            if (error.code === '42P01' || error.message.includes('does not exist')) {
+            if (error.code === '42P01' || error.code === 'PGRST205' || error.message.includes('does not exist') || error.message.includes('Could not find the table')) {
               const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
               const filtered = categories.filter((cat: string) => cat !== categoryName);
               localStorage.setItem('expenseCategories', JSON.stringify(filtered));

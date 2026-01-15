@@ -63,7 +63,7 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder') || s
       console.error('⚠️ Supabase session check failed:', err);
     });
   
-  // Test database connection
+  // Test database connection and verify API key headers
   supabase.from('transactions').select('id').limit(1)
     .then(({ error }) => {
       if (error) {
@@ -72,13 +72,50 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder') || s
         console.error('Error details:', error);
         if (error.code === '42501') {
           console.error('⚠️ Permission denied - check RLS policies');
+        } else if (error.message.includes('API key')) {
+          console.error('⚠️ API key issue - check VITE_SUPABASE_ANON_KEY in Vercel');
         }
       } else {
         console.log('✅ Supabase database connection successful');
+        console.log('✅ API key headers are working correctly');
       }
     })
     .catch((err) => {
       console.error('⚠️ Supabase connection test failed:', err);
+    });
+  
+  // Test user_profiles table (if exists)
+  supabase.from('user_profiles').select('id').limit(1)
+    .then(({ error }) => {
+      if (error) {
+        if (error.code === 'PGRST205' || error.message.includes('Could not find the table')) {
+          console.log('ℹ️ user_profiles table not found - this is OK, will use fallback');
+        } else {
+          console.warn('⚠️ user_profiles table access issue:', error.message);
+        }
+      } else {
+        console.log('✅ user_profiles table is accessible');
+      }
+    })
+    .catch(() => {
+      // Silently ignore - table might not exist
+    });
+  
+  // Test expense_categories table (if exists)
+  supabase.from('expense_categories').select('id').limit(1)
+    .then(({ error }) => {
+      if (error) {
+        if (error.code === 'PGRST205' || error.message.includes('Could not find the table')) {
+          console.log('ℹ️ expense_categories table not found - this is OK, will use localStorage fallback');
+        } else {
+          console.warn('⚠️ expense_categories table access issue:', error.message);
+        }
+      } else {
+        console.log('✅ expense_categories table is accessible');
+      }
+    })
+    .catch(() => {
+      // Silently ignore - table might not exist
     });
 }
 

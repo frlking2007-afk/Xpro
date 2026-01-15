@@ -4,8 +4,7 @@ import { supabase } from '../lib/supabase';
 import { Lock, Mail, ArrowRight, Zap, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import Hyperspeed from '../components/Hyperspeed';
-import { hyperspeedPresets } from '../components/HyperSpeedPresets';
+// Hyperspeed removed - using CSS gradient background instead
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -42,10 +41,8 @@ export default function Login() {
 
   return (
     <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#050505]">
-      {/* Hyperspeed Background */}
-      <div className="absolute inset-0 z-0 opacity-40">
-        <Hyperspeed effectOptions={hyperspeedPresets.two} />
-      </div>
+      {/* Gradient Background */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" />
 
       <div className="relative z-10 w-full max-w-md px-4">
         <motion.div 
