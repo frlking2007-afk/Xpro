@@ -61,11 +61,11 @@ export default function Dashboard() {
   useEffect(() => {
     const handleCurrencyUpdate = () => {
       // Force re-render by updating stats
-      setStats({ ...stats });
+      setStats(prev => ({ ...prev }));
     };
     window.addEventListener('currencyUpdated', handleCurrencyUpdate);
     return () => window.removeEventListener('currencyUpdated', handleCurrencyUpdate);
-  }, [stats]);
+  }, []);
 
   const fetchStats = async () => {
     try {
