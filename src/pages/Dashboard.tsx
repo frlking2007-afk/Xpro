@@ -277,9 +277,9 @@ export default function Dashboard() {
       
       console.log('✅ Dashboard stats calculated:', {
         jamiFoyda: currentMetrics.jamiFoyda,
-        jamiZarar: currentMetrics.jamiZarar,
-        sofFoyda: currentMetrics.sofFoyda,
-        kechagiFoyda: yesterdayProfit
+        olimAka: currentMetrics.olimAka,
+        azamAka: currentMetrics.azamAka,
+        kassa: currentMetrics.kassa
       });
 
     } catch (error: any) {
