@@ -54,6 +54,7 @@ export default function CategoryExpenseStatistics() {
     
     window.addEventListener('transactionAdded', handleTransactionUpdate);
     window.addEventListener('transactionDeleted', handleTransactionUpdate);
+    window.addEventListener('transactionUpdated', handleTransactionUpdate);
     
     // Refresh when page becomes visible
     const handleVisibilityChange = () => {
@@ -66,6 +67,7 @@ export default function CategoryExpenseStatistics() {
     return () => {
       window.removeEventListener('transactionAdded', handleTransactionUpdate);
       window.removeEventListener('transactionDeleted', handleTransactionUpdate);
+      window.removeEventListener('transactionUpdated', handleTransactionUpdate);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [categoryName]);
