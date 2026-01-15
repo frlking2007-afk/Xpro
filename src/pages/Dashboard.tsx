@@ -150,14 +150,36 @@ export default function Dashboard() {
       
       console.log('✅ Previous period transactions filtered:', prevData.length, 'items');
 
-      // Calculate Stats
+      // Calculate Stats based on KASSA operations
       const calculateMetrics = (transactions: any[]) => {
-        const kirim = transactions.filter(t => t.type !== 'xarajat').reduce((sum, t) => sum + t.amount, 0);
-        const chiqim = transactions.filter(t => t.type === 'xarajat').reduce((sum, t) => sum + t.amount, 0);
+        // Filter KASSA transactions only
+        const kassaTransactions = transactions.filter(t => t.type === 'kassa');
+        
+        // Jami Foyda: KASSA tab'dagi + (plus) operatsiyalar yig'indisi
+        const jamiFoyda = kassaTransactions
+          .filter(t => t.amount > 0)
+          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        
+        // Olim aka: KASSA tab'dagi - (minus) operatsiyalar, description "Olim aka" bo'lganlar
+        const olimAka = kassaTransactions
+          .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('olim aka'))
+          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        
+        // Azam aka: KASSA tab'dagi - (minus) operatsiyalar, description "Azam aka" yoki "azam aka" bo'lganlar
+        const azamAka = kassaTransactions
+          .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('azam aka'))
+          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        
+        // Kassa: KASSA tab'dagi - (minus) operatsiyalar, description "Kassa" yoki "kassa" bo'lganlar
+        const kassa = kassaTransactions
+          .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('kassa'))
+          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        
         return {
-          jamiFoyda: kirim,
-          jamiZarar: chiqim,
-          sofFoyda: kirim - chiqim
+          jamiFoyda,
+          olimAka,
+          azamAka,
+          kassa
         };
       };
 
@@ -195,23 +217,26 @@ export default function Dashboard() {
       
       console.log('✅ Day before yesterday transactions filtered:', dayBeforeYesterdayData.length, 'items');
 
-      const yesterdayProfit = (yesterdayData || [])
-        .filter(t => t.type !== 'xarajat')
-        .reduce((sum, t) => sum + t.amount, 0);
+      // Calculate yesterday's "Olim aka" (same logic as current period)
+      const yesterdayKassaTransactions = (yesterdayData || []).filter(t => t.type === 'kassa');
+      const yesterdayOlimAka = yesterdayKassaTransactions
+        .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('olim aka'))
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
         
-      const dayBeforeYesterdayProfit = (dayBeforeYesterdayData || [])
-        .filter(t => t.type !== 'xarajat')
-        .reduce((sum, t) => sum + t.amount, 0);
+      const dayBeforeYesterdayKassaTransactions = (dayBeforeYesterdayData || []).filter(t => t.type === 'kassa');
+      const dayBeforeYesterdayOlimAka = dayBeforeYesterdayKassaTransactions
+        .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('olim aka'))
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
       setStats({
         jamiFoyda: currentMetrics.jamiFoyda,
-        jamiZarar: currentMetrics.jamiZarar,
-        sofFoyda: currentMetrics.sofFoyda,
-        kechagiFoyda: yesterdayProfit,
+        jamiZarar: currentMetrics.kassa, // "Kassa" nomi bilan ko'rsatiladi
+        sofFoyda: currentMetrics.azamAka, // "Azam aka" nomi bilan ko'rsatiladi
+        kechagiFoyda: currentMetrics.olimAka, // "Olim aka" nomi bilan ko'rsatiladi
         jamiFoydaChange: calculateChange(currentMetrics.jamiFoyda, prevMetrics.jamiFoyda),
-        jamiZararChange: calculateChange(currentMetrics.jamiZarar, prevMetrics.jamiZarar),
-        sofFoydaChange: calculateChange(currentMetrics.sofFoyda, prevMetrics.sofFoyda),
-        kechagiFoydaChange: calculateChange(yesterdayProfit, dayBeforeYesterdayProfit)
+        jamiZararChange: calculateChange(currentMetrics.kassa, prevMetrics.kassa),
+        sofFoydaChange: calculateChange(currentMetrics.azamAka, prevMetrics.azamAka),
+        kechagiFoydaChange: calculateChange(currentMetrics.olimAka, prevMetrics.olimAka)
       });
 
       // Prepare Chart Data (Group by Day or Month based on range)
