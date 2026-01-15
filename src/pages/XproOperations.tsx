@@ -385,17 +385,94 @@ export default function XproOperations() {
     }
   }, [tabParam]);
 
-  // Load expense categories from localStorage
+  // Load expense categories from Supabase (user-specific)
   useEffect(() => {
-    const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
-    setExpenseCategories(categories);
+    loadExpenseCategories();
   }, []);
+
+  const loadExpenseCategories = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        // Fallback to localStorage if user not logged in
+        const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+        setExpenseCategories(categories);
+        return;
+      }
+
+      // Try to load from Supabase
+      try {
+        const { data, error } = await supabase
+          .from('expense_categories')
+          .select('category_name')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true });
+
+        if (error) {
+          // If table doesn't exist, try to create it or fallback to localStorage
+          if (error.code === '42P01' || error.message.includes('does not exist')) {
+            console.log('expense_categories table not found, using localStorage');
+            const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+            setExpenseCategories(categories);
+            return;
+          }
+          throw error;
+        }
+
+        // Extract category names from data
+        const categories = data?.map(item => item.category_name) || [];
+        setExpenseCategories(categories);
+
+        // Migrate from localStorage to Supabase if localStorage has data and Supabase is empty
+        if (categories.length === 0) {
+          const localCategories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+          if (localCategories.length > 0) {
+            // Migrate to Supabase
+            await migrateCategoriesToSupabase(localCategories, user.id);
+            setExpenseCategories(localCategories);
+          }
+        }
+      } catch (error: any) {
+        console.error('Error loading categories from Supabase:', error);
+        // Fallback to localStorage
+        const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+        setExpenseCategories(categories);
+      }
+    } catch (error: any) {
+      console.error('Error in loadExpenseCategories:', error);
+      // Fallback to localStorage
+      const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+      setExpenseCategories(categories);
+    }
+  };
+
+  const migrateCategoriesToSupabase = async (categories: string[], userId: string) => {
+    try {
+      const categoryData = categories.map(categoryName => ({
+        user_id: userId,
+        category_name: categoryName,
+        created_at: new Date().toISOString()
+      }));
+
+      const { error } = await supabase
+        .from('expense_categories')
+        .insert(categoryData);
+
+      if (error) {
+        console.error('Error migrating categories:', error);
+      } else {
+        // Clear localStorage after successful migration
+        localStorage.removeItem('expenseCategories');
+      }
+    } catch (error) {
+      console.error('Error in migrateCategoriesToSupabase:', error);
+    }
+  };
 
   // Listen for category updates
   useEffect(() => {
     const handleCategoryUpdate = () => {
-      const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
-      setExpenseCategories(categories);
+      loadExpenseCategories();
     };
     window.addEventListener('categoryUpdated', handleCategoryUpdate);
     return () => window.removeEventListener('categoryUpdated', handleCategoryUpdate);
@@ -636,74 +713,234 @@ export default function XproOperations() {
     setIsClearPasswordModalOpen(false);
   };
 
-  const handleAddCategory = (categoryName: string) => {
-    // Save category to localStorage for now
-    const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
-    if (!categories.includes(categoryName)) {
-      categories.push(categoryName);
-      localStorage.setItem('expenseCategories', JSON.stringify(categories));
-      setExpenseCategories(categories);
-      window.dispatchEvent(new Event('categoryUpdated'));
-      toast.success(`"${categoryName}" bo'limi qo'shildi`);
-    } else {
-      toast.info(`"${categoryName}" bo'limi allaqachon mavjud`);
+  const handleAddCategory = async (categoryName: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        // Fallback to localStorage if user not logged in
+        const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+        if (!categories.includes(categoryName)) {
+          categories.push(categoryName);
+          localStorage.setItem('expenseCategories', JSON.stringify(categories));
+          setExpenseCategories(categories);
+          window.dispatchEvent(new Event('categoryUpdated'));
+          toast.success(`"${categoryName}" bo'limi qo'shildi`);
+        } else {
+          toast.info(`"${categoryName}" bo'limi allaqachon mavjud`);
+        }
+        setIsAddCategoryModalOpen(false);
+        return;
+      }
+
+      // Check if category already exists
+      if (expenseCategories.includes(categoryName)) {
+        toast.info(`"${categoryName}" bo'limi allaqachon mavjud`);
+        setIsAddCategoryModalOpen(false);
+        return;
+      }
+
+      // Save to Supabase
+      try {
+        const { error } = await supabase
+          .from('expense_categories')
+          .insert({
+            user_id: user.id,
+            category_name: categoryName,
+            created_at: new Date().toISOString()
+          });
+
+        if (error) {
+          // If table doesn't exist, fallback to localStorage
+          if (error.code === '42P01' || error.message.includes('does not exist')) {
+            const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+            if (!categories.includes(categoryName)) {
+              categories.push(categoryName);
+              localStorage.setItem('expenseCategories', JSON.stringify(categories));
+              setExpenseCategories(categories);
+              window.dispatchEvent(new Event('categoryUpdated'));
+              toast.success(`"${categoryName}" bo'limi qo'shildi`);
+            }
+          } else {
+            throw error;
+          }
+        } else {
+          // Successfully saved to Supabase
+          setExpenseCategories([...expenseCategories, categoryName]);
+          window.dispatchEvent(new Event('categoryUpdated'));
+          toast.success(`"${categoryName}" bo'limi qo'shildi`);
+        }
+      } catch (error: any) {
+        console.error('Error saving category to Supabase:', error);
+        // Fallback to localStorage
+        const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+        if (!categories.includes(categoryName)) {
+          categories.push(categoryName);
+          localStorage.setItem('expenseCategories', JSON.stringify(categories));
+          setExpenseCategories(categories);
+          window.dispatchEvent(new Event('categoryUpdated'));
+          toast.success(`"${categoryName}" bo'limi qo'shildi`);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error in handleAddCategory:', error);
+      toast.error('Bo\'lim qo\'shishda xatolik: ' + error.message);
     }
     setIsAddCategoryModalOpen(false);
   };
 
-  const handleEditCategory = (oldName: string, newName: string) => {
+  const handleEditCategory = async (oldName: string, newName: string) => {
     if (oldName === newName) return;
     
-    const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
-    if (categories.includes(newName)) {
-      toast.error(`"${newName}" bo'limi allaqachon mavjud`);
-      return;
-    }
-    
-    const index = categories.indexOf(oldName);
-    if (index !== -1) {
-      categories[index] = newName;
-      localStorage.setItem('expenseCategories', JSON.stringify(categories));
-      setExpenseCategories(categories);
-      window.dispatchEvent(new Event('categoryUpdated'));
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
       
-      // Update transactions with old category name
-      updateTransactionsCategory(oldName, newName);
-      
-      toast.success(`"${oldName}" bo'limi "${newName}" ga o'zgartirildi`);
+      // Check if new name already exists
+      if (expenseCategories.includes(newName)) {
+        toast.error(`"${newName}" bo'limi allaqachon mavjud`);
+        return;
+      }
+
+      if (user) {
+        // Update in Supabase
+        try {
+          const { error } = await supabase
+            .from('expense_categories')
+            .update({ category_name: newName })
+            .eq('user_id', user.id)
+            .eq('category_name', oldName);
+
+          if (error) {
+            // If table doesn't exist, fallback to localStorage
+            if (error.code === '42P01' || error.message.includes('does not exist')) {
+              const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+              const index = categories.indexOf(oldName);
+              if (index !== -1) {
+                categories[index] = newName;
+                localStorage.setItem('expenseCategories', JSON.stringify(categories));
+                setExpenseCategories(categories);
+                window.dispatchEvent(new Event('categoryUpdated'));
+                updateTransactionsCategory(oldName, newName);
+                toast.success(`"${oldName}" bo'limi "${newName}" ga o'zgartirildi`);
+              }
+            } else {
+              throw error;
+            }
+          } else {
+            // Successfully updated in Supabase
+            const updatedCategories = expenseCategories.map(cat => cat === oldName ? newName : cat);
+            setExpenseCategories(updatedCategories);
+            window.dispatchEvent(new Event('categoryUpdated'));
+            updateTransactionsCategory(oldName, newName);
+            toast.success(`"${oldName}" bo'limi "${newName}" ga o'zgartirildi`);
+          }
+        } catch (error: any) {
+          console.error('Error updating category in Supabase:', error);
+          // Fallback to localStorage
+          const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+          const index = categories.indexOf(oldName);
+          if (index !== -1) {
+            categories[index] = newName;
+            localStorage.setItem('expenseCategories', JSON.stringify(categories));
+            setExpenseCategories(categories);
+            window.dispatchEvent(new Event('categoryUpdated'));
+            updateTransactionsCategory(oldName, newName);
+            toast.success(`"${oldName}" bo'limi "${newName}" ga o'zgartirildi`);
+          }
+        }
+      } else {
+        // Fallback to localStorage if user not logged in
+        const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+        const index = categories.indexOf(oldName);
+        if (index !== -1) {
+          categories[index] = newName;
+          localStorage.setItem('expenseCategories', JSON.stringify(categories));
+          setExpenseCategories(categories);
+          window.dispatchEvent(new Event('categoryUpdated'));
+          updateTransactionsCategory(oldName, newName);
+          toast.success(`"${oldName}" bo'limi "${newName}" ga o'zgartirildi`);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error in handleEditCategory:', error);
+      toast.error('Bo\'limni o\'zgartirishda xatolik: ' + error.message);
     }
   };
 
   const handleDeleteCategory = async (categoryName: string) => {
-    const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
-    const filtered = categories.filter((cat: string) => cat !== categoryName);
-    localStorage.setItem('expenseCategories', JSON.stringify(filtered));
-    setExpenseCategories(filtered);
-    window.dispatchEvent(new Event('categoryUpdated'));
-    
-    // Delete all transactions for this category
     try {
-      const categoryTransactions = transactions.filter(t => 
-        t.category === categoryName || 
-        (t.type === 'xarajat' && t.description?.includes(`[${categoryName}]`))
-      );
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (categoryTransactions.length > 0) {
-        const ids = categoryTransactions.map(t => t.id);
-        const { error } = await supabase
-          .from('transactions')
-          .delete()
-          .in('id', ids);
-        
-        if (error) throw error;
-        
-        setTransactions(transactions.filter(t => !ids.includes(t.id)));
+      // Delete from Supabase if user is logged in
+      if (user) {
+        try {
+          const { error } = await supabase
+            .from('expense_categories')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('category_name', categoryName);
+
+          if (error) {
+            // If table doesn't exist, fallback to localStorage
+            if (error.code === '42P01' || error.message.includes('does not exist')) {
+              const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+              const filtered = categories.filter((cat: string) => cat !== categoryName);
+              localStorage.setItem('expenseCategories', JSON.stringify(filtered));
+              setExpenseCategories(filtered);
+              window.dispatchEvent(new Event('categoryUpdated'));
+            } else {
+              throw error;
+            }
+          } else {
+            // Successfully deleted from Supabase
+            const filtered = expenseCategories.filter((cat: string) => cat !== categoryName);
+            setExpenseCategories(filtered);
+            window.dispatchEvent(new Event('categoryUpdated'));
+          }
+        } catch (error: any) {
+          console.error('Error deleting category from Supabase:', error);
+          // Fallback to localStorage
+          const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+          const filtered = categories.filter((cat: string) => cat !== categoryName);
+          localStorage.setItem('expenseCategories', JSON.stringify(filtered));
+          setExpenseCategories(filtered);
+          window.dispatchEvent(new Event('categoryUpdated'));
+        }
+      } else {
+        // Fallback to localStorage if user not logged in
+        const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+        const filtered = categories.filter((cat: string) => cat !== categoryName);
+        localStorage.setItem('expenseCategories', JSON.stringify(filtered));
+        setExpenseCategories(filtered);
+        window.dispatchEvent(new Event('categoryUpdated'));
       }
       
-      toast.success(`"${categoryName}" bo'limi o'chirildi`);
+      // Delete all transactions for this category
+      try {
+        const categoryTransactions = transactions.filter(t => 
+          t.category === categoryName || 
+          (t.type === 'xarajat' && t.description?.includes(`[${categoryName}]`))
+        );
+        
+        if (categoryTransactions.length > 0) {
+          const ids = categoryTransactions.map(t => t.id);
+          const { error } = await supabase
+            .from('transactions')
+            .delete()
+            .in('id', ids);
+          
+          if (error) throw error;
+          
+          setTransactions(transactions.filter(t => !ids.includes(t.id)));
+        }
+        
+        toast.success(`"${categoryName}" bo'limi o'chirildi`);
+      } catch (error: any) {
+        console.error('Error deleting category transactions:', error);
+        toast.error('Bo\'lim o\'chirildi, lekin ba\'zi operatsiyalar o\'chirilmadi');
+      }
     } catch (error: any) {
-      console.error('Error deleting category transactions:', error);
-      toast.error('Bo\'lim o\'chirildi, lekin ba\'zi operatsiyalar o\'chirilmadi');
+      console.error('Error in handleDeleteCategory:', error);
+      toast.error('Bo\'limni o\'chirishda xatolik: ' + error.message);
     }
   };
 

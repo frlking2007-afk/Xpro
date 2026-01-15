@@ -67,7 +67,8 @@ export function generateExpenseReceiptHTML(
   const now = new Date();
   
   // Calculate width based on paper size
-  const width = settings.paperWidth === '58mm' ? '48mm' : '72mm';
+  // 80mm printer: 72.1mm printable width (as shown in printer settings)
+  const width = settings.paperWidth === '58mm' ? '48mm' : '72.1mm';
   const fontSize = settings.fontSize === 'small' ? '8px' : settings.fontSize === 'medium' ? '10px' : '12px';
   const titleSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
   const dateSize = settings.fontSize === 'small' ? '13px' : settings.fontSize === 'medium' ? '15px' : '17px';
@@ -88,7 +89,7 @@ export function generateExpenseReceiptHTML(
   <style>
     @media print {
       @page {
-        size: ${settings.paperWidth};
+        size: ${settings.paperWidth === '80mm' ? '80mm 297mm' : settings.paperWidth};
         margin: 0;
       }
       * {
@@ -306,7 +307,8 @@ export function generatePaymentReceiptHTML(
   const now = new Date();
   
   // Calculate width based on paper size
-  const width = settings.paperWidth === '58mm' ? '48mm' : '72mm';
+  // 80mm printer: 72.1mm printable width (as shown in printer settings)
+  const width = settings.paperWidth === '58mm' ? '48mm' : '72.1mm';
   const fontSize = settings.fontSize === 'small' ? '8px' : settings.fontSize === 'medium' ? '10px' : '12px';
   const titleSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
   const dateSize = settings.fontSize === 'small' ? '13px' : settings.fontSize === 'medium' ? '15px' : '17px';
@@ -327,7 +329,7 @@ export function generatePaymentReceiptHTML(
   <style>
     @media print {
       @page {
-        size: ${settings.paperWidth};
+        size: ${settings.paperWidth === '80mm' ? '80mm 297mm' : settings.paperWidth};
         margin: 0;
       }
       * {
