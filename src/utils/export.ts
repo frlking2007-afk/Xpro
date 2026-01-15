@@ -514,6 +514,281 @@ export function generatePaymentReceiptHTML(
   return html;
 }
 
+// Generate receipt HTML for shift (tabaka) - includes all transactions
+export function generateShiftReceiptHTML(
+  allTransactions: Transaction[],
+  shiftName: string,
+  settings: ExportSettings
+): string {
+  // Filter transactions by type
+  const xarajatTransactions = allTransactions.filter(t => t.type === 'xarajat');
+  const clickTransactions = allTransactions.filter(t => t.type === 'click');
+  const uzcardTransactions = allTransactions.filter(t => t.type === 'uzcard');
+  const humoTransactions = allTransactions.filter(t => t.type === 'humo');
+  
+  // Calculate totals
+  const totalXarajat = xarajatTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const totalClick = clickTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const totalUzcard = uzcardTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const totalHumo = humoTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const totalTerminal = totalUzcard + totalHumo; // Terminal = Uzcard + Humo
+  
+  // Get category sales from localStorage (for calculating profit)
+  // We need to sum all category sales
+  const allCategories = [...new Set(xarajatTransactions.map(t => {
+    if (t.category) return t.category;
+    // Extract category from description [CategoryName]
+    const match = t.description?.match(/\[([^\]]+)\]/);
+    return match ? match[1] : null;
+  }).filter(Boolean))];
+  
+  let totalSales = 0;
+  allCategories.forEach(category => {
+    const saved = localStorage.getItem(`categorySales_${category}`);
+    if (saved) {
+      totalSales += parseFloat(saved) || 0;
+    }
+  });
+  
+  // Calculate profit/loss: Savdo - (Umumiy xarajat + Click + Terminal)
+  const profitOrLoss = totalSales - (totalXarajat + totalClick + totalTerminal);
+  
+  const now = new Date();
+  
+  // Calculate width based on paper size
+  const width = settings.paperWidth === '58mm' ? '48mm' : '72.1mm';
+  const fontSize = settings.fontSize === 'small' ? '12px' : settings.fontSize === 'medium' ? '14px' : '16px';
+  const titleSize = settings.fontSize === 'small' ? '16px' : settings.fontSize === 'medium' ? '18px' : '20px';
+  const dateSize = settings.fontSize === 'small' ? '20px' : settings.fontSize === 'medium' ? '24px' : '28px';
+  const descSize = settings.fontSize === 'small' ? '14px' : settings.fontSize === 'medium' ? '16px' : '18px';
+  const lineHeight = '1.1';
+  
+  // Format number without currency symbol
+  const formatAmount = (amount: number): string => {
+    return amount.toLocaleString('uz-UZ');
+  };
+  
+  let html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${shiftName} - Tabaka</title>
+  <style>
+    @media print {
+      @page {
+        size: ${settings.paperWidth === '80mm' ? '80mm 297mm' : settings.paperWidth};
+        margin: 0;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0 !important;
+        padding: 1px !important;
+        page-break-inside: avoid;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        orphans: 999;
+        widows: 999;
+      }
+      .section-title {
+        page-break-after: avoid;
+        page-break-before: avoid;
+        break-after: avoid;
+        break-before: avoid;
+      }
+      div[style*="page-break-inside: avoid"] {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        orphans: 999 !important;
+        widows: 999 !important;
+        display: block !important;
+      }
+      .item {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        display: block;
+        orphans: 999 !important;
+        widows: 999 !important;
+        page-break-before: avoid !important;
+        break-before: avoid !important;
+      }
+      .divider {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+        page-break-before: avoid !important;
+        break-before: avoid !important;
+      }
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Courier New', monospace;
+      width: ${width};
+      margin: 0 auto;
+      padding: 1px;
+      font-size: ${fontSize};
+      line-height: ${lineHeight};
+      background: white;
+      color: black;
+      height: auto;
+      min-height: auto;
+      max-height: none;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 1px dashed #000;
+      padding-bottom: 4px;
+      margin-bottom: 4px;
+    }
+    .title {
+      font-weight: 900;
+      font-size: ${titleSize};
+      margin-bottom: 2px;
+    }
+    .info {
+      font-size: ${fontSize};
+      font-weight: 900;
+      color: #000;
+      margin: 1px 0;
+    }
+    .divider {
+      border-top: 1px dashed #000;
+      margin: 3px 0;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .section {
+      margin: 2px 0;
+    }
+    .section-title {
+      font-weight: 900;
+      font-size: ${fontSize};
+      margin-bottom: 2px;
+      text-decoration: underline;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin: 1px 0;
+      font-size: ${fontSize};
+    }
+    .row-label {
+      font-weight: 900;
+    }
+    .row-value {
+      font-weight: 900;
+    }
+    .item {
+      margin: 1px 0;
+      font-size: ${fontSize};
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .item-desc {
+      flex: 1;
+      word-wrap: break-word;
+      font-weight: 900;
+      font-size: ${descSize};
+      color: #000;
+      line-height: 1.2;
+    }
+    .item-amount {
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .total {
+      border-top: 2px solid #000;
+      margin-top: 4px;
+      padding-top: 3px;
+      font-weight: 900;
+      font-size: ${parseInt(fontSize) + 1}px;
+    }
+    .footer {
+      text-align: center;
+      border-top: 1px dashed #000;
+      padding-top: 4px;
+      margin-top: 4px;
+      font-size: ${parseInt(fontSize) - 1}px;
+      font-weight: 900;
+    }
+    .center {
+      text-align: center;
+    }
+    .date {
+      font-size: ${dateSize};
+      font-weight: 900;
+      text-align: center;
+      margin: 4px 0;
+      padding: 0;
+      line-height: 1.2;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+`;
+
+  // Wrap ALL content in one container to prevent any page breaks
+  html += `<div style="page-break-inside: avoid !important; break-inside: avoid !important; orphans: 999 !important; widows: 999 !important; display: block !important;">`;
+  
+  // Date (larger, centered, bold)
+  html += `<div class="date">${format(now, 'dd.MM.yyyy', { locale: uz })}</div>`;
+
+  // Shift Name
+  html += `<div class="title center">${shiftName}</div>`;
+
+  // Sales
+  html += `<div class="section"><div class="row"><span class="row-label">Savdo:</span><span class="row-value">${formatAmount(totalSales)}</span></div></div><div class="divider"></div>`;
+
+  // Total Expenses
+  html += `<div class="section"><div class="row"><span class="row-label">Umumiy xarajat:</span><span class="row-value">${formatAmount(totalXarajat)}</span></div></div><div class="divider"></div>`;
+
+  // Click
+  html += `<div class="section"><div class="row"><span class="row-label">Click:</span><span class="row-value">${formatAmount(totalClick)}</span></div></div><div class="divider"></div>`;
+
+  // Terminal (Uzcard + Humo)
+  html += `<div class="section"><div class="row"><span class="row-label">Terminal:</span><span class="row-value">${formatAmount(totalTerminal)}</span></div></div><div class="divider"></div>`;
+
+  // Profit/Loss
+  html += `<div class="section"><div class="row"><span class="row-label">${profitOrLoss >= 0 ? 'Foyda:' : 'Zarar:'}</span><span class="row-value">${formatAmount(Math.abs(profitOrLoss))}</span></div></div><div class="divider"></div>`;
+
+  // Expenses History
+  html += `<div class="section-title" style="page-break-before: avoid !important; break-before: avoid !important; page-break-after: avoid !important; break-after: avoid !important;">Xarajatlar tarixi:</div>`;
+  html += `<div class="divider" style="page-break-before: avoid !important; break-before: avoid !important; page-break-after: avoid !important; break-after: avoid !important;"></div>`;
+  if (xarajatTransactions.length === 0) {
+    html += `<div class="info">Xarajatlar mavjud emas</div>`;
+  } else {
+    xarajatTransactions.forEach((transaction) => {
+      const desc = transaction.description || 'Izohsiz';
+      // Remove category prefix if exists
+      const cleanDesc = desc.replace(/\[([^\]]+)\]/g, '').trim() || 'Izohsiz';
+      const amount = formatAmount(transaction.amount);
+      
+      html += `<div class="item"><div class="item-amount">${amount}</div><div class="item-desc">${cleanDesc}</div></div><div class="divider"></div>`;
+    });
+  }
+
+  html += `</div>`;
+
+  html += `
+</body>
+</html>
+`;
+
+  return html;
+}
+
 // Legacy function for backward compatibility
 export function generateReceiptHTML(
   transactions: Transaction[],
