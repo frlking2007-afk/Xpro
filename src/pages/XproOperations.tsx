@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight, Lock, Calendar, FolderPlus, Trash, Edit, Settings } from 'lucide-react';
+import { Wallet, CreditCard, Banknote, Upload, Plus, History, Trash2, ArrowRight, Lock, Calendar, FolderPlus, Trash, Edit, Settings, X, DollarSign, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { uz } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -42,6 +42,7 @@ const PaymentTab = ({
   transactions, 
   onAddTransaction,
   onDeleteTransaction,
+  onEditTransaction,
   loading,
   shiftId,
   isReadOnly = false
@@ -52,12 +53,16 @@ const PaymentTab = ({
   transactions: Transaction[], 
   onAddTransaction: (amount: number, description: string) => void,
   onDeleteTransaction: (id: string) => void,
+  onEditTransaction?: (id: string, amount: number, description: string) => void,
   loading: boolean,
   shiftId: string | undefined,
   isReadOnly?: boolean
 }) => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAmount, setEditAmount] = useState('');
+  const [editDescription, setEditDescription] = useState('');
 
   // Format number with spaces (50000 -> 50 000)
   const formatNumber = (value: string): string => {
@@ -153,28 +158,395 @@ const PaymentTab = ({
                 key={item.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="group flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-4 transition-colors hover:bg-white/10 hover:border-white/10"
+                className={`group rounded-xl border border-white/5 bg-white/5 p-4 transition-colors hover:bg-white/10 hover:border-white/10 ${
+                  editingId === item.id ? 'border-blue-500/50 bg-blue-500/5' : ''
+                }`}
               >
-                <div className="flex items-center gap-4">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full ${bg} ${color}`}>
-                    <Plus className={`h-5 w-5 ${type === 'xarajat' ? 'rotate-45' : ''}`} />
+                {editingId === item.id ? (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-slate-400">Summa</label>
+                      <input
+                        type="text"
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(formatNumber(e.target.value))}
+                        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                        autoFocus
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-slate-400">Tavsif</label>
+                      <input
+                        type="text"
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          if (onEditTransaction && editAmount) {
+                            const numericAmount = parseFloat(editAmount.replace(/\s/g, '').replace(/[^0-9-]/g, ''));
+                            onEditTransaction(item.id, numericAmount, editDescription);
+                            setEditingId(null);
+                            setEditAmount('');
+                            setEditDescription('');
+                          }
+                        }}
+                        className="flex-1 rounded-lg bg-green-500/20 px-3 py-2 text-green-400 transition-all hover:bg-green-500/30"
+                      >
+                        Saqlash
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingId(null);
+                          setEditAmount('');
+                          setEditDescription('');
+                        }}
+                        className="flex-1 rounded-lg bg-slate-500/20 px-3 py-2 text-slate-400 transition-all hover:bg-slate-500/30"
+                      >
+                        Bekor
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-white">
-                      {type === 'xarajat' ? '-' : '+'} {formatCurrency(item.amount)}
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      {item.description || "Izohsiz"} • {format(new Date(item.date), 'HH:mm')}
-                    </p>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-full ${bg} ${color}`}>
+                        <Plus className={`h-5 w-5 ${type === 'xarajat' ? 'rotate-45' : ''}`} />
+                      </div>
+                      <div>
+                        <p className="font-bold text-white">
+                          {type === 'xarajat' ? '-' : '+'} {formatCurrency(item.amount)}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {item.description || "Izohsiz"} • {format(new Date(item.date), 'HH:mm')}
+                        </p>
+                      </div>
+                    </div>
+                    {!isReadOnly && (
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => onDeleteTransaction(item.id)}
+                          className="rounded-lg p-2 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-400"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                        {onEditTransaction && (
+                          <button
+                            onClick={() => {
+                              setEditingId(item.id);
+                              setEditAmount(formatNumber(item.amount.toString()));
+                              setEditDescription(item.description || '');
+                            }}
+                            className="rounded-lg p-2 text-slate-500 transition-all hover:bg-blue-500/20 hover:text-blue-400"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </div>
-                {!isReadOnly && (
-                  <button 
-                    onClick={() => onDeleteTransaction(item.id)}
-                    className="rounded-lg p-2 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-400"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                )}
+              </motion.div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Kassa Tab Component
+const KassaTab = ({
+  transactions,
+  kassaTransactions,
+  onAddTransaction,
+  onDeleteTransaction,
+  onEditTransaction,
+  loading,
+  shiftId,
+  isReadOnly = false
+}: {
+  transactions: Transaction[];
+  kassaTransactions: Transaction[];
+  onAddTransaction: (amount: number, description: string) => void;
+  onDeleteTransaction: (id: string) => void;
+  onEditTransaction: (id: string, amount: number, description: string) => void;
+  loading: boolean;
+  shiftId: string | undefined;
+  isReadOnly?: boolean;
+}) => {
+  const [kassaAmount, setKassaAmount] = useState('');
+  const [kassaDescription, setKassaDescription] = useState('');
+  const [salesAmount, setSalesAmount] = useState<number>(0);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAmount, setEditAmount] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+
+  // Load sales amount from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('kassa_sales');
+    if (saved) {
+      setSalesAmount(parseFloat(saved) || 0);
+    }
+  }, []);
+
+  // Calculate total expenses (click + uzcard + humo + xarajatlar)
+  const totalExpenses = transactions.reduce((sum, t) => {
+    if (t.type === 'click' || t.type === 'uzcard' || t.type === 'humo' || t.type === 'xarajat') {
+      return sum + t.amount;
+    }
+    return sum;
+  }, 0);
+
+  // Calculate profit/loss
+  const profitOrLoss = salesAmount > 0 ? salesAmount - totalExpenses : 0;
+
+  // Format number with spaces
+  const formatNumber = (value: string): string => {
+    const numericValue = value.replace(/\s/g, '').replace(/[^0-9-]/g, '');
+    if (!numericValue) return '';
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  };
+
+  const handleSalesClick = () => {
+    const input = prompt('Savdo summasini kiriting:', salesAmount.toString());
+    if (input !== null) {
+      const amount = parseFloat(input.replace(/\s/g, '')) || 0;
+      setSalesAmount(amount);
+      localStorage.setItem('kassa_sales', amount.toString());
+    }
+  };
+
+  const handleKassaSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!kassaAmount) return;
+    if (!shiftId) {
+      toast.error("Smena ochiq emas! Iltimos, avval smenani oching.");
+      return;
+    }
+
+    const numericAmount = parseFloat(kassaAmount.replace(/\s/g, '').replace(/[^0-9-]/g, ''));
+    onAddTransaction(numericAmount, kassaDescription);
+    setKassaAmount('');
+    setKassaDescription('');
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Savdo */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          onClick={handleSalesClick}
+          className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-6 cursor-pointer hover:bg-emerald-500/20 transition-colors"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20">
+              <DollarSign className="h-5 w-5 text-emerald-400" />
+            </div>
+            <span className="text-sm text-slate-400 uppercase">Savdo</span>
+          </div>
+          <p className="text-2xl font-bold text-white">{formatCurrency(salesAmount)}</p>
+        </motion.div>
+
+        {/* Jami xarajat */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl border border-red-500/20 bg-red-500/10 p-6"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/20">
+              <Banknote className="h-5 w-5 text-red-400" />
+            </div>
+            <span className="text-sm text-slate-400 uppercase">Jami xarajat</span>
+          </div>
+          <p className="text-2xl font-bold text-white">{formatCurrency(totalExpenses)}</p>
+        </motion.div>
+
+        {/* Foyda */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`rounded-2xl border p-6 ${
+            profitOrLoss >= 0 
+              ? 'border-emerald-500/20 bg-emerald-500/10' 
+              : 'border-red-500/20 bg-red-500/10'
+          }`}
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-full ${
+              profitOrLoss >= 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'
+            }`}>
+              <TrendingUp className={`h-5 w-5 ${
+                profitOrLoss >= 0 ? 'text-emerald-400' : 'text-red-400'
+              }`} />
+            </div>
+            <span className="text-sm text-slate-400 uppercase">Foyda</span>
+          </div>
+          <p className={`text-2xl font-bold ${
+            profitOrLoss >= 0 ? 'text-emerald-400' : 'text-red-400'
+          }`}>
+            {profitOrLoss >= 0 ? '+' : ''}{formatCurrency(profitOrLoss)}
+          </p>
+        </motion.div>
+      </div>
+
+      {/* Kassa Input Form */}
+      <div className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm">
+        <form onSubmit={handleKassaSave} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-slate-400 uppercase tracking-wider">
+              Kassa foyda/zarar
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={kassaAmount}
+                onChange={(e) => setKassaAmount(formatNumber(e.target.value))}
+                placeholder="0 (zarar uchun - bilan boshlang)"
+                disabled={isReadOnly}
+                className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-4 pr-12 text-lg font-bold text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                required
+              />
+              <span className="absolute right-4 top-3.5 text-sm font-medium text-slate-500">{getCurrencySymbol()}</span>
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-slate-400 uppercase tracking-wider">Tavsif (Ixtiyoriy)</label>
+            <input
+              type="text"
+              value={kassaDescription}
+              onChange={(e) => setKassaDescription(e.target.value)}
+              placeholder="Izoh yozing..."
+              disabled={isReadOnly}
+              className="block w-full rounded-xl border border-white/10 bg-white/5 py-3 px-4 text-sm text-white placeholder-slate-600 focus:border-blue-500 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || isReadOnly}
+            className={`group mt-2 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white transition-all shadow-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-blue-500/20 ${loading || isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {loading ? 'Saqlanmoqda...' : isReadOnly ? 'Faqat ko\'rish rejimi' : 'Saqlash'}
+            {!loading && !isReadOnly && <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />}
+          </button>
+        </form>
+      </div>
+
+      {/* Kassa Operations History */}
+      <div>
+        <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-400 uppercase tracking-wider">
+          <History className="h-4 w-4" />
+          Kassa operatsiyalar tarixi
+        </h3>
+        
+        <div className="space-y-3">
+          {kassaTransactions.length === 0 ? (
+            <div className="rounded-xl border border-white/5 bg-white/5 p-8 text-center text-slate-500">
+              Hozircha ma'lumot yo'q
+            </div>
+          ) : (
+            kassaTransactions.map((item) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`group rounded-xl border border-white/5 bg-white/5 p-4 transition-colors hover:bg-white/10 hover:border-white/10 ${
+                  editingId === item.id ? 'border-blue-500/50 bg-blue-500/5' : ''
+                }`}
+              >
+                {editingId === item.id ? (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-slate-400">Summa</label>
+                      <input
+                        type="text"
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(formatNumber(e.target.value))}
+                        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                        autoFocus
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-slate-400">Tavsif</label>
+                      <input
+                        type="text"
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          if (editAmount) {
+                            const numericAmount = parseFloat(editAmount.replace(/\s/g, '').replace(/[^0-9-]/g, ''));
+                            onEditTransaction(item.id, numericAmount, editDescription);
+                            setEditingId(null);
+                            setEditAmount('');
+                            setEditDescription('');
+                          }
+                        }}
+                        className="flex-1 rounded-lg bg-green-500/20 px-3 py-2 text-green-400 transition-all hover:bg-green-500/30"
+                      >
+                        Saqlash
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingId(null);
+                          setEditAmount('');
+                          setEditDescription('');
+                        }}
+                        className="flex-1 rounded-lg bg-slate-500/20 px-3 py-2 text-slate-400 transition-all hover:bg-slate-500/30"
+                      >
+                        Bekor
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+                        <Wallet className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-white">
+                          {item.amount >= 0 ? '+' : ''} {formatCurrency(item.amount)}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {item.description || "Izohsiz"} • {format(new Date(item.date), 'HH:mm')}
+                        </p>
+                      </div>
+                    </div>
+                    {!isReadOnly && (
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => onDeleteTransaction(item.id)}
+                          className="rounded-lg p-2 text-slate-500 transition-all hover:bg-red-500/20 hover:text-red-400"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingId(item.id);
+                            setEditAmount(formatNumber(item.amount.toString()));
+                            setEditDescription(item.description || '');
+                          }}
+                          className="rounded-lg p-2 text-slate-500 transition-all hover:bg-blue-500/20 hover:text-blue-400"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </motion.div>
             ))
@@ -567,9 +939,11 @@ export default function XproOperations() {
     };
     window.addEventListener('transactionDeleted', handleTransactionUpdate);
     window.addEventListener('transactionAdded', handleTransactionUpdate);
+    window.addEventListener('transactionUpdated', handleTransactionUpdate);
     return () => {
       window.removeEventListener('transactionDeleted', handleTransactionUpdate);
       window.removeEventListener('transactionAdded', handleTransactionUpdate);
+      window.removeEventListener('transactionUpdated', handleTransactionUpdate);
     };
   }, [currentShift, isViewMode, viewShift]);
 
@@ -619,6 +993,23 @@ export default function XproOperations() {
       toast.error('Xatolik: ' + error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditTransaction = async (id: string, amount: number, description: string) => {
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .update({ amount, description })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setTransactions(transactions.map(t => t.id === id ? { ...t, amount, description } : t));
+      window.dispatchEvent(new Event('transactionUpdated'));
+      toast.success("Tahrirlandi!");
+    } catch (error: any) {
+      toast.error('Tahrirlashda xatolik: ' + error.message);
     }
   };
 
@@ -1300,7 +1691,18 @@ export default function XproOperations() {
             shiftId={isViewMode ? viewShift?.id : currentShift?.id}
             isReadOnly={isViewMode}
           />
-        ) : ['kassa', 'click', 'uzcard', 'humo'].includes(activeTab) && activeTabInfo ? (
+        ) : activeTab === 'kassa' && activeTabInfo ? (
+          <KassaTab
+            transactions={transactions}
+            kassaTransactions={filteredTransactions}
+            onAddTransaction={handleAddTransaction}
+            onDeleteTransaction={handleDeleteTransaction}
+            onEditTransaction={handleEditTransaction}
+            loading={loading}
+            shiftId={isViewMode ? viewShift?.id : currentShift?.id}
+            isReadOnly={isViewMode}
+          />
+        ) : ['click', 'uzcard', 'humo'].includes(activeTab) && activeTabInfo ? (
           <PaymentTab 
             type={activeTab} 
             color={activeTabInfo.color} 
@@ -1308,6 +1710,7 @@ export default function XproOperations() {
             transactions={filteredTransactions}
             onAddTransaction={handleAddTransaction}
             onDeleteTransaction={handleDeleteTransaction}
+            onEditTransaction={handleEditTransaction}
             loading={loading}
             shiftId={isViewMode ? viewShift?.id : currentShift?.id}
             isReadOnly={isViewMode}
