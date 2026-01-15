@@ -84,7 +84,18 @@ export default function Dashboard() {
         console.error('Error code:', allError.code);
         console.error('Error message:', allError.message);
         console.error('Error details:', allError);
-        toast.error(`Statistikani yuklashda xatolik: ${allError.message}`);
+        
+        // Provide user-friendly error message
+        let userMessage = 'Statistikani yuklashda xatolik yuz berdi.';
+        if (allError.code === '42501') {
+          userMessage = 'Ruxsat yo\'q. Iltimos, qayta kiring.';
+        } else if (allError.code === 'PGRST301') {
+          userMessage = 'Ma\'lumotlar bazasi jadvali topilmadi.';
+        } else if (allError.message) {
+          userMessage = allError.message;
+        }
+        
+        toast.error(userMessage);
         return;
       }
       

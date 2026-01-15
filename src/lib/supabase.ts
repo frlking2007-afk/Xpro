@@ -24,15 +24,33 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder') || s
     },
   });
   
-  // Test connection
+  // Test connection and authentication
+  supabase.auth.getSession()
+    .then(({ data: { session }, error: authError }) => {
+      if (authError) {
+        console.error('⚠️ Supabase auth error:', authError.message);
+      } else if (session) {
+        console.log('✅ Supabase session active for user:', session.user.email);
+      } else {
+        console.log('ℹ️ No active Supabase session');
+      }
+    })
+    .catch((err) => {
+      console.error('⚠️ Supabase session check failed:', err);
+    });
+  
+  // Test database connection
   supabase.from('transactions').select('id').limit(1)
     .then(({ error }) => {
       if (error) {
-        console.error('⚠️ Supabase connection error:', error.message);
+        console.error('⚠️ Supabase database connection error:', error.message);
         console.error('Error code:', error.code);
         console.error('Error details:', error);
+        if (error.code === '42501') {
+          console.error('⚠️ Permission denied - check RLS policies');
+        }
       } else {
-        console.log('✅ Supabase connection successful');
+        console.log('✅ Supabase database connection successful');
       }
     })
     .catch((err) => {

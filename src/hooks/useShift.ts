@@ -60,19 +60,31 @@ export function useShift() {
   const openShift = async (startingBalance: number = 0, shiftName?: string) => {
     try {
       console.log('🚀 Opening new shift...', { startingBalance, shiftName });
+      
+      // Get current user session
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error('❌ Error getting user:', userError);
+        throw new Error('Foydalanuvchi ma\'lumotlari topilmadi. Iltimos, qayta kiring.');
+      }
+      
       const now = new Date();
       
-      // Base insert data without name field
+      // Base insert data - only include fields that exist in schema
       const insertData: any = {
         status: 'open',
         starting_balance: startingBalance,
         opened_at: now.toISOString(),
       };
 
-      console.log('📝 Insert data:', insertData);
+      // Add name if provided
+      if (shiftName) {
+        insertData.name = shiftName;
+      }
 
-      // Try to insert without name first (safer approach)
-      // If name column exists, we can add it later via migration
+      console.log('📝 Insert data:', JSON.stringify(insertData, null, 2));
+
+      // Insert shift
       let { data, error } = await supabase
         .from('shifts')
         .insert([insertData])
@@ -85,17 +97,27 @@ export function useShift() {
         console.error('Error message:', error.message);
         console.error('Error details:', error);
         console.error('Error hint:', (error as any).hint);
-        console.error('Error details object:', JSON.stringify(error, null, 2));
-        throw error;
+        console.error('Full error object:', JSON.stringify(error, null, 2));
+        
+        // Provide user-friendly error message
+        let userMessage = 'Smena ochishda xatolik yuz berdi.';
+        if (error.code === '42501') {
+          userMessage = 'Ruxsat yo\'q. Iltimos, qayta kiring.';
+        } else if (error.code === '23505') {
+          userMessage = 'Bu smena allaqachon mavjud.';
+        } else if (error.message) {
+          userMessage = error.message;
+        }
+        
+        throw new Error(userMessage);
       }
 
       console.log('✅ Shift inserted successfully:', data);
 
-      // If successful but name column might exist, try to update with name
-      if (data) {
-        const defaultName = shiftName || `Smena ${now.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}`;
+      // Update name if not provided in insert
+      if (data && !shiftName) {
+        const defaultName = `Smena ${now.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}`;
         
-        // Try to update with name (silently fail if column doesn't exist)
         try {
           const { error: updateError } = await supabase
             .from('shifts')
@@ -103,13 +125,16 @@ export function useShift() {
             .eq('id', data.id);
           
           if (updateError) {
-            console.log('ℹ️ Name column not available, skipping name update:', updateError.message);
+            console.log('ℹ️ Could not update shift name:', updateError.message);
+            // Not critical, continue anyway
           } else {
             console.log('✅ Shift name updated successfully');
+            // Update local data with name
+            data.name = defaultName;
           }
         } catch (updateError: any) {
-          // Ignore update error if name column doesn't exist
-          console.log('ℹ️ Name column not available, skipping name update:', updateError.message);
+          console.log('ℹ️ Could not update shift name:', updateError.message);
+          // Not critical, continue anyway
         }
       }
 
@@ -120,7 +145,9 @@ export function useShift() {
       console.error('❌ Exception in openShift:', error);
       const errorMessage = error.message || 'Noma\'lum xatolik';
       console.error('Full error object:', error);
-      toast.error('Smena ochishda xatolik: ' + errorMessage);
+      
+      // Show user-friendly error
+      toast.error(errorMessage);
       return null;
     }
   };
