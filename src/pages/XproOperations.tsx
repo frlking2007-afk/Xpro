@@ -886,10 +886,27 @@ export default function XproOperations() {
 
       // Try to load from Supabase
       try {
+        // Check if user.id is valid before making request
+        if (!user.id) {
+          console.warn('⚠️ User ID is missing, falling back to localStorage');
+          const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+          setExpenseCategories(categories);
+          return;
+        }
+
+        // Make sure user.id is a valid UUID string
+        const userId = String(user.id).trim();
+        if (!userId || userId.length < 10) {
+          console.warn('⚠️ Invalid user ID, falling back to localStorage');
+          const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+          setExpenseCategories(categories);
+          return;
+        }
+
         const { data, error } = await supabase
           .from('expense_categories')
           .select('category_name')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .order('created_at', { ascending: true });
 
         if (error) {

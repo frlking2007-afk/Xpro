@@ -105,7 +105,10 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder') || s
   supabase.from('expense_categories').select('id').limit(1)
     .then(({ error }) => {
       if (error) {
-        if (error.code === 'PGRST205' || error.message.includes('Could not find the table')) {
+        // Handle 400 Bad Request
+        if (error.code === '400' || error.status === 400 || error.message?.includes('400') || error.message?.includes('Bad Request')) {
+          console.warn('⚠️ expense_categories table - 400 Bad Request (will use localStorage fallback):', error.message);
+        } else if (error.code === 'PGRST205' || error.message?.includes('Could not find the table')) {
           console.log('ℹ️ expense_categories table not found - this is OK, will use localStorage fallback');
         } else {
           console.warn('⚠️ expense_categories table access issue:', error.message);
@@ -114,8 +117,9 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder') || s
         console.log('✅ expense_categories table is accessible');
       }
     })
-    .catch(() => {
-      // Silently ignore - table might not exist
+    .catch((err) => {
+      // Handle any unexpected errors
+      console.warn('⚠️ expense_categories table test failed:', err?.message || err);
     });
 }
 
