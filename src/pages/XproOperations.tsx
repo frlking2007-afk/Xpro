@@ -904,14 +904,12 @@ export default function XproOperations() {
         }
 
         console.log('📡 Fetching expense_categories from Supabase...');
-        console.log('📡 User ID:', userId);
         console.log('📡 Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
         
         // Try to fetch from expense_categories table (public schema)
         const { data, error } = await supabase
           .from('expense_categories')
-          .select('*')
-          .eq('user_id', userId);
+          .select('*');
         
         console.log('📡 expense_categories response:', { 
           dataCount: data?.length || 0, 
@@ -967,7 +965,6 @@ export default function XproOperations() {
   const migrateCategoriesToSupabase = async (categories: string[], userId: string) => {
     try {
       const categoryData = categories.map(categoryName => ({
-        user_id: userId,
         category_name: categoryName
       }));
 
@@ -1369,7 +1366,6 @@ export default function XproOperations() {
         const { error } = await supabase
           .from('expense_categories')
           .insert({
-            user_id: user.id,
             category_name: categoryName
           });
 
@@ -1483,7 +1479,6 @@ export default function XproOperations() {
           const { error } = await supabase
             .from('expense_categories')
             .update({ category_name: newName })
-            .eq('user_id', user.id)
             .eq('category_name', oldName);
 
           if (error) {
@@ -1555,7 +1550,6 @@ export default function XproOperations() {
           const { error } = await supabase
             .from('expense_categories')
             .delete()
-            .eq('user_id', user.id)
             .eq('category_name', categoryName);
 
           if (error) {
