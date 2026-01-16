@@ -35,15 +35,55 @@ export default function Settings() {
           .from('user_profiles')
           .select('*')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle(); // Use maybeSingle() instead of single() to handle null/empty results
         
         if (profileError) {
+          // Handle 406 Not Acceptable error
+          if (profileError.code === '406' || profileError.status === 406 || profileError.message?.includes('406')) {
+            console.warn('⚠️ 406 Not Acceptable - user_profiles response format issue:', profileError.message);
+            // Try alternative approach: use limit(1) instead
+            try {
+              const { data: altData, error: altError } = await supabase
+                .from('user_profiles')
+                .select('*')
+                .eq('user_id', user.id)
+                .limit(1);
+              
+              if (!altError && altData && altData.length > 0) {
+                profile = altData[0];
+                console.log('✅ User profile loaded using alternative method');
+              }
+            } catch (altErr: any) {
+              console.warn('⚠️ Alternative method also failed:', altErr.message);
+            }
+          } 
           // If table doesn't exist, skip silently
-          if (profileError.code === '42P01' || profileError.code === 'PGRST205' || profileError.message.includes('does not exist') || profileError.message.includes('Could not find the table')) {
+          else if (profileError.code === '42P01' || profileError.code === 'PGRST205' || profileError.message?.includes('does not exist') || profileError.message?.includes('Could not find the table')) {
             console.log('ℹ️ user_profiles table not found in Supabase, using user metadata');
             console.log('ℹ️ To create the table, run migration: supabase/migrations/002_user_profiles.sql');
+          } 
+          // Handle "Cannot coerce the result to a single JSON object" error
+          else if (profileError.message?.includes('Cannot coerce') || profileError.message?.includes('single JSON object')) {
+            console.warn('⚠️ Cannot coerce to single object - trying alternative method:', profileError.message);
+            // Try alternative approach: use limit(1) instead
+            try {
+              const { data: altData, error: altError } = await supabase
+                .from('user_profiles')
+                .select('*')
+                .eq('user_id', user.id)
+                .limit(1);
+              
+              if (!altError && altData && altData.length > 0) {
+                profile = altData[0];
+                console.log('✅ User profile loaded using alternative method');
+              }
+            } catch (altErr: any) {
+              console.warn('⚠️ Alternative method also failed:', altErr.message);
+            }
           } else {
             console.warn('⚠️ Error loading user profile:', profileError.message);
+            console.warn('⚠️ Error code:', profileError.code);
+            console.warn('⚠️ Error status:', profileError.status);
           }
         } else {
           profile = data;
@@ -51,6 +91,7 @@ export default function Settings() {
       } catch (error: any) {
         // Table might not exist yet, use user metadata as fallback
         console.log('ℹ️ user_profiles table not found, using user metadata');
+        console.log('ℹ️ Error details:', error?.message || error);
       }
 
       if (profile) {
