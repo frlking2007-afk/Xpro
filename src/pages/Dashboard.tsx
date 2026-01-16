@@ -65,7 +65,6 @@ export default function Dashboard() {
         .from('transactions')
         .select('*');
       
-<<<<<<< HEAD
       console.log('📡 Supabase response:', { 
         dataCount: allTransactions?.length || 0, 
         error: allError ? {
@@ -168,7 +167,6 @@ export default function Dashboard() {
 
       setChartData(monthsData);
     } catch (error: any) {
-<<<<<<< HEAD
       console.error('❌ Supabase xatolik (fetchStats):', error);
       const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
       console.error('Xatolik xabari:', errorMessage);
@@ -179,11 +177,8 @@ export default function Dashboard() {
       } else {
         toast.error('Statistikani yuklashda xatolik: ' + errorMessage);
       }
-=======
-      toast.error('Xatolik: ' + error.message);
     } finally {
       setIsLoading(false);
->>>>>>> 6cb695ac5069e878b946c53ab3c9c6843477bf6f
     }
   };
 

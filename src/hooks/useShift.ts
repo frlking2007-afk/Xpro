@@ -34,7 +34,6 @@ export function useShift() {
         .maybeSingle(); // Tuzatildi: .single() o'rniga .maybeSingle() ishlatildi
 
       if (error) {
-<<<<<<< HEAD
         if (error.code === 'PGRST116') {
           // PGRST116 means no rows found - this is normal if no shift is open
           console.log('ℹ️ No open shift found');
@@ -44,9 +43,6 @@ export function useShift() {
           console.error('Xatolik xabari:', error.message);
           console.error('Xatolik tafsilotlari:', error);
         }
-=======
-        console.error('❌ Supabase error fetching shift:', error);
->>>>>>> 6cb695ac5069e878b946c53ab3c9c6843477bf6f
         setCurrentShift(null);
         return;
       }
@@ -90,9 +86,8 @@ export function useShift() {
         .from('shifts')
         .insert([insertData])
         .select()
-        .maybeSingle(); // Tuzatildi: Bu yerda ham xatolik oldi olindi
+        .maybeSingle();
       
-<<<<<<< HEAD
       console.log('📡 Supabase response received');
       console.log('📡 Response data:', data);
       console.log('📡 Response error:', error);
@@ -147,7 +142,6 @@ export function useShift() {
       toast.success('Yangi smena ochildi!');
       return data;
     } catch (error: any) {
-<<<<<<< HEAD
       console.error('❌ Supabase xatolik (openShift):', error);
       const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
       console.error('Xatolik xabari:', errorMessage);
@@ -158,10 +152,6 @@ export function useShift() {
       } else {
         toast.error(errorMessage);
       }
-=======
-      console.error('❌ Exception in openShift:', error);
-      toast.error(error.message || 'Smena ochishda xatolik');
->>>>>>> 6cb695ac5069e878b946c53ab3c9c6843477bf6f
       return null;
     }
   };
