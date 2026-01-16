@@ -1456,49 +1456,22 @@ export default function XproOperations() {
     if (oldName === newName) return;
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       // Check if new name already exists
       if (expenseCategories.includes(newName)) {
         toast.error(`"${newName}" bo'limi allaqachon mavjud`);
         return;
       }
 
-      if (user) {
-        // Update in Supabase
-        try {
-          const { error } = await supabase
-            .from('expense_categories')
-            .update({ category_name: newName })
-            .eq('category_name', oldName);
+      // Try to update in Supabase first
+      try {
+        console.log(`🔄 Updating category from "${oldName}" to "${newName}"`);
+        const { error } = await supabase
+          .from('expense_categories')
+          .update({ category_name: newName })
+          .eq('category_name', oldName);
 
-          if (error) {
-            // If table doesn't exist, fallback to localStorage
-            if (error.code === '42P01' || error.code === 'PGRST205' || error.message.includes('does not exist') || error.message.includes('Could not find the table')) {
-              const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
-              const index = categories.indexOf(oldName);
-              if (index !== -1) {
-                categories[index] = newName;
-                localStorage.setItem('expenseCategories', JSON.stringify(categories));
-                setExpenseCategories(categories);
-                window.dispatchEvent(new Event('categoryUpdated'));
-                updateTransactionsCategory(oldName, newName);
-                toast.success(`"${oldName}" bo'limi "${newName}" ga o'zgartirildi`);
-              }
-            } else {
-              const errorMessage = error.message || 'Noma\'lum xatolik';
-        throw new Error(errorMessage);
-            }
-          } else {
-            // Successfully updated in Supabase
-            const updatedCategories = expenseCategories.map(cat => cat === oldName ? newName : cat);
-            setExpenseCategories(updatedCategories);
-            window.dispatchEvent(new Event('categoryUpdated'));
-            updateTransactionsCategory(oldName, newName);
-            toast.success(`"${oldName}" bo'limi "${newName}" ga o'zgartirildi`);
-          }
-        } catch (error: any) {
-          console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+        if (error) {
+          console.error('SUPABASE_XATO:', error.message);
           console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
           // Fallback to localStorage
           const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
@@ -1510,10 +1483,22 @@ export default function XproOperations() {
             window.dispatchEvent(new Event('categoryUpdated'));
             updateTransactionsCategory(oldName, newName);
             toast.success(`"${oldName}" bo'limi "${newName}" ga o'zgartirildi`);
+          } else {
+            toast.error('Bo\'lim topilmadi');
           }
+        } else {
+          // Successfully updated in Supabase
+          console.log(`✅ Category updated successfully in Supabase`);
+          const updatedCategories = expenseCategories.map(cat => cat === oldName ? newName : cat);
+          setExpenseCategories(updatedCategories);
+          window.dispatchEvent(new Event('categoryUpdated'));
+          updateTransactionsCategory(oldName, newName);
+          toast.success(`"${oldName}" bo'limi "${newName}" ga o'zgartirildi`);
         }
-      } else {
-        // Fallback to localStorage if user not logged in
+      } catch (error: any) {
+        console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+        console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
+        // Fallback to localStorage
         const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
         const index = categories.indexOf(oldName);
         if (index !== -1) {
@@ -1523,46 +1508,28 @@ export default function XproOperations() {
           window.dispatchEvent(new Event('categoryUpdated'));
           updateTransactionsCategory(oldName, newName);
           toast.success(`"${oldName}" bo'limi "${newName}" ga o'zgartirildi`);
+        } else {
+          toast.error('Bo\'lim topilmadi');
         }
       }
     } catch (error: any) {
       console.error('Error in handleEditCategory:', error);
-      toast.error('Bo\'limni o\'zgartirishda xatolik: ' + error.message);
+      toast.error('Bo\'limni o\'zgartirishda xatolik: ' + (error?.message || 'Noma\'lum xatolik'));
     }
   };
 
   const handleDeleteCategory = async (categoryName: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // Delete from Supabase if user is logged in
-      if (user) {
-        try {
-          const { error } = await supabase
-            .from('expense_categories')
-            .delete()
-            .eq('category_name', categoryName);
+      // Try to delete from Supabase first
+      try {
+        console.log(`🗑️ Deleting category "${categoryName}"`);
+        const { error } = await supabase
+          .from('expense_categories')
+          .delete()
+          .eq('category_name', categoryName);
 
-          if (error) {
-            // If table doesn't exist, fallback to localStorage
-            if (error.code === '42P01' || error.code === 'PGRST205' || error.message.includes('does not exist') || error.message.includes('Could not find the table')) {
-              const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
-              const filtered = categories.filter((cat: string) => cat !== categoryName);
-              localStorage.setItem('expenseCategories', JSON.stringify(filtered));
-              setExpenseCategories(filtered);
-              window.dispatchEvent(new Event('categoryUpdated'));
-            } else {
-              const errorMessage = error.message || 'Noma\'lum xatolik';
-        throw new Error(errorMessage);
-            }
-          } else {
-            // Successfully deleted from Supabase
-            const filtered = expenseCategories.filter((cat: string) => cat !== categoryName);
-            setExpenseCategories(filtered);
-            window.dispatchEvent(new Event('categoryUpdated'));
-          }
-        } catch (error: any) {
-          console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+        if (error) {
+          console.error('SUPABASE_XATO:', error.message);
           console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
           // Fallback to localStorage
           const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
@@ -1570,9 +1537,17 @@ export default function XproOperations() {
           localStorage.setItem('expenseCategories', JSON.stringify(filtered));
           setExpenseCategories(filtered);
           window.dispatchEvent(new Event('categoryUpdated'));
+        } else {
+          // Successfully deleted from Supabase
+          console.log(`✅ Category deleted successfully from Supabase`);
+          const filtered = expenseCategories.filter((cat: string) => cat !== categoryName);
+          setExpenseCategories(filtered);
+          window.dispatchEvent(new Event('categoryUpdated'));
         }
-      } else {
-        // Fallback to localStorage if user not logged in
+      } catch (error: any) {
+        console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+        console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
+        // Fallback to localStorage
         const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
         const filtered = categories.filter((cat: string) => cat !== categoryName);
         localStorage.setItem('expenseCategories', JSON.stringify(filtered));
