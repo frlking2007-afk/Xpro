@@ -38,10 +38,10 @@ export function useShift() {
           // PGRST116 means no rows found - this is normal if no shift is open
           console.log('ℹ️ No open shift found');
         } else {
-          console.error('❌ Supabase error fetching shift:', error);
-          console.error('Error code:', error.code);
-          console.error('Error message:', error.message);
-          console.error('Error details:', error);
+          console.error('❌ Supabase xatolik (fetchCurrentShift):', error);
+          console.error('Xatolik kodi:', error.code);
+          console.error('Xatolik xabari:', error.message);
+          console.error('Xatolik tafsilotlari:', error);
         }
         setCurrentShift(null);
         return;
@@ -50,7 +50,9 @@ export function useShift() {
       console.log('✅ Current shift fetched successfully:', data);
       setCurrentShift(data);
     } catch (error: any) {
-      console.error('❌ Exception in fetchCurrentShift:', error);
+      console.error('❌ Supabase xatolik (fetchCurrentShift):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
       setCurrentShift(null);
     } finally {
       setLoading(false);
@@ -108,33 +110,27 @@ export function useShift() {
       console.log('📡 Response error:', error);
       
       if (error) {
-        console.error('❌ Full error details:');
-        console.error('  - Code:', error.code);
-        console.error('  - Message:', error.message);
-        console.error('  - Details:', error.details);
-        console.error('  - Hint:', (error as any).hint);
-        console.error('  - Full error object:', JSON.stringify(error, null, 2));
+        console.error('❌ Supabase xatolik (openShift):', error);
+        console.error('Xatolik kodi:', error.code);
+        console.error('Xatolik xabari:', error.message);
+        console.error('Xatolik tafsilotlari:', error.details);
+        console.error('Xatolik hint:', (error as any).hint);
+        console.error('To\'liq xatolik obyekti:', JSON.stringify(error, null, 2));
         
         // Try to get more info from the error
         if ((error as any).response) {
-          console.error('  - Response:', (error as any).response);
+          console.error('Response:', (error as any).response);
         }
         if ((error as any).status) {
-          console.error('  - Status:', (error as any).status);
+          console.error('Status:', (error as any).status);
         }
-      }
-
-      if (error) {
-        console.error('❌ Supabase error inserting shift:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        console.error('Error details:', error);
-        console.error('Error hint:', (error as any).hint);
-        console.error('Full error object:', JSON.stringify(error, null, 2));
         
         // Provide user-friendly error message
         let userMessage = 'Smena ochishda xatolik yuz berdi.';
-        if (error.code === '42501') {
+        if (error.code === '403' || error.status === 403) {
+          userMessage = 'Sizda bu amalni bajarishga ruxsat yo\'q. Iltimos, qayta kiring.';
+          console.error('403 Forbidden - Ruxsat yo\'q');
+        } else if (error.code === '42501') {
           userMessage = 'Ruxsat yo\'q. Iltimos, qayta kiring.';
         } else if (error.code === '23505') {
           userMessage = 'Bu smena allaqachon mavjud.';
@@ -175,12 +171,16 @@ export function useShift() {
       toast.success('Yangi smena ochildi!');
       return data;
     } catch (error: any) {
-      console.error('❌ Exception in openShift:', error);
-      const errorMessage = error.message || 'Noma\'lum xatolik';
-      console.error('Full error object:', error);
+      console.error('❌ Supabase xatolik (openShift):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
       
-      // Show user-friendly error
-      toast.error(errorMessage);
+      // Handle 403 errors
+      if (error?.code === '403' || error?.status === 403 || errorMessage.includes('403') || errorMessage.includes('ruxsat')) {
+        toast.error('Sizda bu amalni bajarishga ruxsat yo\'q. Iltimos, qayta kiring.');
+      } else {
+        toast.error(errorMessage);
+      }
       return null;
     }
   };
@@ -198,13 +198,20 @@ export function useShift() {
         })
         .eq('id', currentShift.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase xatolik (closeShift):', error);
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
+      }
       
       setCurrentShift(null);
       toast.success('Smena muvaffaqiyatli yopildi!');
       return true;
     } catch (error: any) {
-      toast.error('Smena yopishda xatolik: ' + error.message);
+      console.error('❌ Supabase xatolik (closeShift):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      toast.error('Smena yopishda xatolik: ' + errorMessage);
       return false;
     }
   };

@@ -845,8 +845,9 @@ export default function XproOperations() {
             setExpenseCategories(categories);
             return;
           }
-          console.error('❌ Error loading categories:', error);
-          throw error;
+          console.error('❌ Supabase xatolik (loadExpenseCategories):', error);
+          const errorMessage = error.message || 'Noma\'lum xatolik';
+          throw new Error(errorMessage);
         }
 
         // Extract category names from data
@@ -889,13 +890,17 @@ export default function XproOperations() {
         .insert(categoryData);
 
       if (error) {
-        console.error('Error migrating categories:', error);
+        console.error('❌ Supabase xatolik (migrateCategoriesToSupabase):', error);
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        console.error('Xatolik xabari:', errorMessage);
       } else {
         // Clear localStorage after successful migration
         localStorage.removeItem('expenseCategories');
       }
-    } catch (error) {
-      console.error('Error in migrateCategoriesToSupabase:', error);
+    } catch (error: any) {
+      console.error('❌ Supabase xatolik (migrateCategoriesToSupabase):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
     }
   };
 
@@ -930,11 +935,12 @@ export default function XproOperations() {
         .single();
 
       if (error) {
-        console.error('❌ Supabase error fetching view shift:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        console.error('Error details:', error);
-        throw error;
+        console.error('❌ Supabase xatolik (fetchViewShift):', error);
+        console.error('Xatolik kodi:', error.code);
+        console.error('Xatolik xabari:', error.message);
+        console.error('Xatolik tafsilotlari:', error);
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
       }
 
       if (data) {
@@ -951,8 +957,10 @@ export default function XproOperations() {
         console.log('ℹ️ No shift data found');
       }
     } catch (error: any) {
-      console.error('❌ Exception in fetchViewShift:', error);
-      toast.error('Smena topilmadi: ' + (error.message || 'Noma\'lum xatolik'));
+      console.error('❌ Supabase xatolik (fetchViewShift):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      toast.error('Smena topilmadi: ' + errorMessage);
       navigate('/reports');
     } finally {
       setLoadingViewShift(false);
@@ -972,13 +980,12 @@ export default function XproOperations() {
         .limit(1000); // Optimize: limit results
 
       if (error) {
-        console.error('❌ Supabase error fetching transactions for shift:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        console.error('Error details:', error);
-        toast.error(`Operatsiyalarni yuklashda xatolik: ${error.message}`);
-        setTransactions([]);
-        return;
+        console.error('❌ Supabase xatolik (fetchTransactionsForShift):', error);
+        console.error('Xatolik kodi:', error.code);
+        console.error('Xatolik xabari:', error.message);
+        console.error('Xatolik tafsilotlari:', error);
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
       }
 
       console.log('✅ Transactions fetched successfully (view mode):', data?.length || 0, 'items');
@@ -988,8 +995,10 @@ export default function XproOperations() {
         console.log('ℹ️ No transactions found for this shift');
       }
     } catch (error: any) {
-      console.error('❌ Exception in fetchTransactionsForShift:', error);
-      toast.error('Operatsiyalarni yuklashda xatolik: ' + (error.message || 'Noma\'lum xatolik'));
+      console.error('❌ Supabase xatolik (fetchTransactionsForShift):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      toast.error('Operatsiyalarni yuklashda xatolik: ' + errorMessage);
       setTransactions([]);
     } finally {
       setLoading(false);
@@ -1049,13 +1058,12 @@ export default function XproOperations() {
         .order('date', { ascending: false });
 
       if (error) {
-        console.error('❌ Supabase error fetching transactions:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        console.error('Error details:', error);
-        toast.error(`Ma'lumotlarni yuklashda xatolik: ${error.message}`);
-        setTransactions([]);
-        return;
+        console.error('❌ Supabase xatolik (fetchTransactions):', error);
+        console.error('Xatolik kodi:', error.code);
+        console.error('Xatolik xabari:', error.message);
+        console.error('Xatolik tafsilotlari:', error);
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
       }
 
       console.log('✅ Transactions fetched successfully:', data?.length || 0, 'items');
@@ -1065,8 +1073,10 @@ export default function XproOperations() {
         console.log('ℹ️ No transactions found for this shift');
       }
     } catch (error: any) {
-      console.error('❌ Exception in fetchTransactions:', error);
-      toast.error('Ma\'lumotlarni yuklashda xatolik: ' + (error.message || 'Noma\'lum xatolik'));
+      console.error('❌ Supabase xatolik (fetchTransactions):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      toast.error('Ma\'lumotlarni yuklashda xatolik: ' + errorMessage);
       setTransactions([]);
     }
   };
@@ -1096,11 +1106,12 @@ export default function XproOperations() {
         .single();
 
       if (error) {
-        console.error('❌ Supabase error adding transaction:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        console.error('Error details:', error);
-        throw error;
+        console.error('❌ Supabase xatolik (handleAddTransaction):', error);
+        console.error('Xatolik kodi:', error.code);
+        console.error('Xatolik xabari:', error.message);
+        console.error('Xatolik tafsilotlari:', error);
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
       }
 
       console.log('✅ Transaction added successfully:', data);
@@ -1108,8 +1119,10 @@ export default function XproOperations() {
       window.dispatchEvent(new Event('transactionAdded'));
       toast.success("Muvaffaqiyatli saqlandi!");
     } catch (error: any) {
-      console.error('❌ Exception in handleAddTransaction:', error);
-      toast.error('Xatolik: ' + (error.message || 'Noma\'lum xatolik'));
+      console.error('❌ Supabase xatolik (handleAddTransaction):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      toast.error('Xatolik: ' + errorMessage);
     } finally {
       setLoading(false);
     }
@@ -1125,11 +1138,12 @@ export default function XproOperations() {
         .eq('id', id);
 
       if (error) {
-        console.error('❌ Supabase error editing transaction:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        console.error('Error details:', error);
-        throw error;
+        console.error('❌ Supabase xatolik (handleEditTransaction):', error);
+        console.error('Xatolik kodi:', error.code);
+        console.error('Xatolik xabari:', error.message);
+        console.error('Xatolik tafsilotlari:', error);
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
       }
 
       console.log('✅ Transaction edited successfully');
@@ -1137,8 +1151,10 @@ export default function XproOperations() {
       window.dispatchEvent(new Event('transactionUpdated'));
       toast.success("Tahrirlandi!");
     } catch (error: any) {
-      console.error('❌ Exception in handleEditTransaction:', error);
-      toast.error('Tahrirlashda xatolik: ' + (error.message || 'Noma\'lum xatolik'));
+      console.error('❌ Supabase xatolik (handleEditTransaction):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      toast.error('Tahrirlashda xatolik: ' + errorMessage);
     }
   };
 
@@ -1164,11 +1180,12 @@ export default function XproOperations() {
         .eq('id', id);
 
       if (error) {
-        console.error('❌ Supabase error deleting transaction:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        console.error('Error details:', error);
-        throw error;
+        console.error('❌ Supabase xatolik (performDelete):', error);
+        console.error('Xatolik kodi:', error.code);
+        console.error('Xatolik xabari:', error.message);
+        console.error('Xatolik tafsilotlari:', error);
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
       }
 
       console.log('✅ Transaction deleted successfully');
@@ -1176,8 +1193,10 @@ export default function XproOperations() {
       window.dispatchEvent(new Event('transactionDeleted'));
       toast.success("O'chirildi!");
     } catch (error: any) {
-      console.error('❌ Exception in performDelete:', error);
-      toast.error('O\'chirishda xatolik: ' + (error.message || 'Noma\'lum xatolik'));
+      console.error('❌ Supabase xatolik (performDelete):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      toast.error('O\'chirishda xatolik: ' + errorMessage);
     }
   };
 
@@ -1225,12 +1244,19 @@ export default function XproOperations() {
         .delete()
         .in('id', ids);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase xatolik (performClearAll):', error);
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
+      }
 
       setTransactions(transactions.filter(t => t.type !== 'xarajat'));
       toast.success(`Barcha xarajatlar o'chirildi (${xarajatTransactions.length} ta)`);
     } catch (error: any) {
-      toast.error('Tozalashda xatolik: ' + error.message);
+      console.error('❌ Supabase xatolik (performClearAll):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      toast.error('Tozalashda xatolik: ' + errorMessage);
     }
   };
 
@@ -1292,7 +1318,8 @@ export default function XproOperations() {
               toast.success(`"${categoryName}" bo'limi qo'shildi`);
             }
           } else {
-            throw error;
+            const errorMessage = error.message || 'Noma\'lum xatolik';
+            throw new Error(errorMessage);
           }
         } else {
           // Successfully saved to Supabase
@@ -1354,7 +1381,8 @@ export default function XproOperations() {
                 toast.success(`"${oldName}" bo'limi "${newName}" ga o'zgartirildi`);
               }
             } else {
-              throw error;
+              const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
             }
           } else {
             // Successfully updated in Supabase
@@ -1419,7 +1447,8 @@ export default function XproOperations() {
               setExpenseCategories(filtered);
               window.dispatchEvent(new Event('categoryUpdated'));
             } else {
-              throw error;
+              const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
             }
           } else {
             // Successfully deleted from Supabase
@@ -1459,7 +1488,11 @@ export default function XproOperations() {
             .delete()
             .in('id', ids);
           
-          if (error) throw error;
+          if (error) {
+        console.error('❌ Supabase xatolik (performClearAll):', error);
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
+      }
           
           setTransactions(transactions.filter(t => !ids.includes(t.id)));
         }
@@ -1511,7 +1544,11 @@ export default function XproOperations() {
           .update({ description: newDescription })
           .eq('id', transaction.id);
         
-        if (error) console.error('Error updating transaction:', error);
+        if (error) {
+          console.error('❌ Supabase xatolik (updateTransactionsCategory):', error);
+          const errorMessage = error.message || 'Noma\'lum xatolik';
+          console.error('Xatolik xabari:', errorMessage);
+        }
       }
       
       // Refresh transactions
@@ -1540,7 +1577,8 @@ export default function XproOperations() {
           toast.info('Smena nomi funksiyasi hali qo\'llanmagan. Iltimos, database migration\'ni bajarishingiz kerak.');
           return;
         }
-        throw error;
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
       }
 
       // Refresh shift data
@@ -1596,7 +1634,8 @@ export default function XproOperations() {
           const transactionWithCategory = { ...retryData, category: categoryName };
           setTransactions([transactionWithCategory, ...transactions]);
         } else {
-          throw error;
+          const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
         }
       } else {
         // Ensure category is set even if column doesn't exist
@@ -1609,9 +1648,11 @@ export default function XproOperations() {
 
       toast.success("Muvaffaqiyatli saqlandi!");
     } catch (error: any) {
-      console.error('Error adding expense:', error);
-      toast.error('Xatolik: ' + error.message);
-      throw error; // Re-throw to let component handle loading state
+      console.error('❌ Supabase xatolik (handleAddExpense):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      toast.error('Xatolik: ' + errorMessage);
+      throw new Error(errorMessage); // Re-throw to let component handle loading state
     }
   };
 

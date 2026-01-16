@@ -130,7 +130,8 @@ export default function Settings() {
 
           if (uploadError) {
             // If storage bucket doesn't exist, use data URL as fallback
-            console.warn('Storage upload failed, using data URL:', uploadError);
+            console.warn('❌ Supabase xatolik (storage upload):', uploadError);
+            console.warn('Xatolik xabari:', uploadError.message);
             avatarUrl = avatar;
           } else {
             const { data: { publicUrl } } = supabase.storage
@@ -138,9 +139,11 @@ export default function Settings() {
               .getPublicUrl(filePath);
             avatarUrl = publicUrl;
           }
-        } catch (storageError) {
+        } catch (storageError: any) {
           // Use data URL as fallback if storage is not available
-          console.warn('Storage not available, using data URL');
+          console.error('❌ Supabase xatolik (storage):', storageError);
+          const errorMessage = storageError?.message || storageError?.toString() || 'Storage xatolik';
+          console.error('Xatolik xabari:', errorMessage);
           avatarUrl = avatar;
         }
       }
@@ -205,8 +208,10 @@ export default function Settings() {
 
       toast.success('Sozlamalar saqlandi!');
     } catch (error: any) {
-      console.error('Error saving settings:', error);
-      toast.error('Xatolik: ' + error.message);
+      console.error('❌ Supabase xatolik (handleSave):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      toast.error('Xatolik: ' + errorMessage);
     } finally {
       setLoading(false);
     }

@@ -104,16 +104,19 @@ export default function Dashboard() {
       });
       
       if (allError) {
-        console.error('❌ Supabase error fetching transactions:', allError);
-        console.error('Error code:', allError.code);
-        console.error('Error message:', allError.message);
-        console.error('Error details:', allError.details);
-        console.error('Error hint:', (allError as any).hint);
-        console.error('Full error object:', JSON.stringify(allError, null, 2));
+        console.error('❌ Supabase xatolik:', allError);
+        console.error('Xatolik kodi:', allError.code);
+        console.error('Xatolik xabari:', allError.message);
+        console.error('Xatolik tafsilotlari:', allError.details);
+        console.error('Xatolik hint:', (allError as any).hint);
+        console.error('To\'liq xatolik obyekti:', JSON.stringify(allError, null, 2));
         
         // Provide user-friendly error message
         let userMessage = 'Statistikani yuklashda xatolik yuz berdi.';
-        if (allError.code === '42501') {
+        if (allError.code === '403' || allError.status === 403) {
+          userMessage = 'Sizda bu amalni bajarishga ruxsat yo\'q. Iltimos, qayta kiring.';
+          console.error('403 Forbidden - Ruxsat yo\'q');
+        } else if (allError.code === '42501') {
           userMessage = 'Ruxsat yo\'q. Iltimos, qayta kiring.';
         } else if (allError.code === 'PGRST301') {
           userMessage = 'Ma\'lumotlar bazasi jadvali topilmadi.';
@@ -121,8 +124,8 @@ export default function Dashboard() {
           userMessage = allError.message;
         }
         
-        toast.error(userMessage);
-        return;
+        // Throw proper Error instead of returning
+        throw new Error(userMessage);
       }
       
       console.log('✅ All transactions fetched:', allTransactions?.length || 0, 'items');
@@ -301,8 +304,16 @@ export default function Dashboard() {
       });
 
     } catch (error: any) {
-      console.error('❌ Exception in fetchStats:', error);
-      toast.error('Statistikani yuklashda xatolik: ' + (error.message || 'Noma\'lum xatolik'));
+      console.error('❌ Supabase xatolik (fetchStats):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      
+      // Handle 403 errors
+      if (error?.code === '403' || error?.status === 403 || errorMessage.includes('403') || errorMessage.includes('ruxsat')) {
+        toast.error('Sizda bu amalni bajarishga ruxsat yo\'q. Iltimos, qayta kiring.');
+      } else {
+        toast.error('Statistikani yuklashda xatolik: ' + errorMessage);
+      }
     }
   };
 

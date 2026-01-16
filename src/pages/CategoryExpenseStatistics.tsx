@@ -144,11 +144,17 @@ export default function CategoryExpenseStatistics() {
         console.log('✅ Filtered transactions:', data.length);
       }
 
-      if (error && !data) throw error;
+      if (error && !data) {
+        console.error('❌ Supabase xatolik (fetchTransactions):', error);
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
+      }
       console.log('✅ Final transactions count:', data?.length || 0);
       setTransactions(data || []);
     } catch (error: any) {
-      console.error('Error fetching transactions:', error);
+      console.error('❌ Supabase xatolik (fetchTransactions):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
       // If error, try alternative method
       try {
         let fallbackQuery = supabase
@@ -163,7 +169,11 @@ export default function CategoryExpenseStatistics() {
         const { data: allData, error: allError } = await fallbackQuery
           .order('date', { ascending: false });
 
-        if (allError) throw allError;
+        if (allError) {
+          console.error('❌ Supabase xatolik (fetchTransactions fallback):', allError);
+          const fallbackErrorMessage = allError.message || 'Noma\'lum xatolik';
+          throw new Error(fallbackErrorMessage);
+        }
 
         // Filter by description
         const filtered = (allData || []).filter(t => {
@@ -175,7 +185,9 @@ export default function CategoryExpenseStatistics() {
 
         setTransactions(filtered);
       } catch (fallbackError: any) {
-        console.error('Fallback error:', fallbackError);
+        console.error('❌ Supabase xatolik (fetchTransactions fallback):', fallbackError);
+        const fallbackErrorMessage = fallbackError?.message || fallbackError?.toString() || 'Noma\'lum xatolik';
+        console.error('Xatolik xabari:', fallbackErrorMessage);
         setTransactions([]);
       }
     } finally {
@@ -219,7 +231,11 @@ export default function CategoryExpenseStatistics() {
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase xatolik (performDelete):', error);
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
+      }
 
       setTransactions(transactions.filter(t => t.id !== id));
       
@@ -228,8 +244,10 @@ export default function CategoryExpenseStatistics() {
       
       toast.success("O'chirildi!");
     } catch (error: any) {
-      console.error('Error deleting transaction:', error);
-      toast.error('O\'chirishda xatolik: ' + error.message);
+      console.error('❌ Supabase xatolik (performDelete):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      toast.error('O\'chirishda xatolik: ' + errorMessage);
     }
   };
 
@@ -284,7 +302,11 @@ export default function CategoryExpenseStatistics() {
         })
         .eq('id', editingId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase xatolik (handleSaveEdit):', error);
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
+      }
 
       // Update local state
       setTransactions(transactions.map(t => 
@@ -299,8 +321,10 @@ export default function CategoryExpenseStatistics() {
       toast.success('O\'zgartirildi!');
       handleCancelEdit();
     } catch (error: any) {
-      console.error('Error updating transaction:', error);
-      toast.error('O\'zgartirishda xatolik: ' + error.message);
+      console.error('❌ Supabase xatolik (handleSaveEdit):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      toast.error('O\'zgartirishda xatolik: ' + errorMessage);
     }
   };
 

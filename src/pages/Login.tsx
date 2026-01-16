@@ -17,23 +17,111 @@ export default function Login() {
     setLoading(true);
 
     try {
+      // Check if session exists and is valid
+      const { data: { session: existingSession }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('❌ Supabase xatolik (getSession):', sessionError);
+        const errorMessage = sessionError.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
+      }
+
+      // If session exists but expired, sign out first
+      if (existingSession) {
+        const expiresAt = existingSession.expires_at;
+        if (expiresAt && expiresAt * 1000 < Date.now()) {
+          console.log('ℹ️ Session muddati tugagan, yangilash...');
+          await supabase.auth.signOut();
+        }
+      }
+
+      // Attempt login
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase xatolik (signInWithPassword):', error);
+        console.error('Xatolik kodi:', error.code);
+        console.error('Xatolik xabari:', error.message);
+        console.error('Xatolik tafsilotlari:', error);
+        
+        // Handle 403 Forbidden error specifically
+        if (error.code === '403' || error.status === 403) {
+          const errorMessage = 'Sizda bu amalni bajarishga ruxsat yo\'q. Iltimos, administrator bilan bog\'laning.';
+          console.error('403 Forbidden - Ruxsat yo\'q');
+          toast.error(errorMessage);
+          return;
+        }
 
-      if (data.user?.email !== 'frlking2007@gmail.com') {
-         await supabase.auth.signOut();
-         toast.error('Kirish ruxsati yo\'q.');
-         return;
+        // Handle token expiration
+        if (error.message?.includes('token') || error.message?.includes('expired') || error.message?.includes('refresh')) {
+          const errorMessage = 'Sessiya muddati tugagan. Iltimos, qayta kiring.';
+          console.error('Token muddati tugagan');
+          toast.error(errorMessage);
+          await supabase.auth.signOut();
+          return;
+        }
+
+        // Handle other errors
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
       }
 
+      // Verify user has access
+      if (!data.user) {
+        const errorMessage = 'Foydalanuvchi ma\'lumotlari topilmadi.';
+        console.error('Foydalanuvchi ma\'lumotlari yo\'q');
+        throw new Error(errorMessage);
+      }
+
+      // Check email authorization (RLS policy check)
+      if (data.user?.email !== 'frlking2007@gmail.com') {
+        console.warn('⚠️ Ruxsatsiz kirish urinishi:', data.user.email);
+        await supabase.auth.signOut();
+        toast.error('Kirish ruxsati yo\'q. Faqat ruxsatli foydalanuvchilar kirishi mumkin.');
+        return;
+      }
+
+      // Verify session is valid after login
+      const { data: { session: newSession }, error: verifyError } = await supabase.auth.getSession();
+      
+      if (verifyError) {
+        console.error('❌ Supabase xatolik (session verify):', verifyError);
+        const errorMessage = verifyError.message || 'Sessiya tekshirishda xatolik';
+        throw new Error(errorMessage);
+      }
+
+      if (!newSession) {
+        const errorMessage = 'Sessiya yaratilmadi. Iltimos, qayta urinib ko\'ring.';
+        console.error('Sessiya yaratilmadi');
+        throw new Error(errorMessage);
+      }
+
+      // Check if token is expired
+      const expiresAt = newSession.expires_at;
+      if (expiresAt && expiresAt * 1000 < Date.now()) {
+        const errorMessage = 'Sessiya muddati tugagan. Iltimos, qayta kiring.';
+        console.error('Sessiya muddati tugagan');
+        await supabase.auth.signOut();
+        throw new Error(errorMessage);
+      }
+
+      console.log('✅ Login muvaffaqiyatli:', data.user.email);
       toast.success('Xush kelibsiz!');
       navigate('/');
     } catch (error: any) {
-      toast.error('Xatolik: ' + error.message);
+      console.error('❌ Supabase xatolik (handleLogin):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      
+      // Handle 403 errors in catch block as well
+      if (error?.code === '403' || error?.status === 403 || errorMessage.includes('403') || errorMessage.includes('ruxsat')) {
+        toast.error('Sizda bu amalni bajarishga ruxsat yo\'q. Iltimos, administrator bilan bog\'laning.');
+      } else {
+        toast.error('Xatolik: ' + errorMessage);
+      }
     } finally {
       setLoading(false);
     }

@@ -96,13 +96,12 @@ export default function Reports() {
         .limit(10000); // Large limit to get all transactions
       
       if (allError) {
-        console.error('❌ Supabase error fetching transactions:', allError);
-        console.error('Error code:', allError.code);
-        console.error('Error message:', allError.message);
-        console.error('Error details:', allError.details);
-        toast.error(`Ma'lumotlarni yuklashda xatolik: ${allError.message}`);
-        setTransactions([]);
-        return;
+        console.error('❌ Supabase xatolik (fetchTransactions):', allError);
+        console.error('Xatolik kodi:', allError.code);
+        console.error('Xatolik xabari:', allError.message);
+        console.error('Xatolik tafsilotlari:', allError.details);
+        const errorMessage = allError.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
       }
       
       console.log('✅ All transactions fetched:', allTransactions?.length || 0, 'items');
@@ -122,8 +121,10 @@ export default function Reports() {
       console.log('✅ Filtered transactions:', filtered.length, 'items');
       setTransactions(filtered);
     } catch (error: any) {
-      console.error('❌ Exception in fetchTransactions:', error);
-      toast.error('Ma\'lumotlarni yuklashda xatolik: ' + (error.message || 'Noma\'lum xatolik'));
+      console.error('❌ Supabase xatolik (fetchTransactions):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      toast.error('Ma\'lumotlarni yuklashda xatolik: ' + errorMessage);
       setTransactions([]);
     } finally {
       setLoadingTransactions(false);
@@ -152,20 +153,21 @@ export default function Reports() {
         .order('opened_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Supabase error fetching shifts:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        console.error('Error details:', error.details);
-        toast.error(`Smenalarni yuklashda xatolik: ${error.message}`);
-        setShifts([]);
-        return;
+        console.error('❌ Supabase xatolik (fetchShifts):', error);
+        console.error('Xatolik kodi:', error.code);
+        console.error('Xatolik xabari:', error.message);
+        console.error('Xatolik tafsilotlari:', error.details);
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
       }
       
       console.log('✅ Shifts fetched:', data?.length || 0, 'items');
       setShifts(data || []);
     } catch (error: any) {
-      console.error('❌ Exception in fetchShifts:', error);
-      toast.error('Smenalarni yuklashda xatolik: ' + (error.message || 'Noma\'lum xatolik'));
+      console.error('❌ Supabase xatolik (fetchShifts):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      toast.error('Smenalarni yuklashda xatolik: ' + errorMessage);
       setShifts([]);
     } finally {
       setLoadingShifts(false);
@@ -207,12 +209,19 @@ export default function Reports() {
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase xatolik (performDeleteShift):', error);
+        const errorMessage = error.message || 'Noma\'lum xatolik';
+        throw new Error(errorMessage);
+      }
 
       setShifts(shifts.filter(s => s.id !== id));
       toast.success("Smena va unga bog'liq operatsiyalar o'chirildi");
     } catch (error: any) {
-      toast.error("O'chirishda xatolik: " + error.message);
+      console.error('❌ Supabase xatolik (performDeleteShift):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      toast.error("O'chirishda xatolik: " + errorMessage);
     }
   };
 
