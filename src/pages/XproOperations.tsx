@@ -911,7 +911,7 @@ export default function XproOperations() {
           .from('expense_categories')
           .select('*');
         
-        console.log('KELGAN MA'LUMOT:', data);
+        console.log("KELGAN MA'LUMOT:", data);
 
         if (error) {
           console.error('SUPABASE_XATO:', error.message);
@@ -1046,7 +1046,7 @@ export default function XproOperations() {
         .from('transactions')
         .select('*');
 
-      console.log('KELGAN MA'LUMOT:', data);
+      console.log("KELGAN MA'LUMOT:", data);
 
       if (error) {
         console.error('SUPABASE_XATO:', error.message);
@@ -1122,7 +1122,7 @@ export default function XproOperations() {
         .from('transactions')
         .select('*');
 
-      console.log('KELGAN MA'LUMOT:', data);
+      console.log("KELGAN MA'LUMOT:", data);
 
       if (error) {
         console.error('SUPABASE_XATO:', error.message);

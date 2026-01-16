@@ -93,7 +93,7 @@ export default function Reports() {
         .from('transactions')
         .select('*');
       
-      console.log('KELGAN MA'LUMOT:', allTransactions);
+      console.log("KELGAN MA'LUMOT:", allTransactions);
       
       if (allError) {
         console.error('❌ Supabase xatolik (fetchTransactions):', allError);

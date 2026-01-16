@@ -89,7 +89,7 @@ export default function CategoryExpenseStatistics() {
       // First try to fetch by category column
       let { data, error } = await query;
       
-      console.log('KELGAN MA'LUMOT:', data);
+      console.log("KELGAN MA'LUMOT:", data);
 
       console.log('✅ Direct category query result:', { data: data?.length || 0, error: error?.message });
 
@@ -104,7 +104,7 @@ export default function CategoryExpenseStatistics() {
         
         const { data: allData, error: allError } = await allQuery;
         
-        console.log('KELGAN MA'LUMOT:', allData);
+        console.log("KELGAN MA'LUMOT:", allData);
 
         if (allError) throw allError;
 
@@ -152,7 +152,7 @@ export default function CategoryExpenseStatistics() {
         
         const { data: allData, error: allError } = await fallbackQuery;
         
-        console.log('KELGAN MA'LUMOT:', allData);
+        console.log("KELGAN MA'LUMOT:", allData);
 
         if (allError) {
           console.error('❌ Supabase xatolik (fetchTransactions fallback):', allError);
