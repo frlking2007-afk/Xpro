@@ -837,8 +837,16 @@ export default function XproOperations() {
           .order('created_at', { ascending: true });
 
         if (error) {
+          // Handle 400 Bad Request error
+          if (error.code === '400' || error.status === 400 || error.message?.includes('400') || error.message?.includes('Bad Request')) {
+            console.warn('⚠️ 400 Bad Request - expense_categories query issue:', error.message);
+            console.warn('⚠️ Falling back to localStorage');
+            const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+            setExpenseCategories(categories);
+            return;
+          }
           // If table doesn't exist, fallback to localStorage
-          if (error.code === '42P01' || error.code === 'PGRST205' || error.message.includes('does not exist') || error.message.includes('Could not find the table')) {
+          if (error.code === '42P01' || error.code === 'PGRST205' || error.message?.includes('does not exist') || error.message?.includes('Could not find the table')) {
             console.log('ℹ️ expense_categories table not found in Supabase, using localStorage');
             console.log('ℹ️ To create the table, run migration: supabase/migrations/005_expense_categories.sql');
             const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
@@ -846,8 +854,13 @@ export default function XproOperations() {
             return;
           }
           console.error('❌ Supabase xatolik (loadExpenseCategories):', error);
-          const errorMessage = error.message || 'Noma\'lum xatolik';
-          throw new Error(errorMessage);
+          console.error('Xatolik kodi:', error.code);
+          console.error('Xatolik status:', error.status);
+          console.error('Xatolik xabari:', error.message);
+          // Fallback to localStorage instead of throwing
+          const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+          setExpenseCategories(categories);
+          return;
         }
 
         // Extract category names from data
@@ -864,13 +877,17 @@ export default function XproOperations() {
           }
         }
       } catch (error: any) {
-        console.error('Error loading categories from Supabase:', error);
+        console.error('❌ Supabase xatolik (loadExpenseCategories inner catch):', error);
+        const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+        console.error('Xatolik xabari:', errorMessage);
         // Fallback to localStorage
         const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
         setExpenseCategories(categories);
       }
     } catch (error: any) {
-      console.error('Error in loadExpenseCategories:', error);
+      console.error('❌ Supabase xatolik (loadExpenseCategories outer catch):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
       // Fallback to localStorage
       const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
       setExpenseCategories(categories);
@@ -1307,8 +1324,10 @@ export default function XproOperations() {
           });
 
         if (error) {
-          // If table doesn't exist, fallback to localStorage
-          if (error.code === '42P01' || error.code === 'PGRST205' || error.message.includes('does not exist') || error.message.includes('Could not find the table')) {
+          // Handle 400 Bad Request error
+          if (error.code === '400' || error.status === 400 || error.message?.includes('400') || error.message?.includes('Bad Request')) {
+            console.warn('⚠️ 400 Bad Request - expense_categories insert issue:', error.message);
+            // Fallback to localStorage
             const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
             if (!categories.includes(categoryName)) {
               categories.push(categoryName);
@@ -1317,10 +1336,51 @@ export default function XproOperations() {
               window.dispatchEvent(new Event('categoryUpdated'));
               toast.success(`"${categoryName}" bo'limi qo'shildi`);
             }
-          } else {
-            const errorMessage = error.message || 'Noma\'lum xatolik';
-            throw new Error(errorMessage);
+            setIsAddCategoryModalOpen(false);
+            return;
           }
+          // Handle 403 Forbidden error
+          if (error.code === '403' || error.status === 403 || error.message?.includes('403')) {
+            console.warn('⚠️ 403 Forbidden - expense_categories insert issue:', error.message);
+            // Fallback to localStorage
+            const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+            if (!categories.includes(categoryName)) {
+              categories.push(categoryName);
+              localStorage.setItem('expenseCategories', JSON.stringify(categories));
+              setExpenseCategories(categories);
+              window.dispatchEvent(new Event('categoryUpdated'));
+              toast.success(`"${categoryName}" bo'limi qo'shildi`);
+            }
+            setIsAddCategoryModalOpen(false);
+            return;
+          }
+          // If table doesn't exist, fallback to localStorage
+          if (error.code === '42P01' || error.code === 'PGRST205' || error.message?.includes('does not exist') || error.message?.includes('Could not find the table')) {
+            const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+            if (!categories.includes(categoryName)) {
+              categories.push(categoryName);
+              localStorage.setItem('expenseCategories', JSON.stringify(categories));
+              setExpenseCategories(categories);
+              window.dispatchEvent(new Event('categoryUpdated'));
+              toast.success(`"${categoryName}" bo'limi qo'shildi`);
+            }
+            setIsAddCategoryModalOpen(false);
+            return;
+          }
+          // For other errors, fallback to localStorage instead of throwing
+          console.error('❌ Supabase xatolik (handleAddCategory):', error);
+          console.error('Xatolik kodi:', error.code);
+          console.error('Xatolik status:', error.status);
+          const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+          if (!categories.includes(categoryName)) {
+            categories.push(categoryName);
+            localStorage.setItem('expenseCategories', JSON.stringify(categories));
+            setExpenseCategories(categories);
+            window.dispatchEvent(new Event('categoryUpdated'));
+            toast.success(`"${categoryName}" bo'limi qo'shildi`);
+          }
+          setIsAddCategoryModalOpen(false);
+          return;
         } else {
           // Successfully saved to Supabase
           setExpenseCategories([...expenseCategories, categoryName]);
@@ -1328,7 +1388,9 @@ export default function XproOperations() {
           toast.success(`"${categoryName}" bo'limi qo'shildi`);
         }
       } catch (error: any) {
-        console.error('Error saving category to Supabase:', error);
+        console.error('❌ Supabase xatolik (handleAddCategory inner catch):', error);
+        const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+        console.error('Xatolik xabari:', errorMessage);
         // Fallback to localStorage
         const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
         if (!categories.includes(categoryName)) {
@@ -1340,8 +1402,18 @@ export default function XproOperations() {
         }
       }
     } catch (error: any) {
-      console.error('Error in handleAddCategory:', error);
-      toast.error('Bo\'lim qo\'shishda xatolik: ' + error.message);
+      console.error('❌ Supabase xatolik (handleAddCategory outer catch):', error);
+      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
+      console.error('Xatolik xabari:', errorMessage);
+      // Fallback to localStorage
+      const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
+      if (!categories.includes(categoryName)) {
+        categories.push(categoryName);
+        localStorage.setItem('expenseCategories', JSON.stringify(categories));
+        setExpenseCategories(categories);
+        window.dispatchEvent(new Event('categoryUpdated'));
+        toast.success(`"${categoryName}" bo'limi qo'shildi`);
+      }
     }
     setIsAddCategoryModalOpen(false);
   };
