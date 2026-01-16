@@ -192,9 +192,10 @@ export default function Reports() {
 
   const performDeleteShift = async (id: string) => {
     try {
-      console.log(`🗑️ Deleting shift ${id} and its transactions...`);
+      console.log(`🗑️ Deleting shift ${id}...`);
       
-      // First, delete all transactions linked to this shift
+      // First, try to delete all transactions linked to this shift
+      // If CASCADE DELETE is set in Supabase, this step can be skipped
       const { error: transactionsError } = await supabase
         .from('transactions')
         .delete()
@@ -203,13 +204,15 @@ export default function Reports() {
       if (transactionsError) {
         console.error('SUPABASE_XATO (delete transactions):', transactionsError.message);
         console.error('SUPABASE_XATO (full):', JSON.stringify(transactionsError, null, 2));
-        // Continue anyway, maybe transactions were already deleted or don't exist
-        console.warn('⚠️ Warning: Could not delete transactions, but continuing with shift deletion');
+        // If we can't delete transactions, still try to delete shift
+        // (CASCADE DELETE will handle it if configured in Supabase)
+        console.warn('⚠️ Could not delete transactions directly, but will try shift deletion (CASCADE may handle it)');
       } else {
         console.log(`✅ Successfully deleted transactions for shift ${id}`);
       }
 
       // Then delete the shift
+      // If CASCADE DELETE is configured in Supabase, related transactions will be auto-deleted
       const { error } = await supabase
         .from('shifts')
         .delete()
@@ -218,6 +221,15 @@ export default function Reports() {
       if (error) {
         console.error('SUPABASE_XATO (delete shift):', error.message);
         console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
+        
+        // Check if it's a foreign key constraint error
+        if (error.message?.includes('foreign key constraint') || error.message?.includes('transactions_shift_id_fkey')) {
+          const errorMessage = 'Smenani o\'chirish uchun avval unga bog\'liq operatsiyalarni o\'chirish kerak. ' +
+            'Yoki Supabase\'da CASCADE DELETE sozlash kerak. ' +
+            'FIX_SHIFT_DELETE.sql faylini Supabase SQL Editor\'da ishga tushiring.';
+          throw new Error(errorMessage);
+        }
+        
         const errorMessage = error.message || 'Noma\'lum xatolik';
         throw new Error(errorMessage);
       }
