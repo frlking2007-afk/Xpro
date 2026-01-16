@@ -41,58 +41,31 @@ const StatCard = ({ title, value, change, icon: Icon, color }: any) => (
 export default function Dashboard() {
   const [dateRange, setDateRange] = useState({ start: startOfMonth(new Date()), end: new Date() });
   const [chartMetric, setChartMetric] = useState('savdo');
+  const [isLoading, setIsLoading] = useState(true); // Yuklanish holati qo'shildi
   const [stats, setStats] = useState({
     jamiFoyda: 0,
-    olimAka: 0, // "Olim aka" (old name: kechagiFoyda)
-    kassa: 0, // "Kassa" (old name: jamiZarar)
-    azamAka: 0, // "Azam aka" (old name: sofFoyda)
+    olimAka: 0,
+    kassa: 0,
+    azamAka: 0,
     jamiFoydaChange: '0%',
-    olimAkaChange: '0%', // (old name: kechagiFoydaChange)
-    kassaChange: '0%', // (old name: jamiZararChange)
-    azamAkaChange: '0%' // (old name: sofFoydaChange)
+    olimAkaChange: '0%',
+    kassaChange: '0%',
+    azamAkaChange: '0%'
   });
   const [chartData, setChartData] = useState<any[]>([]);
 
   useEffect(() => {
     fetchStats();
-  }, [dateRange]); // Refetch when date range changes
-
-  // Listen for currency updates
-  useEffect(() => {
-    const handleCurrencyUpdate = () => {
-      // Force re-render by updating stats
-      setStats(prev => ({ ...prev }));
-    };
-    window.addEventListener('currencyUpdated', handleCurrencyUpdate);
-    return () => window.removeEventListener('currencyUpdated', handleCurrencyUpdate);
-  }, []);
+  }, [dateRange]);
 
   const fetchStats = async () => {
     try {
-      console.log('📊 Fetching dashboard stats...', { start: dateRange.start, end: dateRange.end });
-      
-      // Check environment variables before making requests
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseKey) {
-        console.error('❌ Supabase environment variables are missing!');
-        toast.error('Supabase sozlamalari topilmadi. Environment variables\'ni tekshiring.');
-        return;
-      }
-      
-      console.log('📡 Supabase URL:', supabaseUrl ? 'Set' : 'Missing');
-      console.log('📡 Supabase Key:', supabaseKey ? 'Set (' + supabaseKey.length + ' chars)' : 'Missing');
-      
-      // First, try to fetch all transactions to see if table exists and what columns it has
-      // Then filter by date in JavaScript (safer approach if date column format is unknown)
-      console.log('📡 Attempting to fetch all transactions first...');
-      
+      setIsLoading(true);
       const { data: allTransactions, error: allError } = await supabase
         .from('transactions')
-        .select('*')
-        .limit(10000); // Large limit to get all transactions
+        .select('*');
       
+<<<<<<< HEAD
       console.log('📡 Supabase response:', { 
         dataCount: allTransactions?.length || 0, 
         error: allError ? {
@@ -139,171 +112,63 @@ export default function Dashboard() {
       
       console.log('✅ Current period transactions filtered:', currentData.length, 'items');
 
-      // Fetch previous period data for comparison (simple comparison: same duration before start date)
       const duration = dateRange.end.getTime() - dateRange.start.getTime();
       const prevStart = new Date(dateRange.start.getTime() - duration);
       const prevEnd = new Date(dateRange.end.getTime() - duration);
 
-      // Filter previous period in JavaScript
       const prevData = (allTransactions || []).filter(t => {
-        if (!t.date) return false;
-        const transactionDate = new Date(t.date);
-        return transactionDate >= prevStart && transactionDate <= prevEnd;
+        const d = new Date(t.date);
+        return d >= prevStart && d <= prevEnd;
       });
-      
-      console.log('✅ Previous period transactions filtered:', prevData.length, 'items');
 
-      // Calculate Stats based on KASSA operations
       const calculateMetrics = (transactions: any[]) => {
-        // Filter KASSA transactions only
-        const kassaTransactions = transactions.filter(t => t.type === 'kassa');
-        
-        // Jami Foyda: KASSA tab'dagi + (plus) operatsiyalar yig'indisi
-        const jamiFoyda = kassaTransactions
-          .filter(t => t.amount > 0)
-          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-        
-        // Olim aka: KASSA tab'dagi - (minus) operatsiyalar, description "Olim aka" bo'lganlar
-        const olimAka = kassaTransactions
-          .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('olim aka'))
-          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-        
-        // Azam aka: KASSA tab'dagi - (minus) operatsiyalar, description "Azam aka" yoki "azam aka" bo'lganlar
-        const azamAka = kassaTransactions
-          .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('azam aka'))
-          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-        
-        // Kassa: KASSA tab'dagi - (minus) operatsiyalar, description "Kassa" yoki "kassa" bo'lganlar
-        const kassa = kassaTransactions
-          .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('kassa'))
-          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-        
+        const kassa = transactions.filter(t => t.type === 'kassa');
         return {
-          jamiFoyda,
-          olimAka,
-          azamAka,
-          kassa
+          jamiFoyda: kassa.filter(t => t.amount > 0).reduce((sum, t) => sum + Math.abs(t.amount), 0),
+          olimAka: kassa.filter(t => t.amount < 0 && t.description?.toLowerCase().includes('olim aka')).reduce((sum, t) => sum + Math.abs(t.amount), 0),
+          azamAka: kassa.filter(t => t.amount < 0 && t.description?.toLowerCase().includes('azam aka')).reduce((sum, t) => sum + Math.abs(t.amount), 0),
+          kassa: kassa.filter(t => t.amount < 0 && t.description?.toLowerCase().includes('kassa')).reduce((sum, t) => sum + Math.abs(t.amount), 0)
         };
       };
 
-      const currentMetrics = calculateMetrics(currentData || []);
-      const prevMetrics = calculateMetrics(prevData || []);
+      const currentMetrics = calculateMetrics(currentData);
+      const prevMetrics = calculateMetrics(prevData);
 
-      const calculateChange = (current: number, prev: number) => {
-        if (prev === 0) return current > 0 ? '+100%' : '0%';
-        const percent = ((current - prev) / prev) * 100;
-        return `${percent > 0 ? '+' : ''}${percent.toFixed(1)}%`;
+      const calculateChange = (curr: number, prev: number) => {
+        if (prev === 0) return curr > 0 ? '+100%' : '0%';
+        const p = ((curr - prev) / prev) * 100;
+        return `${p > 0 ? '+' : ''}${p.toFixed(1)}%`;
       };
-
-      // Special calculation for "Kechagi Foyda" (always yesterday's profit, regardless of filter? Or based on filter?)
-      // Usually "Yesterday" implies literally yesterday.
-      const yesterdayStart = startOfDay(subDays(new Date(), 1));
-      const yesterdayEnd = endOfDay(subDays(new Date(), 1));
-      const dayBeforeYesterdayStart = startOfDay(subDays(new Date(), 2));
-      const dayBeforeYesterdayEnd = endOfDay(subDays(new Date(), 2));
-
-      // Filter yesterday data in JavaScript
-      const yesterdayData = (allTransactions || []).filter(t => {
-        if (!t.date) return false;
-        const transactionDate = new Date(t.date);
-        return transactionDate >= yesterdayStart && transactionDate <= yesterdayEnd;
-      });
-      
-      console.log('✅ Yesterday transactions filtered:', yesterdayData.length, 'items');
-      
-      // Filter day before yesterday data in JavaScript
-      const dayBeforeYesterdayData = (allTransactions || []).filter(t => {
-        if (!t.date) return false;
-        const transactionDate = new Date(t.date);
-        return transactionDate >= dayBeforeYesterdayStart && transactionDate <= dayBeforeYesterdayEnd;
-      });
-      
-      console.log('✅ Day before yesterday transactions filtered:', dayBeforeYesterdayData.length, 'items');
-
-      // Calculate yesterday's "Olim aka" (same logic as current period)
-      const yesterdayKassaTransactions = (yesterdayData || []).filter(t => t.type === 'kassa');
-      const yesterdayOlimAka = yesterdayKassaTransactions
-        .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('olim aka'))
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-        
-      const dayBeforeYesterdayKassaTransactions = (dayBeforeYesterdayData || []).filter(t => t.type === 'kassa');
-      const dayBeforeYesterdayOlimAka = dayBeforeYesterdayKassaTransactions
-        .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('olim aka'))
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
       setStats({
         jamiFoyda: currentMetrics.jamiFoyda,
-        olimAka: currentMetrics.olimAka, // "Olim aka"
-        kassa: currentMetrics.kassa, // "Kassa"
-        azamAka: currentMetrics.azamAka, // "Azam aka"
+        olimAka: currentMetrics.olimAka,
+        kassa: currentMetrics.kassa,
+        azamAka: currentMetrics.azamAka,
         jamiFoydaChange: calculateChange(currentMetrics.jamiFoyda, prevMetrics.jamiFoyda),
         olimAkaChange: calculateChange(currentMetrics.olimAka, prevMetrics.olimAka),
         kassaChange: calculateChange(currentMetrics.kassa, prevMetrics.kassa),
         azamAkaChange: calculateChange(currentMetrics.azamAka, prevMetrics.azamAka)
       });
 
-      // Prepare Chart Data (Group by Day or Month based on range)
-      // For simplicity, let's group by Day if range < 2 months, else by Month
-      // Grouping logic...
-      // Let's create a daily map for the current range
-      const days = eachMonthOfInterval({ start: startOfYear(new Date()), end: endOfYear(new Date()) }); // Show yearly chart by default? Or based on filter?
-      // Better: Show chart for the selected range.
-      
-      // Let's stick to the current "Monthly" view for the chart as in the original design (Jan, Feb...) 
-      // but populated with real data from THIS YEAR.
-      const startOfCurrentYear = startOfYear(new Date());
-      const endOfCurrentYear = endOfYear(new Date());
-      
-      // Filter year data in JavaScript
-      const yearData = (allTransactions || []).filter(t => {
-        if (!t.date) return false;
-        const transactionDate = new Date(t.date);
-        return transactionDate >= startOfCurrentYear && transactionDate <= endOfCurrentYear;
-      });
-      
-      console.log('✅ Year data filtered:', yearData.length, 'items');
+      const startOfYearDate = startOfYear(new Date());
+      const endOfYearDate = endOfYear(new Date());
+      const monthIntervals = eachMonthOfInterval({ start: startOfYearDate, end: endOfYearDate });
 
-      const monthsData = days.map(month => {
-        const monthTrans = (yearData || []).filter(t => isSameMonth(new Date(t.date), month));
-        
-        // Filter KASSA transactions only
-        const kassaTransactions = monthTrans.filter(t => t.type === 'kassa');
-        
-        // Calculate based on KASSA operations
-        const jamiFoyda = kassaTransactions
-          .filter(t => t.amount > 0)
-          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-        
-        const olimAka = kassaTransactions
-          .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('olim aka'))
-          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-        
-        const azamAka = kassaTransactions
-          .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('azam aka'))
-          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-        
-        const kassa = kassaTransactions
-          .filter(t => t.amount < 0 && t.description && t.description.toLowerCase().includes('kassa'))
-          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-        
+      const monthsData = monthIntervals.map(month => {
+        const mTrans = (allTransactions || []).filter(t => isSameMonth(new Date(t.date), month));
+        const mMetrics = calculateMetrics(mTrans);
         return {
           name: format(month, 'MMM', { locale: uz }),
-          savdo: jamiFoyda, // Jami Foyda
-          zarar: kassa, // Kassa
-          daromad: azamAka // Azam aka
+          savdo: mMetrics.jamiFoyda,
+          zarar: mMetrics.kassa,
+          daromad: mMetrics.azamAka
         };
       });
 
       setChartData(monthsData);
-      
-      console.log('✅ Dashboard stats calculated:', {
-        jamiFoyda: currentMetrics.jamiFoyda,
-        olimAka: currentMetrics.olimAka,
-        azamAka: currentMetrics.azamAka,
-        kassa: currentMetrics.kassa
-      });
-
     } catch (error: any) {
+<<<<<<< HEAD
       console.error('❌ Supabase xatolik (fetchStats):', error);
       const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
       console.error('Xatolik xabari:', errorMessage);
@@ -314,12 +179,15 @@ export default function Dashboard() {
       } else {
         toast.error('Statistikani yuklashda xatolik: ' + errorMessage);
       }
+=======
+      toast.error('Xatolik: ' + error.message);
+    } finally {
+      setIsLoading(false);
+>>>>>>> 6cb695ac5069e878b946c53ab3c9c6843477bf6f
     }
   };
 
-  const handleFilterChange = (range: { start: Date; end: Date; label: string }) => {
-    setDateRange({ start: range.start, end: range.end });
-  };
+  const handleFilterChange = (range: any) => setDateRange({ start: range.start, end: range.end });
 
   const metricOptions = [
     { value: 'savdo', label: 'Jami Foyda', color: '#3b82f6' },
@@ -333,63 +201,34 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-bold text-white tracking-tight">Umumiy ko'rinish</h2>
-        <div className="flex gap-2">
-          <DateFilter onFilterChange={handleFilterChange} />
-        </div>
+        <DateFilter onFilterChange={handleFilterChange} />
       </div>
       
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard 
-          title="Jami Foyda" 
-          value={formatCurrency(stats.jamiFoyda)}
-          change={stats.jamiFoydaChange} 
-          icon={DollarSign}
-          color="bg-blue-500" 
-        />
-        <StatCard 
-          title="Olim aka" 
-          value={formatCurrency(stats.olimAka)}
-          change={stats.olimAkaChange} 
-          icon={Wallet}
-          color="bg-emerald-500" 
-        />
-        <StatCard 
-          title="Kassa" 
-          value={formatCurrency(stats.kassa)}
-          change={stats.kassaChange} 
-          icon={TrendingDown}
-          color="bg-red-500" 
-        />
-        <StatCard 
-          title="Azam aka" 
-          value={formatCurrency(stats.azamAka)}
-          change={stats.azamAkaChange} 
-          icon={TrendingUp}
-          color="bg-purple-500" 
-        />
+        <StatCard title="Jami Foyda" value={formatCurrency(stats.jamiFoyda)} change={stats.jamiFoydaChange} icon={DollarSign} color="bg-blue-500" />
+        <StatCard title="Olim aka" value={formatCurrency(stats.olimAka)} change={stats.olimAkaChange} icon={Wallet} color="bg-emerald-500" />
+        <StatCard title="Kassa" value={formatCurrency(stats.kassa)} change={stats.kassaChange} icon={TrendingDown} color="bg-red-500" />
+        <StatCard title="Azam aka" value={formatCurrency(stats.azamAka)} change={stats.azamAkaChange} icon={TrendingUp} color="bg-purple-500" />
       </div>
 
-      <div className="grid gap-6">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="rounded-2xl border border-white/5 bg-white/5 p-6 backdrop-blur-sm"
-        >
-          <div className="mb-6 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Yillik Statistika</h3>
-            <MetricSelector 
-              selected={chartMetric}
-              onSelect={setChartMetric}
-              options={metricOptions}
-            />
-          </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl border border-white/5 bg-white/5 p-6 backdrop-blur-sm"
+      >
+        <div className="mb-6 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-white">Yillik Statistika</h3>
+          <MetricSelector selected={chartMetric} onSelect={setChartMetric} options={metricOptions} />
+        </div>
 
-          <div className="h-80 w-full min-h-[300px]">
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%" minHeight={300}>
-                <AreaChart data={chartData}>
-                  <defs>
+        {/* TUZATILGAN QISM: ResponsiveContainer uchun qat'iy balandlik berildi */}
+        <div className="w-full" style={{ height: '350px', minHeight: '350px' }}>
+          {isLoading ? (
+            <div className="flex h-full items-center justify-center text-slate-500">Yuklanmoqda...</div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
                   <linearGradient id="colorMetric" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor={currentMetric.color} stopOpacity={0.3}/>
                     <stop offset="95%" stopColor={currentMetric.color} stopOpacity={0}/>
@@ -397,30 +236,18 @@ export default function Dashboard() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value/1000}k`} />
+                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `${v/1000}k`} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px' }}
                   itemStyle={{ color: '#fff' }}
                   formatter={(value: number) => [formatCurrency(value), currentMetric.label]}
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey={chartMetric} 
-                  stroke={currentMetric.color} 
-                  strokeWidth={3} 
-                  fillOpacity={1} 
-                  fill="url(#colorMetric)" 
-                />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex h-full items-center justify-center text-slate-500">
-                Ma'lumotlar yuklanmoqda...
-              </div>
-            )}
-          </div>
-        </motion.div>
-      </div>
+                <Area type="monotone" dataKey={chartMetric} stroke={currentMetric.color} strokeWidth={3} fillOpacity={1} fill="url(#colorMetric)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </motion.div>
     </div>
   );
-}
+            }
