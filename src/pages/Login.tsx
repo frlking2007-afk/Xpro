@@ -128,10 +128,7 @@ export default function Login() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#050505]">
-      {/* Gradient Background */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" />
-
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-black">
       <div className="relative z-10 w-full max-w-md px-4">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -139,10 +136,6 @@ export default function Login() {
           transition={{ duration: 0.6 }}
           className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/40 p-8 shadow-2xl backdrop-blur-xl"
         >
-          {/* Glow Effect */}
-          <div className="absolute -top-24 -left-24 h-48 w-48 rounded-full bg-blue-600/30 blur-[100px]" />
-          <div className="absolute -bottom-24 -right-24 h-48 w-48 rounded-full bg-purple-600/30 blur-[100px]" />
-
           <div className="relative flex flex-col items-center text-center">
             <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-purple-600 shadow-lg shadow-blue-500/20">
               <Zap className="h-8 w-8 text-white" />
