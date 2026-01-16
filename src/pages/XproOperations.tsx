@@ -617,18 +617,74 @@ const ExportTab = ({
 
   const getCategoryTransactions = (category: string) => {
     return transactions.filter(t => {
-      if (t.category === category) return true;
-      if (t.type === 'xarajat' && t.description && t.description.includes(`[${category}]`)) return true;
+      // Only process xarajat transactions
+      if (t.type !== 'xarajat') {
+        return false;
+      }
+
+      // Check if category column exists and matches (case-insensitive)
+      if (t.category && t.category.toLowerCase().trim() === category.toLowerCase().trim()) {
+        return true;
+      }
+      
+      // Check if description contains [CategoryName] format (case-insensitive)
+      if (t.description && t.description.toLowerCase().includes(`[${category.toLowerCase()}]`)) {
+        return true;
+      }
+      
+      // Check if description contains CategoryName without brackets (case-insensitive)
+      if (t.description) {
+        const descLower = t.description.toLowerCase();
+        const categoryLower = category.toLowerCase();
+        // Check if it's an exact word match or in brackets
+        if (descLower.includes(`[${categoryLower}]`) || 
+            descLower.trim() === categoryLower ||
+            descLower.startsWith(`${categoryLower} `) ||
+            descLower.endsWith(` ${categoryLower}`) ||
+            descLower.includes(` ${categoryLower} `)) {
+          return true;
+        }
+      }
+      
+      // Also check for exact match without brackets (for backward compatibility, case-insensitive)
+      if (t.description && t.description.trim().toLowerCase() === category.toLowerCase().trim()) {
+        return true;
+      }
+      
       return false;
     });
   };
 
   const handleTabakaExport = () => {
     try {
-      // Filter only "Tabaka" category transactions
+      // Filter only "Tabaka" category transactions (case-insensitive)
       const tabakaTransactions = transactions.filter(t => {
-        if (t.category === 'Tabaka') return true;
-        if (t.type === 'xarajat' && t.description && t.description.includes('[Tabaka]')) return true;
+        if (t.type !== 'xarajat') {
+          return false;
+        }
+        
+        // Check if category column exists and matches (case-insensitive)
+        if (t.category && t.category.toLowerCase().trim() === 'tabaka') {
+          return true;
+        }
+        
+        // Check if description contains [Tabaka] format (case-insensitive)
+        if (t.description && t.description.toLowerCase().includes('[tabaka]')) {
+          return true;
+        }
+        
+        // Check if description contains Tabaka without brackets (case-insensitive)
+        if (t.description) {
+          const descLower = t.description.toLowerCase();
+          if (descLower.includes('[tabaka]') || 
+              descLower.trim() === 'tabaka' ||
+              descLower.startsWith('tabaka ') ||
+              descLower.endsWith(' tabaka') ||
+              descLower.includes(' tabaka ')) {
+            return true;
+          }
+        }
+        
         return false;
       });
 

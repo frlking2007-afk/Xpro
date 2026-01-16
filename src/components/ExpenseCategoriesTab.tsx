@@ -102,24 +102,53 @@ export default function ExpenseCategoriesTab({
   };
 
   const getCategoryTransactions = (category: string) => {
-    return transactions.filter(t => {
-      // Check if category column exists and matches
-      if (t.category === category) {
-        console.log('✅ ExpenseCategoriesTab: Found by category column:', t.id, t.category);
+    const filtered = transactions.filter(t => {
+      // Only process xarajat transactions
+      if (t.type !== 'xarajat') {
+        return false;
+      }
+
+      // Check if category column exists and matches (case-insensitive)
+      if (t.category && t.category.toLowerCase().trim() === category.toLowerCase().trim()) {
+        console.log('✅ ExpenseCategoriesTab: Found by category column:', t.id, t.category, 'for category:', category);
         return true;
       }
-      // Check if description contains [CategoryName] format
-      if (t.type === 'xarajat' && t.description && t.description.includes(`[${category}]`)) {
-        console.log('✅ ExpenseCategoriesTab: Found by description:', t.id, t.description);
+      
+      // Check if description contains [CategoryName] format (case-insensitive)
+      if (t.description && t.description.toLowerCase().includes(`[${category.toLowerCase()}]`)) {
+        console.log('✅ ExpenseCategoriesTab: Found by description with brackets:', t.id, t.description, 'for category:', category);
         return true;
       }
-      // Also check for exact match without brackets (for backward compatibility)
-      if (t.type === 'xarajat' && t.description && t.description.trim() === category) {
-        console.log('✅ ExpenseCategoriesTab: Found by exact description match:', t.id, t.description);
+      
+      // Check if description contains CategoryName without brackets (case-insensitive)
+      if (t.description && t.description.toLowerCase().includes(category.toLowerCase())) {
+        // Make sure it's not part of another category name
+        const descLower = t.description.toLowerCase();
+        const categoryLower = category.toLowerCase();
+        // Check if it's an exact word match or in brackets
+        if (descLower.includes(`[${categoryLower}]`) || 
+            descLower.trim() === categoryLower ||
+            descLower.startsWith(`${categoryLower} `) ||
+            descLower.endsWith(` ${categoryLower}`) ||
+            descLower.includes(` ${categoryLower} `)) {
+          console.log('✅ ExpenseCategoriesTab: Found by description (case-insensitive):', t.id, t.description, 'for category:', category);
+          return true;
+        }
+      }
+      
+      // Also check for exact match without brackets (for backward compatibility, case-insensitive)
+      if (t.description && t.description.trim().toLowerCase() === category.toLowerCase().trim()) {
+        console.log('✅ ExpenseCategoriesTab: Found by exact description match:', t.id, t.description, 'for category:', category);
         return true;
       }
+      
       return false;
     });
+    
+    console.log(`📊 ExpenseCategoriesTab: Category "${category}" - Found ${filtered.length} transactions out of ${transactions.length} total transactions`);
+    console.log(`📊 ExpenseCategoriesTab: Category "${category}" - Total amount: ${filtered.reduce((sum, t) => sum + t.amount, 0)}`);
+    
+    return filtered;
   };
 
 
