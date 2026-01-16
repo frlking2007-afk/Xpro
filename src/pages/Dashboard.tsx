@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, TrendingDown, DollarSign, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, format, isSameMonth, subMonths, eachMonthOfInterval, startOfYear, endOfYear } from 'date-fns';
-import { uz } from 'date-fns/locale';
+import { startOfMonth, endOfMonth } from 'date-fns';
 import DateFilter from '../components/DateFilter';
-import MetricSelector from '../components/MetricSelector';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import { formatCurrency } from '../utils/currency';
@@ -40,8 +37,7 @@ const StatCard = ({ title, value, change, icon: Icon, color }: any) => (
 
 export default function Dashboard() {
   const [dateRange, setDateRange] = useState({ start: startOfMonth(new Date()), end: new Date() });
-  const [chartMetric, setChartMetric] = useState('savdo');
-  const [isLoading, setIsLoading] = useState(true); // Yuklanish holati qo'shildi
+  const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
     jamiFoyda: 0,
     olimAka: 0,
@@ -52,7 +48,6 @@ export default function Dashboard() {
     kassaChange: '0%',
     azamAkaChange: '0%'
   });
-  const [chartData, setChartData] = useState<any[]>([]);
 
   useEffect(() => {
     fetchStats();
@@ -149,23 +144,6 @@ export default function Dashboard() {
         kassaChange: calculateChange(currentMetrics.kassa, prevMetrics.kassa),
         azamAkaChange: calculateChange(currentMetrics.azamAka, prevMetrics.azamAka)
       });
-
-      const startOfYearDate = startOfYear(new Date());
-      const endOfYearDate = endOfYear(new Date());
-      const monthIntervals = eachMonthOfInterval({ start: startOfYearDate, end: endOfYearDate });
-
-      const monthsData = monthIntervals.map(month => {
-        const mTrans = (allTransactions || []).filter(t => isSameMonth(new Date(t.date), month));
-        const mMetrics = calculateMetrics(mTrans);
-        return {
-          name: format(month, 'MMM', { locale: uz }),
-          savdo: mMetrics.jamiFoyda,
-          zarar: mMetrics.kassa,
-          daromad: mMetrics.azamAka
-        };
-      });
-
-      setChartData(monthsData);
     } catch (error: any) {
       console.error('❌ Supabase xatolik (fetchStats):', error);
       const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
@@ -184,14 +162,6 @@ export default function Dashboard() {
 
   const handleFilterChange = (range: any) => setDateRange({ start: range.start, end: range.end });
 
-  const metricOptions = [
-    { value: 'savdo', label: 'Jami Foyda', color: '#3b82f6' },
-    { value: 'daromad', label: 'Azam aka', color: '#8b5cf6' },
-    { value: 'zarar', label: 'Kassa', color: '#ef4444' },
-  ];
-
-  const currentMetric = metricOptions.find(m => m.value === chartMetric) || metricOptions[0];
-
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -205,44 +175,6 @@ export default function Dashboard() {
         <StatCard title="Kassa" value={formatCurrency(stats.kassa)} change={stats.kassaChange} icon={TrendingDown} color="bg-red-500" />
         <StatCard title="Azam aka" value={formatCurrency(stats.azamAka)} change={stats.azamAkaChange} icon={TrendingUp} color="bg-purple-500" />
       </div>
-
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border border-white/5 bg-white/5 p-6 backdrop-blur-sm"
-      >
-        <div className="mb-6 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-white">Yillik Statistika</h3>
-          <MetricSelector selected={chartMetric} onSelect={setChartMetric} options={metricOptions} />
-        </div>
-
-        {/* TUZATILGAN QISM: ResponsiveContainer uchun qat'iy balandlik berildi */}
-        <div className="w-full" style={{ height: '350px', minHeight: '350px' }}>
-          {isLoading ? (
-            <div className="flex h-full items-center justify-center text-slate-500">Yuklanmoqda...</div>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorMetric" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={currentMetric.color} stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor={currentMetric.color} stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `${v/1000}k`} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px' }}
-                  itemStyle={{ color: '#fff' }}
-                  formatter={(value: number) => [formatCurrency(value), currentMetric.label]}
-                />
-                <Area type="monotone" dataKey={chartMetric} stroke={currentMetric.color} strokeWidth={3} fillOpacity={1} fill="url(#colorMetric)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </motion.div>
     </div>
   );
-            }
+}
