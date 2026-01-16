@@ -192,14 +192,21 @@ export default function Reports() {
 
   const performDeleteShift = async (id: string) => {
     try {
-      // Delete transactions (no filter)
+      console.log(`🗑️ Deleting shift ${id} and its transactions...`);
+      
+      // First, delete all transactions linked to this shift
       const { error: transactionsError } = await supabase
         .from('transactions')
-        .delete();
+        .delete()
+        .eq('shift_id', id);
 
       if (transactionsError) {
-        console.error('Error deleting transactions:', transactionsError);
-        // Continue anyway, maybe transactions were already deleted
+        console.error('SUPABASE_XATO (delete transactions):', transactionsError.message);
+        console.error('SUPABASE_XATO (full):', JSON.stringify(transactionsError, null, 2));
+        // Continue anyway, maybe transactions were already deleted or don't exist
+        console.warn('⚠️ Warning: Could not delete transactions, but continuing with shift deletion');
+      } else {
+        console.log(`✅ Successfully deleted transactions for shift ${id}`);
       }
 
       // Then delete the shift
@@ -209,17 +216,19 @@ export default function Reports() {
         .eq('id', id);
 
       if (error) {
-        console.error('❌ Supabase xatolik (performDeleteShift):', error);
+        console.error('SUPABASE_XATO (delete shift):', error.message);
+        console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
         const errorMessage = error.message || 'Noma\'lum xatolik';
         throw new Error(errorMessage);
       }
 
+      console.log(`✅ Successfully deleted shift ${id}`);
       setShifts(shifts.filter(s => s.id !== id));
       toast.success("Smena va unga bog'liq operatsiyalar o'chirildi");
     } catch (error: any) {
-      console.error('❌ Supabase xatolik (performDeleteShift):', error);
+      console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+      console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
       const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
-      console.error('Xatolik xabari:', errorMessage);
       toast.error("O'chirishda xatolik: " + errorMessage);
     }
   };

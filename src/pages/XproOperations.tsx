@@ -99,9 +99,10 @@ const PaymentTab = ({
         <div className="rounded-2xl border border-white/10 bg-black/20 p-6 backdrop-blur-sm">
           <form onSubmit={handleSave} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-400 uppercase tracking-wider">Summa</label>
+              <label htmlFor="payment-amount" className="mb-1.5 block text-xs font-medium text-slate-400 uppercase tracking-wider">Summa</label>
               <div className="relative">
                 <input
+                  id="payment-amount"
                   type="text"
                   value={amount}
                   onChange={handleAmountChange}
@@ -115,8 +116,9 @@ const PaymentTab = ({
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-400 uppercase tracking-wider">Tavsif (Ixtiyoriy)</label>
+              <label htmlFor="payment-description" className="mb-1.5 block text-xs font-medium text-slate-400 uppercase tracking-wider">Tavsif (Ixtiyoriy)</label>
               <input
+                id="payment-description"
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -165,8 +167,9 @@ const PaymentTab = ({
                 {editingId === item.id ? (
                   <div className="space-y-3">
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-slate-400">Summa</label>
+                      <label htmlFor={`edit-amount-${item.id}`} className="mb-1 block text-xs font-medium text-slate-400">Summa</label>
                       <input
+                        id={`edit-amount-${item.id}`}
                         type="text"
                         value={editAmount}
                         onChange={(e) => setEditAmount(formatNumber(e.target.value))}
@@ -175,8 +178,9 @@ const PaymentTab = ({
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-slate-400">Tavsif</label>
+                      <label htmlFor={`edit-description-${item.id}`} className="mb-1 block text-xs font-medium text-slate-400">Tavsif</label>
                       <input
+                        id={`edit-description-${item.id}`}
                         type="text"
                         value={editDescription}
                         onChange={(e) => setEditDescription(e.target.value)}
@@ -466,8 +470,9 @@ const KassaTab = ({
                 {editingId === item.id ? (
                   <div className="space-y-3">
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-slate-400">Summa</label>
+                      <label htmlFor={`edit-amount-kassa-${item.id}`} className="mb-1 block text-xs font-medium text-slate-400">Summa</label>
                       <input
+                        id={`edit-amount-kassa-${item.id}`}
                         type="text"
                         value={editAmount}
                         onChange={(e) => setEditAmount(formatNumber(e.target.value))}
@@ -476,8 +481,9 @@ const KassaTab = ({
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-slate-400">Tavsif</label>
+                      <label htmlFor={`edit-description-kassa-${item.id}`} className="mb-1 block text-xs font-medium text-slate-400">Tavsif</label>
                       <input
+                        id={`edit-description-kassa-${item.id}`}
                         type="text"
                         value={editDescription}
                         onChange={(e) => setEditDescription(e.target.value)}
