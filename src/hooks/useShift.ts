@@ -31,24 +31,21 @@ export function useShift() {
         .eq('status', 'open')
         .order('opened_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle(); // Tuzatildi: .single() o'rniga .maybeSingle() ishlatildi
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          // PGRST116 means no rows found - this is normal if no shift is open
-          console.log('ℹ️ No open shift found');
-        } else {
-          console.error('❌ Supabase error fetching shift:', error);
-          console.error('Error code:', error.code);
-          console.error('Error message:', error.message);
-          console.error('Error details:', error);
-        }
+        console.error('❌ Supabase error fetching shift:', error);
         setCurrentShift(null);
         return;
       }
 
-      console.log('✅ Current shift fetched successfully:', data);
-      setCurrentShift(data);
+      if (!data) {
+        console.log('ℹ️ No open shift found');
+        setCurrentShift(null);
+      } else {
+        console.log('✅ Current shift fetched successfully:', data);
+        setCurrentShift(data);
+      }
     } catch (error: any) {
       console.error('❌ Exception in fetchCurrentShift:', error);
       setCurrentShift(null);
@@ -61,113 +58,42 @@ export function useShift() {
     try {
       console.log('🚀 Opening new shift...', { startingBalance, shiftName });
       
-      // Check session (but don't fail if no session - anon key should work)
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        console.warn('⚠️ Session check error (continuing anyway):', sessionError.message);
-      } else if (session) {
-        console.log('✅ User session found:', session.user.email);
-      } else {
-        console.log('ℹ️ No user session - using anon key');
-      }
-      
+      const { data: { session } } = await supabase.auth.getSession();
       const now = new Date();
       
-      // Base insert data - only include fields that exist in schema
-      // Make sure starting_balance is a number, not string
       const insertData: any = {
         status: 'open',
         starting_balance: Number(startingBalance) || 0,
         opened_at: now.toISOString(),
       };
 
-      // Add name if provided
       if (shiftName) {
         insertData.name = shiftName;
       }
 
-      console.log('📝 Insert data:', JSON.stringify(insertData, null, 2));
-      console.log('📝 Insert data types:', {
-        status: typeof insertData.status,
-        starting_balance: typeof insertData.starting_balance,
-        opened_at: typeof insertData.opened_at
-      });
-      console.log('📝 Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
-      console.log('📝 Supabase Key exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
-
       // Insert shift
-      console.log('📡 Sending request to Supabase...');
       let { data, error } = await supabase
         .from('shifts')
         .insert([insertData])
         .select()
-        .single();
+        .maybeSingle(); // Tuzatildi: Bu yerda ham xatolik oldi olindi
       
-      console.log('📡 Supabase response received');
-      console.log('📡 Response data:', data);
-      console.log('📡 Response error:', error);
-      
-      if (error) {
-        console.error('❌ Full error details:');
-        console.error('  - Code:', error.code);
-        console.error('  - Message:', error.message);
-        console.error('  - Details:', error.details);
-        console.error('  - Hint:', (error as any).hint);
-        console.error('  - Full error object:', JSON.stringify(error, null, 2));
-        
-        // Try to get more info from the error
-        if ((error as any).response) {
-          console.error('  - Response:', (error as any).response);
-        }
-        if ((error as any).status) {
-          console.error('  - Status:', (error as any).status);
-        }
-      }
-
       if (error) {
         console.error('❌ Supabase error inserting shift:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        console.error('Error details:', error);
-        console.error('Error hint:', (error as any).hint);
-        console.error('Full error object:', JSON.stringify(error, null, 2));
-        
-        // Provide user-friendly error message
-        let userMessage = 'Smena ochishda xatolik yuz berdi.';
-        if (error.code === '42501') {
-          userMessage = 'Ruxsat yo\'q. Iltimos, qayta kiring.';
-        } else if (error.code === '23505') {
-          userMessage = 'Bu smena allaqachon mavjud.';
-        } else if (error.message) {
-          userMessage = error.message;
-        }
-        
-        throw new Error(userMessage);
+        throw new Error(error.message);
       }
-
-      console.log('✅ Shift inserted successfully:', data);
 
       // Update name if not provided in insert
       if (data && !shiftName) {
         const defaultName = `Smena ${now.toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit', year: 'numeric' })} ${now.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}`;
         
-        try {
-          const { error: updateError } = await supabase
-            .from('shifts')
-            .update({ name: defaultName })
-            .eq('id', data.id);
-          
-          if (updateError) {
-            console.log('ℹ️ Could not update shift name:', updateError.message);
-            // Not critical, continue anyway
-          } else {
-            console.log('✅ Shift name updated successfully');
-            // Update local data with name
-            data.name = defaultName;
-          }
-        } catch (updateError: any) {
-          console.log('ℹ️ Could not update shift name:', updateError.message);
-          // Not critical, continue anyway
+        const { error: updateError } = await supabase
+          .from('shifts')
+          .update({ name: defaultName })
+          .eq('id', data.id);
+        
+        if (!updateError) {
+          data.name = defaultName;
         }
       }
 
@@ -176,11 +102,7 @@ export function useShift() {
       return data;
     } catch (error: any) {
       console.error('❌ Exception in openShift:', error);
-      const errorMessage = error.message || 'Noma\'lum xatolik';
-      console.error('Full error object:', error);
-      
-      // Show user-friendly error
-      toast.error(errorMessage);
+      toast.error(error.message || 'Smena ochishda xatolik');
       return null;
     }
   };
@@ -216,4 +138,4 @@ export function useShift() {
     closeShift,
     refreshShift: fetchCurrentShift
   };
-}
+          }
