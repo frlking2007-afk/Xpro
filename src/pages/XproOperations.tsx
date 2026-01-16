@@ -903,11 +903,26 @@ export default function XproOperations() {
           return;
         }
 
+        console.log('📡 Fetching expense_categories from Supabase...');
+        console.log('📡 User ID:', userId);
+        console.log('📡 Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+        
+        // Try to fetch from expense_categories table (public schema)
         const { data, error } = await supabase
           .from('expense_categories')
           .select('category_name')
           .eq('user_id', userId)
-          .order('created_at', { ascending: true });
+          .order('id', { ascending: true });
+        
+        console.log('📡 expense_categories response:', { 
+          dataCount: data?.length || 0, 
+          error: error ? {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: (error as any).hint
+          } : null
+        });
 
         if (error) {
           // Handle 400 Bad Request error
@@ -971,8 +986,7 @@ export default function XproOperations() {
     try {
       const categoryData = categories.map(categoryName => ({
         user_id: userId,
-        category_name: categoryName,
-        created_at: new Date().toISOString()
+        category_name: categoryName
       }));
 
       const { error } = await supabase
@@ -1392,8 +1406,7 @@ export default function XproOperations() {
           .from('expense_categories')
           .insert({
             user_id: user.id,
-            category_name: categoryName,
-            created_at: new Date().toISOString()
+            category_name: categoryName
           });
 
         if (error) {
