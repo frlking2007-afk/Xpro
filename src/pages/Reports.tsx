@@ -91,9 +91,9 @@ export default function Reports() {
       console.log('📡 Fetching all transactions...');
       const { data: allTransactions, error: allError } = await supabase
         .from('transactions')
-        .select('*')
-        .order('date', { ascending: false })
-        .limit(10000); // Large limit to get all transactions
+        .select('*');
+      
+      console.log('KELGAN MA'LUMOT:', allTransactions);
       
       if (allError) {
         console.error('❌ Supabase xatolik (fetchTransactions):', allError);
@@ -192,11 +192,10 @@ export default function Reports() {
 
   const performDeleteShift = async (id: string) => {
     try {
-      // First, delete all transactions linked to this shift
+      // Delete transactions (no filter)
       const { error: transactionsError } = await supabase
         .from('transactions')
-        .delete()
-        .eq('shift_id', id);
+        .delete();
 
       if (transactionsError) {
         console.error('Error deleting transactions:', transactionsError);

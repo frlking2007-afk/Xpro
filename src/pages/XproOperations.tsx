@@ -911,15 +911,7 @@ export default function XproOperations() {
           .from('expense_categories')
           .select('*');
         
-        console.log('📡 expense_categories response:', { 
-          dataCount: data?.length || 0, 
-          error: error ? {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: (error as any).hint
-          } : null
-        });
+        console.log('KELGAN MA'LUMOT:', data);
 
         if (error) {
           console.error('SUPABASE_XATO:', error.message);
@@ -1052,10 +1044,9 @@ export default function XproOperations() {
       
       const { data, error } = await supabase
         .from('transactions')
-        .select('*')
-        .eq('shift_id', shiftId)
-        .order('date', { ascending: false })
-        .limit(1000); // Optimize: limit results
+        .select('*');
+
+      console.log('KELGAN MA'LUMOT:', data);
 
       if (error) {
         console.error('SUPABASE_XATO:', error.message);
@@ -1129,9 +1120,9 @@ export default function XproOperations() {
       
       const { data, error } = await supabase
         .from('transactions')
-        .select('*')
-        .eq('shift_id', currentShift.id) // Filter by Shift ID
-        .order('date', { ascending: false });
+        .select('*');
+
+      console.log('KELGAN MA'LUMOT:', data);
 
       if (error) {
         console.error('SUPABASE_XATO:', error.message);

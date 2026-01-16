@@ -81,22 +81,15 @@ export default function CategoryExpenseStatistics() {
     try {
       console.log('📊 Fetching transactions for category:', categoryName, 'shift:', currentShift?.id);
       
-      // Build query with shift_id filter if available
+      // Build query without filters
       let query = supabase
         .from('transactions')
-        .select('*')
-        .eq('type', 'xarajat');
-      
-      // Add shift_id filter if current shift exists
-      if (currentShift?.id) {
-        query = query.eq('shift_id', currentShift.id);
-        console.log('✅ Filtering by shift_id:', currentShift.id);
-      }
+        .select('*');
       
       // First try to fetch by category column
-      let { data, error } = await query
-        .eq('category', categoryName)
-        .order('date', { ascending: false });
+      let { data, error } = await query;
+      
+      console.log('KELGAN MA'LUMOT:', data);
 
       console.log('✅ Direct category query result:', { data: data?.length || 0, error: error?.message });
 
@@ -104,18 +97,14 @@ export default function CategoryExpenseStatistics() {
       if (error || !data || data.length === 0) {
         console.log('ℹ️ Category column query returned empty, trying description filter...');
         
-        // Fetch all xarajat transactions (with shift_id filter if available)
+        // Fetch all transactions without filters
         let allQuery = supabase
           .from('transactions')
-          .select('*')
-          .eq('type', 'xarajat');
+          .select('*');
         
-        if (currentShift?.id) {
-          allQuery = allQuery.eq('shift_id', currentShift.id);
-        }
+        const { data: allData, error: allError } = await allQuery;
         
-        const { data: allData, error: allError } = await allQuery
-          .order('date', { ascending: false });
+        console.log('KELGAN MA'LUMOT:', allData);
 
         if (allError) throw allError;
 
@@ -159,15 +148,11 @@ export default function CategoryExpenseStatistics() {
       try {
         let fallbackQuery = supabase
           .from('transactions')
-          .select('*')
-          .eq('type', 'xarajat');
+          .select('*');
         
-        if (currentShift?.id) {
-          fallbackQuery = fallbackQuery.eq('shift_id', currentShift.id);
-        }
+        const { data: allData, error: allError } = await fallbackQuery;
         
-        const { data: allData, error: allError } = await fallbackQuery
-          .order('date', { ascending: false });
+        console.log('KELGAN MA'LUMOT:', allData);
 
         if (allError) {
           console.error('❌ Supabase xatolik (fetchTransactions fallback):', allError);

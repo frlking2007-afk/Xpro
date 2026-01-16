@@ -60,6 +60,7 @@ export default function Dashboard() {
         .from('transactions')
         .select('*');
       
+      console.log('KELGAN MA'LUMOT:', allTransactions);
       console.log('📡 Supabase response:', { 
         dataCount: allTransactions?.length || 0, 
         error: allError ? {
