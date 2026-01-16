@@ -910,9 +910,8 @@ export default function XproOperations() {
         // Try to fetch from expense_categories table (public schema)
         const { data, error } = await supabase
           .from('expense_categories')
-          .select('category_name')
-          .eq('user_id', userId)
-          .order('id', { ascending: true });
+          .select('*')
+          .eq('user_id', userId);
         
         console.log('📡 expense_categories response:', { 
           dataCount: data?.length || 0, 
@@ -925,34 +924,19 @@ export default function XproOperations() {
         });
 
         if (error) {
-          // Handle 400 Bad Request error
-          if (error.code === '400' || error.status === 400 || error.message?.includes('400') || error.message?.includes('Bad Request')) {
-            console.warn('⚠️ 400 Bad Request - expense_categories query issue:', error.message);
-            console.warn('⚠️ Falling back to localStorage');
-            const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
-            setExpenseCategories(categories);
-            return;
-          }
-          // If table doesn't exist, fallback to localStorage
-          if (error.code === '42P01' || error.code === 'PGRST205' || error.message?.includes('does not exist') || error.message?.includes('Could not find the table')) {
-            console.log('ℹ️ expense_categories table not found in Supabase, using localStorage');
-            console.log('ℹ️ To create the table, run migration: supabase/migrations/005_expense_categories.sql');
-            const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
-            setExpenseCategories(categories);
-            return;
-          }
-          console.error('❌ Supabase xatolik (loadExpenseCategories):', error);
-          console.error('Xatolik kodi:', error.code);
-          console.error('Xatolik status:', error.status);
-          console.error('Xatolik xabari:', error.message);
-          // Fallback to localStorage instead of throwing
+          console.error('SUPABASE_XATO:', error.message);
+          console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
+          // Fallback to localStorage
           const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
           setExpenseCategories(categories);
           return;
         }
 
-        // Extract category names from data
-        const categories = data?.map(item => item.category_name) || [];
+        // Extract category names from data - try different possible column names
+        const categories = data?.map(item => {
+          // Try different possible column names
+          return item.category_name || item.name || item.category || item.title || '';
+        }).filter(name => name) || [];
         setExpenseCategories(categories);
 
         // Migrate from localStorage to Supabase if localStorage has data and Supabase is empty
@@ -965,17 +949,15 @@ export default function XproOperations() {
           }
         }
       } catch (error: any) {
-        console.error('❌ Supabase xatolik (loadExpenseCategories inner catch):', error);
-        const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
-        console.error('Xatolik xabari:', errorMessage);
+        console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+        console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
         // Fallback to localStorage
         const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
         setExpenseCategories(categories);
       }
     } catch (error: any) {
-      console.error('❌ Supabase xatolik (loadExpenseCategories outer catch):', error);
-      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
-      console.error('Xatolik xabari:', errorMessage);
+      console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+      console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
       // Fallback to localStorage
       const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
       setExpenseCategories(categories);
@@ -994,17 +976,15 @@ export default function XproOperations() {
         .insert(categoryData);
 
       if (error) {
-        console.error('❌ Supabase xatolik (migrateCategoriesToSupabase):', error);
-        const errorMessage = error.message || 'Noma\'lum xatolik';
-        console.error('Xatolik xabari:', errorMessage);
+        console.error('SUPABASE_XATO:', error.message || 'Noma\'lum xatolik');
+        console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
       } else {
         // Clear localStorage after successful migration
         localStorage.removeItem('expenseCategories');
       }
     } catch (error: any) {
-      console.error('❌ Supabase xatolik (migrateCategoriesToSupabase):', error);
-      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
-      console.error('Xatolik xabari:', errorMessage);
+      console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+      console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
     }
   };
 
@@ -1039,10 +1019,8 @@ export default function XproOperations() {
         .single();
 
       if (error) {
-        console.error('❌ Supabase xatolik (fetchViewShift):', error);
-        console.error('Xatolik kodi:', error.code);
-        console.error('Xatolik xabari:', error.message);
-        console.error('Xatolik tafsilotlari:', error);
+        console.error('SUPABASE_XATO:', error.message);
+        console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
         const errorMessage = error.message || 'Noma\'lum xatolik';
         throw new Error(errorMessage);
       }
@@ -1061,9 +1039,8 @@ export default function XproOperations() {
         console.log('ℹ️ No shift data found');
       }
     } catch (error: any) {
-      console.error('❌ Supabase xatolik (fetchViewShift):', error);
-      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
-      console.error('Xatolik xabari:', errorMessage);
+      console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+      console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
       toast.error('Smena topilmadi: ' + errorMessage);
       navigate('/reports');
     } finally {
@@ -1084,10 +1061,8 @@ export default function XproOperations() {
         .limit(1000); // Optimize: limit results
 
       if (error) {
-        console.error('❌ Supabase xatolik (fetchTransactionsForShift):', error);
-        console.error('Xatolik kodi:', error.code);
-        console.error('Xatolik xabari:', error.message);
-        console.error('Xatolik tafsilotlari:', error);
+        console.error('SUPABASE_XATO:', error.message);
+        console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
         const errorMessage = error.message || 'Noma\'lum xatolik';
         throw new Error(errorMessage);
       }
@@ -1099,9 +1074,9 @@ export default function XproOperations() {
         console.log('ℹ️ No transactions found for this shift');
       }
     } catch (error: any) {
-      console.error('❌ Supabase xatolik (fetchTransactionsForShift):', error);
+      console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+      console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
       const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
-      console.error('Xatolik xabari:', errorMessage);
       toast.error('Operatsiyalarni yuklashda xatolik: ' + errorMessage);
       setTransactions([]);
     } finally {
@@ -1162,10 +1137,8 @@ export default function XproOperations() {
         .order('date', { ascending: false });
 
       if (error) {
-        console.error('❌ Supabase xatolik (fetchTransactions):', error);
-        console.error('Xatolik kodi:', error.code);
-        console.error('Xatolik xabari:', error.message);
-        console.error('Xatolik tafsilotlari:', error);
+        console.error('SUPABASE_XATO:', error.message);
+        console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
         const errorMessage = error.message || 'Noma\'lum xatolik';
         throw new Error(errorMessage);
       }
@@ -1177,9 +1150,9 @@ export default function XproOperations() {
         console.log('ℹ️ No transactions found for this shift');
       }
     } catch (error: any) {
-      console.error('❌ Supabase xatolik (fetchTransactions):', error);
+      console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+      console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
       const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
-      console.error('Xatolik xabari:', errorMessage);
       toast.error('Ma\'lumotlarni yuklashda xatolik: ' + errorMessage);
       setTransactions([]);
     }
@@ -1210,10 +1183,8 @@ export default function XproOperations() {
         .single();
 
       if (error) {
-        console.error('❌ Supabase xatolik (handleAddTransaction):', error);
-        console.error('Xatolik kodi:', error.code);
-        console.error('Xatolik xabari:', error.message);
-        console.error('Xatolik tafsilotlari:', error);
+        console.error('SUPABASE_XATO:', error.message);
+        console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
         const errorMessage = error.message || 'Noma\'lum xatolik';
         throw new Error(errorMessage);
       }
@@ -1223,9 +1194,8 @@ export default function XproOperations() {
       window.dispatchEvent(new Event('transactionAdded'));
       toast.success("Muvaffaqiyatli saqlandi!");
     } catch (error: any) {
-      console.error('❌ Supabase xatolik (handleAddTransaction):', error);
-      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
-      console.error('Xatolik xabari:', errorMessage);
+      console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+      console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
       toast.error('Xatolik: ' + errorMessage);
     } finally {
       setLoading(false);
@@ -1242,10 +1212,8 @@ export default function XproOperations() {
         .eq('id', id);
 
       if (error) {
-        console.error('❌ Supabase xatolik (handleEditTransaction):', error);
-        console.error('Xatolik kodi:', error.code);
-        console.error('Xatolik xabari:', error.message);
-        console.error('Xatolik tafsilotlari:', error);
+        console.error('SUPABASE_XATO:', error.message);
+        console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
         const errorMessage = error.message || 'Noma\'lum xatolik';
         throw new Error(errorMessage);
       }
@@ -1255,9 +1223,8 @@ export default function XproOperations() {
       window.dispatchEvent(new Event('transactionUpdated'));
       toast.success("Tahrirlandi!");
     } catch (error: any) {
-      console.error('❌ Supabase xatolik (handleEditTransaction):', error);
-      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
-      console.error('Xatolik xabari:', errorMessage);
+      console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+      console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
       toast.error('Tahrirlashda xatolik: ' + errorMessage);
     }
   };
@@ -1284,10 +1251,8 @@ export default function XproOperations() {
         .eq('id', id);
 
       if (error) {
-        console.error('❌ Supabase xatolik (performDelete):', error);
-        console.error('Xatolik kodi:', error.code);
-        console.error('Xatolik xabari:', error.message);
-        console.error('Xatolik tafsilotlari:', error);
+        console.error('SUPABASE_XATO:', error.message);
+        console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
         const errorMessage = error.message || 'Noma\'lum xatolik';
         throw new Error(errorMessage);
       }
@@ -1297,9 +1262,8 @@ export default function XproOperations() {
       window.dispatchEvent(new Event('transactionDeleted'));
       toast.success("O'chirildi!");
     } catch (error: any) {
-      console.error('❌ Supabase xatolik (performDelete):', error);
-      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
-      console.error('Xatolik xabari:', errorMessage);
+      console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+      console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
       toast.error('O\'chirishda xatolik: ' + errorMessage);
     }
   };
@@ -1349,7 +1313,8 @@ export default function XproOperations() {
         .in('id', ids);
 
       if (error) {
-        console.error('❌ Supabase xatolik (performClearAll):', error);
+        console.error('SUPABASE_XATO:', error.message);
+        console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
         const errorMessage = error.message || 'Noma\'lum xatolik';
         throw new Error(errorMessage);
       }
@@ -1357,9 +1322,8 @@ export default function XproOperations() {
       setTransactions(transactions.filter(t => t.type !== 'xarajat'));
       toast.success(`Barcha xarajatlar o'chirildi (${xarajatTransactions.length} ta)`);
     } catch (error: any) {
-      console.error('❌ Supabase xatolik (performClearAll):', error);
-      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
-      console.error('Xatolik xabari:', errorMessage);
+      console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+      console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
       toast.error('Tozalashda xatolik: ' + errorMessage);
     }
   };
@@ -1454,9 +1418,8 @@ export default function XproOperations() {
             return;
           }
           // For other errors, fallback to localStorage instead of throwing
-          console.error('❌ Supabase xatolik (handleAddCategory):', error);
-          console.error('Xatolik kodi:', error.code);
-          console.error('Xatolik status:', error.status);
+          console.error('SUPABASE_XATO:', error.message);
+          console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
           const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
           if (!categories.includes(categoryName)) {
             categories.push(categoryName);
@@ -1474,9 +1437,8 @@ export default function XproOperations() {
           toast.success(`"${categoryName}" bo'limi qo'shildi`);
         }
       } catch (error: any) {
-        console.error('❌ Supabase xatolik (handleAddCategory inner catch):', error);
-        const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
-        console.error('Xatolik xabari:', errorMessage);
+        console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+        console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
         // Fallback to localStorage
         const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
         if (!categories.includes(categoryName)) {
@@ -1488,9 +1450,8 @@ export default function XproOperations() {
         }
       }
     } catch (error: any) {
-      console.error('❌ Supabase xatolik (handleAddCategory outer catch):', error);
-      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
-      console.error('Xatolik xabari:', errorMessage);
+      console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+      console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
       // Fallback to localStorage
       const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
       if (!categories.includes(categoryName)) {
@@ -1551,7 +1512,8 @@ export default function XproOperations() {
             toast.success(`"${oldName}" bo'limi "${newName}" ga o'zgartirildi`);
           }
         } catch (error: any) {
-          console.error('Error updating category in Supabase:', error);
+          console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+          console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
           // Fallback to localStorage
           const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
           const index = categories.indexOf(oldName);
@@ -1615,7 +1577,8 @@ export default function XproOperations() {
             window.dispatchEvent(new Event('categoryUpdated'));
           }
         } catch (error: any) {
-          console.error('Error deleting category from Supabase:', error);
+          console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+          console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
           // Fallback to localStorage
           const categories = JSON.parse(localStorage.getItem('expenseCategories') || '[]');
           const filtered = categories.filter((cat: string) => cat !== categoryName);
@@ -1647,7 +1610,8 @@ export default function XproOperations() {
             .in('id', ids);
           
           if (error) {
-        console.error('❌ Supabase xatolik (performClearAll):', error);
+        console.error('SUPABASE_XATO:', error.message);
+        console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
         const errorMessage = error.message || 'Noma\'lum xatolik';
         throw new Error(errorMessage);
       }
@@ -1806,9 +1770,8 @@ export default function XproOperations() {
 
       toast.success("Muvaffaqiyatli saqlandi!");
     } catch (error: any) {
-      console.error('❌ Supabase xatolik (handleAddExpense):', error);
-      const errorMessage = error?.message || error?.toString() || 'Noma\'lum xatolik';
-      console.error('Xatolik xabari:', errorMessage);
+      console.error('SUPABASE_XATO:', error?.message || error?.toString() || 'Noma\'lum xatolik');
+      console.error('SUPABASE_XATO (full):', JSON.stringify(error, null, 2));
       toast.error('Xatolik: ' + errorMessage);
       throw new Error(errorMessage); // Re-throw to let component handle loading state
     }
