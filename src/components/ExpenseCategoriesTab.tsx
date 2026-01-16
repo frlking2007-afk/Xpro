@@ -102,6 +102,10 @@ export default function ExpenseCategoriesTab({
   };
 
   const getCategoryTransactions = (category: string) => {
+    console.log(`🔍 ExpenseCategoriesTab: Searching for category "${category}"`);
+    console.log(`🔍 ExpenseCategoriesTab: Total transactions: ${transactions.length}`);
+    console.log(`🔍 ExpenseCategoriesTab: Transactions with type 'xarajat': ${transactions.filter(t => t.type === 'xarajat').length}`);
+    
     const filtered = transactions.filter(t => {
       // Only process xarajat transactions
       if (t.type !== 'xarajat') {
@@ -145,8 +149,10 @@ export default function ExpenseCategoriesTab({
       return false;
     });
     
+    const totalAmount = filtered.reduce((sum, t) => sum + (t.amount || 0), 0);
     console.log(`📊 ExpenseCategoriesTab: Category "${category}" - Found ${filtered.length} transactions out of ${transactions.length} total transactions`);
-    console.log(`📊 ExpenseCategoriesTab: Category "${category}" - Total amount: ${filtered.reduce((sum, t) => sum + t.amount, 0)}`);
+    console.log(`📊 ExpenseCategoriesTab: Category "${category}" - Total amount: ${totalAmount}`);
+    console.log(`📊 ExpenseCategoriesTab: Category "${category}" - Filtered transactions:`, filtered);
     
     return filtered;
   };
