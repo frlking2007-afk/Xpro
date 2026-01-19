@@ -106,13 +106,14 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder') || s
   supabase.from('expense_categories').select('id').limit(1)
     .then(({ data, error }) => {
       if (error) {
-        // Handle 400 Bad Request
-        if (error.code === '400' || error.status === 400 || error.message?.includes('400') || error.message?.includes('Bad Request')) {
+        // Handle 404 specifically - table doesn't exist
+        if (error.status === 404 || error.code === 'PGRST205' || error.message?.includes('Could not find the table') || error.message?.includes('does not exist')) {
+          console.error('❌ expense_categories table not found (404) - Please run database-setup.sql or fix-expense-categories.sql');
+          console.error('🔧 Quick fix: Copy fix-expense-categories.sql and run in Supabase Dashboard → SQL Editor');
+        } else if (error.code === '400' || error.status === 400 || error.message?.includes('400') || error.message?.includes('Bad Request')) {
           console.warn('⚠️ expense_categories table - 400 Bad Request (will use localStorage fallback):', error.message);
           console.warn('⚠️ Error details:', error.details);
           console.warn('⚠️ Error hint:', (error as any).hint);
-        } else if (error.code === 'PGRST205' || error.message?.includes('Could not find the table') || error.message?.includes('does not exist')) {
-          console.log('ℹ️ expense_categories table not found - this is OK, will use localStorage fallback');
         } else {
           console.warn('⚠️ expense_categories table access issue:', error.message);
           console.warn('⚠️ Error code:', error.code);
