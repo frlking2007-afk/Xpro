@@ -35,15 +35,6 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder') || s
       autoRefreshToken: true,
       detectSessionInUrl: true,
     },
-    db: {
-      schema: 'public',
-    },
-    global: {
-      headers: {
-        'apikey': supabaseAnonKey,
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-      },
-    },
   });
   
   console.log('✅ Supabase client created with API key headers');
@@ -79,9 +70,6 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder') || s
         console.log('✅ Supabase database connection successful');
         console.log('✅ API key headers are working correctly');
       }
-    })
-    .catch((err) => {
-      console.error('⚠️ Supabase connection test failed:', err);
     });
   
   // Test user_profiles table (if exists)
@@ -96,38 +84,32 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder') || s
       } else {
         console.log('✅ user_profiles table is accessible');
       }
-    })
-    .catch(() => {
-      // Silently ignore - table might not exist
     });
   
   // Test expense_categories table (if exists) - using public schema explicitly
   console.log('🔧 Testing expense_categories table access (public schema)...');
-  supabase.from('expense_categories').select('id').limit(1)
-    .then(({ data, error }) => {
-      if (error) {
-        // Handle 404 specifically - table doesn't exist
-        if (error.status === 404 || error.code === 'PGRST205' || error.message?.includes('Could not find the table') || error.message?.includes('does not exist')) {
-          console.error('❌ expense_categories table not found (404) - Please run database-setup.sql or fix-expense-categories.sql');
-          console.error('🔧 Quick fix: Copy fix-expense-categories.sql and run in Supabase Dashboard → SQL Editor');
-        } else if (error.code === '400' || error.status === 400 || error.message?.includes('400') || error.message?.includes('Bad Request')) {
-          console.warn('⚠️ expense_categories table - 400 Bad Request (will use localStorage fallback):', error.message);
-          console.warn('⚠️ Error details:', error.details);
-          console.warn('⚠️ Error hint:', (error as any).hint);
-        } else {
-          console.warn('⚠️ expense_categories table access issue:', error.message);
-          console.warn('⚠️ Error code:', error.code);
-          console.warn('⚠️ Error status:', error.status);
-        }
+  (async () => {
+    const { data, error } = await supabase.from('expense_categories').select('id').limit(1);
+    
+    if (error) {
+      // Handle 404 specifically - table doesn't exist
+      if ((error as any).status === 404 || error.code === 'PGRST205' || error.message?.includes('Could not find the table') || error.message?.includes('does not exist')) {
+        console.error('❌ expense_categories table not found (404) - Please run database-setup.sql or fix-expense-categories.sql');
+        console.error('🔧 Quick fix: Copy fix-expense-categories.sql and run in Supabase Dashboard → SQL Editor');
+      } else if (error.code === '400' || (error as any).status === 400 || error.message?.includes('400') || error.message?.includes('Bad Request')) {
+        console.warn('⚠️ expense_categories table - 400 Bad Request (will use localStorage fallback):', error.message);
+        console.warn('⚠️ Error details:', error.details);
+        console.warn('⚠️ Error hint:', (error as any).hint);
       } else {
-        console.log('✅ expense_categories table is accessible (public schema)');
-        console.log('✅ Test query returned:', data?.length || 0, 'rows');
+        console.warn('⚠️ expense_categories table access issue:', error.message);
+        console.warn('⚠️ Error code:', error.code);
+        console.warn('⚠️ Error status:', (error as any).status);
       }
-    })
-    .catch((err) => {
-      // Handle any unexpected errors
-      console.warn('⚠️ expense_categories table test failed:', err?.message || err);
-    });
+    } else {
+      console.log('✅ expense_categories table is accessible (public schema)');
+      console.log('✅ Test query returned:', data?.length || 0, 'rows');
+    }
+  })();
 }
 
 export { supabase };
